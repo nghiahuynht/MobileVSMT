@@ -34,3 +34,7 @@ flutter build web --release --web-renderer=html
 ```
 flutter packages pub run build_runner build --delete-conflicting-outputs
 ```
+
+```
+fvm dart run build_runner build --delete-conflicting-outputs
+```
