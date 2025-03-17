@@ -1,40 +1,118 @@
+![screenshot](assets/images/Google-flutter-logo.svg.png)
+
 # flutter_boilerplate
 
-A new Flutter project.
+A **Flutter Boilerplate** project to kickstart your Flutter app development with best practices, pre-configured dependencies, and a scalable architecture.
+
+## Table of Contents
+
+- [Table of Contents](#table-of-contents)
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Folder Structure](#folder-structure)
+- [Built With](#built-with)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+
+---
+
+## Boilerplate Features
+
+- State Management: Bloc
+- Networking: Dio
+- Localization:
+- Theming (Light/Dark mode support)
+
+## Code structure
+
+Here is the core folder structure which flutter provides.
+
+```
+flutter-app/
+|- android
+|- ios
+|- web
+|- assets
+|- lib
+|- test
+```
+
+Here is the folder structure we have been using in this project
+
+```
+lib/
+|- constants/
+|- domain/
+|- presentation/
+    |- home/
+        |- widgets/
+        |- logics
+        |- home_screen.dart
+    |- login/
+    |- widgets/
+        |- button/
+        |- image/
+        |- view/
+    my_app.dart
+|- router/
+|- services/
+|- utils/
+|- locator.dart
+|- main.dart
+```
+
+## Prerequisites
+
+Before setting up the project, ensure you have the following installed:
+
+- [Flutter SDK](https://flutter.dev/docs/get-started/install) 3.29.0
+- Dart 3.7.0
+- VS Code or Android Studio with Flutter & Dart plugins
+- Android Emulator / iOS Simulator
+
+Run the following command to check dependencies:
+
+```sh
+flutter doctor
+```
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+1. Download or clone this repo by using the link below:
 
-A few resources to get you started if this is your first Flutter project:
+   ```
+   https://github.com/TruongThaiNgan/flutter_boilerplate.git
+   ```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+2. Go to project root and install Dependencies:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+   ```
+   flutter pub get
+   ```
 
-# Web
+3. Generate localizations, assets
 
-## Run code
+   ```
+   dart run build_runner build --delete-conflicting-outputs
+   ```
 
-```
-flutter run -d chrome --web-renderer html --web-browser-flag  "--disable-web-security"
-```
+4. Run staging project
 
-## Release
+   ```
+   flutter run --flavor staging --target lib/main_staging.dart
+   ```
 
-```
-flutter build web --release --web-renderer=html
-```
+5. To run production project
 
-# Build --delete
+   ```
+   flutter run --flavor production --target lib/main_production.dart
+   ```
 
-```
-flutter packages pub run build_runner build --delete-conflicting-outputs
-```
+## Conclusion
 
-```
-fvm dart run build_runner build --delete-conflicting-outputs
-```
+We encourage you to explore, customize, and contribute to enhance this project further. If you encounter any issues or have suggestions for improvements, feel free to open an issue or submit a pull request.
+
+Happy coding! 🚀
