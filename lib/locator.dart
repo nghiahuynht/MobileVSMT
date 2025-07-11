@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_boilerplate/domain/di/domain_manager.dart';
+import 'package:flutter_boilerplate/domain/domain_manager.dart';
+import 'package:flutter_boilerplate/services/auth/firebase_auth_service.dart';
 import 'package:flutter_boilerplate/services/user_prefs.dart';
 import 'package:flutter_boilerplate/utils/bloc_observer.dart';
 import 'package:flutter_boilerplate/utils/device/device_utils.dart';
@@ -26,5 +27,6 @@ Future initializeApp({String? name}) async {
 }
 
 void _locator() {
+  GetIt.I.registerLazySingleton(() => FirebaseAuthService());
   GetIt.I.registerLazySingleton(() => DomainManager());
 }

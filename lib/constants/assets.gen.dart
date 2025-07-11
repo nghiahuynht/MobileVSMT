@@ -27,6 +27,10 @@ class $AssetsIconsGen {
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
+  /// File path: assets/images/Google-flutter-logo.svg.png
+  AssetGenImage get googleFlutterLogoSvg =>
+      const AssetGenImage('assets/images/Google-flutter-logo.svg.png');
+
   /// File path: assets/images/img_login.jpg
   AssetGenImage get imgLogin =>
       const AssetGenImage('assets/images/img_login.jpg');
@@ -36,7 +40,7 @@ class $AssetsImagesGen {
       const AssetGenImage('assets/images/img_no_jobs.png');
 
   /// List of all assets
-  List<AssetGenImage> get values => [imgLogin, imgNoJobs];
+  List<AssetGenImage> get values => [googleFlutterLogoSvg, imgLogin, imgNoJobs];
 }
 
 class Assets {

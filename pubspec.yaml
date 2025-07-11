@@ -48,6 +48,10 @@ dependencies:
   package_info_plus: ^8.3.0
   device_info_plus: ^11.3.0
   logger: ^2.5.0
+  cached_network_image: ^3.4.1
+  firebase_auth: ^5.6.2
+  google_sign_in: ^7.1.0
+  sign_in_with_apple: ^7.0.1
 
 dev_dependencies:
   flutter_test:

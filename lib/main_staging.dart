@@ -6,9 +6,6 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 
 Future main() async {
   if (kIsWeb) {
-    /// This is required to remove the '#' from the URL for web
-    /// Before flutterexample.dev/#/path/to/screen
-    /// After flutterexample.dev/path/to/screen
     usePathUrlStrategy();
   }
 
