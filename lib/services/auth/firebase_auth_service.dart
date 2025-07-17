@@ -1,25 +1,23 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'auth_service.dart';
 
 class FirebaseAuthService implements AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  // final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  @override
-  Future<User?> registerWithEmail(String email, String password) async {
-    final userCredential = await _auth.createUserWithEmailAndPassword(
-        email: email, password: password);
-    return userCredential.user;
-  }
+  // @override
+  // Future<User?> registerWithEmail(String email, String password) async {
+  //   final userCredential = await _auth.createUserWithEmailAndPassword(
+  //       email: email, password: password);
+  //   return userCredential.user;
+  // }
 
-  @override
-  Future<User?> signInWithEmail(String email, String password) async {
-    final userCredential = await _auth.signInWithEmailAndPassword(
-        email: email, password: password);
-    return userCredential.user;
-  }
+  // @override
+  // Future<User?> signInWithEmail(String email, String password) async {
+  //   final userCredential = await _auth.signInWithEmailAndPassword(
+  //       email: email, password: password);
+  //   return userCredential.user;
+  // }
 
-  @override
+  // @override
   // Future<User?> signInWithGoogle() async {
     // final googleUser = await GoogleSignIn().signIn();
     // if (googleUser == null) return null;
@@ -32,33 +30,33 @@ class FirebaseAuthService implements AuthService {
     // return userCredential.user;
   // }
 
-  @override
-  Future<User?> signInWithApple() async {
-    final appleCredential = await SignInWithApple.getAppleIDCredential(
-      scopes: [
-        AppleIDAuthorizationScopes.email,
-        AppleIDAuthorizationScopes.fullName
-      ],
-    );
+  // @override
+  // Future<User?> signInWithApple() async {
+  //   final appleCredential = await SignInWithApple.getAppleIDCredential(
+  //     scopes: [
+  //       AppleIDAuthorizationScopes.email,
+  //       AppleIDAuthorizationScopes.fullName
+  //     ],
+  //   );
 
-    final oAuthProvider = OAuthProvider('apple.com');
-    final credential = oAuthProvider.credential(
-      idToken: appleCredential.identityToken,
-      accessToken: appleCredential.authorizationCode,
-    );
+  //   final oAuthProvider = OAuthProvider('apple.com');
+  //   final credential = oAuthProvider.credential(
+  //     idToken: appleCredential.identityToken,
+  //     accessToken: appleCredential.authorizationCode,
+  //   );
 
-    final userCredential = await _auth.signInWithCredential(credential);
-    return userCredential.user;
-  }
+  //   final userCredential = await _auth.signInWithCredential(credential);
+  //   return userCredential.user;
+  // }
 
-  @override
-  Future<void> signOut() async {
-    await _auth.signOut();
-    // await GoogleSignIn().signOut();
-  }
+  // @override
+  // Future<void> signOut() async {
+  //   await _auth.signOut();
+  //   // await GoogleSignIn().signOut();
+  // }
 
-  @override
-  User? getCurrentUser() {
-    return _auth.currentUser;
-  }
+  // @override
+  // User? getCurrentUser() {
+  //   return _auth.currentUser;
+  // }
 }

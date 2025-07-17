@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_boilerplate/l10n/app_localizations.dart';
-import 'package:flutter_boilerplate/presentation/flash/logics/auth_bloc.dart';
-import 'package:flutter_boilerplate/router/routes.dart';
+import 'package:trash_pay/l10n/app_localizations.dart';
+import 'package:trash_pay/presentation/flash/logics/auth_bloc.dart';
+import 'package:trash_pay/router/routes.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

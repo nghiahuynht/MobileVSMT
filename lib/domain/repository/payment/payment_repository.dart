@@ -1,4 +1,4 @@
-// import 'package:flutter_boilerplate/services/payment/payment_gateway.dart';
+// import 'package:trash_pay/services/payment/payment_gateway.dart';
 
 abstract class PaymentRepository {
   // Future<PaymentResult> processPayment(double amount, String currency);

@@ -1,8 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:flutter_boilerplate/domain/domain_manager.dart';
-import 'package:flutter_boilerplate/presentation/home/logics/home_events.dart';
-import 'package:flutter_boilerplate/presentation/home/logics/home_state.dart';
+import 'package:trash_pay/domain/domain_manager.dart';
+import 'package:trash_pay/presentation/home/logics/home_events.dart';
+import 'package:trash_pay/presentation/home/logics/home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvents, HomeState> {
   HomeBloc() : super(HomeInitial()) {

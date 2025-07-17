@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_boilerplate/presentation/home/logics/home_bloc.dart';
-import 'package:flutter_boilerplate/presentation/home/logics/home_events.dart';
-import 'package:flutter_boilerplate/presentation/home/logics/home_state.dart';
+import 'package:trash_pay/presentation/home/logics/home_bloc.dart';
+import 'package:trash_pay/presentation/home/logics/home_events.dart';
+import 'package:trash_pay/presentation/home/logics/home_state.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});

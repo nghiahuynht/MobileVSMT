@@ -1,4 +1,4 @@
-import 'package:flutter_boilerplate/domain/entities/user/user.dart';
+import 'package:trash_pay/domain/entities/user/user.dart';
 
 class AuthState {}
 

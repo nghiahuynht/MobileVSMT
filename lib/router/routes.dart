@@ -1,6 +1,6 @@
-import 'package:flutter_boilerplate/presentation/home/home_screen.dart';
-import 'package:flutter_boilerplate/presentation/flash/flash_screen.dart';
-import 'package:flutter_boilerplate/presentation/sign_in/sign_in_screen.dart';
+import 'package:trash_pay/presentation/home/home_screen.dart';
+import 'package:trash_pay/presentation/flash/flash_screen.dart';
+import 'package:trash_pay/presentation/sign_in/sign_in_screen.dart';
 import 'package:go_router/go_router.dart';
 
 // GoRouter configuration

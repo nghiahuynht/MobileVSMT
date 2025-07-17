@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
-import 'package:flutter_boilerplate/domain/domain_manager.dart';
-import 'package:flutter_boilerplate/presentation/sign_in/logics/sign_in_events.dart';
+import 'package:trash_pay/domain/domain_manager.dart';
+import 'package:trash_pay/presentation/sign_in/logics/sign_in_events.dart';
 import 'sign_in_state.dart';
 
 class SignInBloc extends Bloc<SignInEvent, SignInState> {
@@ -17,17 +17,17 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
   Future<void> _onSignInEmail(
       SignInEmailEvent event, Emitter<SignInState> emit) async {
     emit(SignInLoading());
-    try {
-      final user =
-          await domainManager.auth.signInWithEmail(event.email, event.password);
-      if (user != null) {
-        emit(SignInSuccess(user.uid));
-      } else {
-        emit(SignInFailure('Sign in failed'));
-      }
-    } catch (e) {
-      emit(SignInFailure(e.toString()));
-    }
+    // try {
+    //   final user =
+    //       await domainManager.auth.signInWithEmail(event.email, event.password);
+    //   if (user != null) {
+    //     emit(SignInSuccess(user.uid));
+    //   } else {
+    //     emit(SignInFailure('Sign in failed'));
+    //   }
+    // } catch (e) {
+    //   emit(SignInFailure(e.toString()));
+    // }
   }
 
   Future<void> _onSignInGoogle(
@@ -61,7 +61,7 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
   }
 
   Future<void> _onSignOut(SignOutEvent event, Emitter<SignInState> emit) async {
-    await domainManager.auth.signOut();
+    // await domainManager.auth.signOut();
     emit(SignInInitial());
   }
 }

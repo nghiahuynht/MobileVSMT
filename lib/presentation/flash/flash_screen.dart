@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_boilerplate/presentation/flash/logics/auth_bloc.dart';
-import 'package:flutter_boilerplate/presentation/flash/logics/auth_events.dart';
-import 'package:flutter_boilerplate/presentation/flash/logics/auth_state.dart';
+import 'package:trash_pay/presentation/flash/logics/auth_bloc.dart';
+import 'package:trash_pay/presentation/flash/logics/auth_events.dart';
+import 'package:trash_pay/presentation/flash/logics/auth_state.dart';
 
 class FlashPage extends StatefulWidget {
   const FlashPage({super.key});

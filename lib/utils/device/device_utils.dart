@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_boilerplate/utils/device/device_info_model.dart';
+import 'package:trash_pay/utils/device/device_info_model.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 /// Helper class for device related operations.

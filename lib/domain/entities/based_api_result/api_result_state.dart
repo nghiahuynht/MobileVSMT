@@ -1,4 +1,4 @@
-import 'package:flutter_boilerplate/domain/entities/based_api_result/error_result_model.dart';
+import 'package:trash_pay/domain/entities/based_api_result/error_result_model.dart';
 
 abstract class ApiResultState<T> {
   const ApiResultState();

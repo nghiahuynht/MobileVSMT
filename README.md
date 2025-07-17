@@ -1,6 +1,6 @@
 ![screenshot](assets/images/Google-flutter-logo.svg.png)
 
-# flutter_boilerplate
+# trash_pay
 
 A **Flutter Boilerplate** project to kickstart your Flutter app development with best practices, pre-configured dependencies, and a scalable architecture.
 
@@ -84,7 +84,7 @@ flutter doctor
 1. Download or clone this repo by using the link below:
 
    ```
-   https://github.com/TruongThaiNgan/flutter_boilerplate.git
+   https://github.com/TruongThaiNgan/trash_pay.git
    ```
 
 2. Go to project root and install Dependencies:

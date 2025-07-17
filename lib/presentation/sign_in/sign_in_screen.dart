@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_boilerplate/presentation/sign_in/logics/sign_in_bloc.dart';
-import 'package:flutter_boilerplate/presentation/sign_in/logics/sign_in_events.dart';
-import 'package:flutter_boilerplate/presentation/sign_in/logics/sign_in_state.dart';
+import 'package:trash_pay/presentation/sign_in/logics/sign_in_bloc.dart';
+import 'package:trash_pay/presentation/sign_in/logics/sign_in_events.dart';
+import 'package:trash_pay/presentation/sign_in/logics/sign_in_state.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
