@@ -7,8 +7,6 @@ import 'sign_in_state.dart';
 class SignInBloc extends Bloc<SignInEvent, SignInState> {
   SignInBloc() : super(SignInInitial()) {
     on<SignInEmailEvent>(_onSignInEmail);
-    on<SignInGoogleEvent>(_onSignInGoogle);
-    on<SignInAppleEvent>(_onSignInApple);
     on<SignOutEvent>(_onSignOut);
   }
 
@@ -17,51 +15,25 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
   Future<void> _onSignInEmail(
       SignInEmailEvent event, Emitter<SignInState> emit) async {
     emit(SignInLoading());
-    // try {
-    //   final user =
-    //       await domainManager.auth.signInWithEmail(event.email, event.password);
-    //   if (user != null) {
-    //     emit(SignInSuccess(user.uid));
-    //   } else {
-    //     emit(SignInFailure('Sign in failed'));
-    //   }
-    // } catch (e) {
-    //   emit(SignInFailure(e.toString()));
-    // }
+    try {
+      final user = await domainManager.auth.signInWithEmail(event.email, event.password);
+      if (user != null) {
+        emit(SignInSuccess(user.uid));
+      } else {
+        emit(SignInFailure('Sign in failed'));
+      }
+    } catch (e) {
+      emit(SignInFailure(e.toString()));
+    }
   }
 
-  Future<void> _onSignInGoogle(
-      SignInGoogleEvent event, Emitter<SignInState> emit) async {
-    // emit(SignInLoading());
-    // try {
-    //   final user = await domainManager.auth.signInWithGoogle();
-    //   if (user != null) {
-    //     emit(SignInSuccess(user.uid));
-    //   } else {
-    //     emit(SignInFailure('Sign in failed'));
-    //   }
-    // } catch (e) {
-    //   emit(SignInFailure(e.toString()));
-    // }
-  }
-
-  Future<void> _onSignInApple(
-      SignInAppleEvent event, Emitter<SignInState> emit) async {
-    emit(SignInLoading());
-    // try {
-    //   final user = await domainManager.auth.signInWithGoogle();
-    //   if (user != null) {
-    //     emit(SignInSuccess(user.uid));
-    //   } else {
-    //     emit(SignInFailure('Sign in failed'));
-    //   }
-    // } catch (e) {
-    //   emit(SignInFailure(e.toString()));
-    // }
-  }
-
-  Future<void> _onSignOut(SignOutEvent event, Emitter<SignInState> emit) async {
-    // await domainManager.auth.signOut();
-    emit(SignInInitial());
+  Future<void> _onSignOut(
+      SignOutEvent event, Emitter<SignInState> emit) async {
+    try {
+      await domainManager.auth.signOut();
+      emit(SignInInitial());
+    } catch (e) {
+      emit(SignInFailure('Sign out failed: ${e.toString()}'));
+    }
   }
 }
