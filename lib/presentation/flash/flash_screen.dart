@@ -31,18 +31,40 @@ class _FlashPageState extends State<FlashPage> {
             context.replace('/login');
           }
         },
-        child: const Center(
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              FlutterLogo(size: 80),
-              SizedBox(height: 24),
-              Text(
-                "Welcome to MyApp",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF059669),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF059669).withOpacity(0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.recycling_rounded,
+                  size: 40,
+                  color: Colors.white,
+                ),
               ),
-              SizedBox(height: 8),
-              CircularProgressIndicator(),
+              const SizedBox(height: 24),
+              const Text(
+                "TrashPay",
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "Waste Management Solution",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
             ],
           ),
         ),

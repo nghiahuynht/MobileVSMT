@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../constants/font_family.dart';
+import '../../domain/entities/unit/unit.dart';
+import '../flash/logics/auth_bloc.dart';
+import '../flash/logics/auth_events.dart';
 import 'logics/sign_in_bloc.dart';
 import 'logics/sign_in_events.dart';
 import 'logics/sign_in_state.dart';
@@ -14,7 +17,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
-  final _emailController = TextEditingController();
+  final _loginNameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   
@@ -23,10 +26,21 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  
+  List<Unit> _units = [];
+  Unit? _selectedUnit;
+  bool _isLoadingUnits = false;
+  
+  late SignInBloc _signInBloc;
 
   @override
   void initState() {
     super.initState();
+    
+    // Khởi tạo SignInBloc và gọi LoadUnitsEvent ngay
+    _signInBloc = SignInBloc();
+    _loadUnits();
+    
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -49,20 +63,28 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     
     _animationController.forward();
   }
+  
+  void _loadUnits() {
+    setState(() {
+      _isLoadingUnits = true;
+    });
+    _signInBloc.add(LoadUnitsEvent());
+  }
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _loginNameController.dispose();
     _passwordController.dispose();
     _animationController.dispose();
+    _signInBloc.close();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocProvider(
-        create: (BuildContext context) => SignInBloc(),
+      body: BlocProvider.value(
+        value: _signInBloc,
         child: BlocConsumer<SignInBloc, SignInState>(
           listener: (context, state) {
             if (state is SignInFailure) {
@@ -83,7 +105,36 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 ),
               );
             } else if (state is SignInSuccess) {
+              // Trigger AuthBloc để check lại auth status và lấy user info
+              if (mounted) {
+                context.read<AuthBloc>().add(CheckAuthStatus());
+              }
               context.replace('/home');
+            } else if (state is UnitsLoaded) {
+              setState(() {
+                _units = state.units;
+                _isLoadingUnits = false;
+              });
+            } else if (state is UnitsError) {
+              setState(() {
+                _isLoadingUnits = false;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.white),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text('Lỗi tải danh sách đơn vị: ${state.message}')),
+                    ],
+                  ),
+                  backgroundColor: const Color(0xFFDC2626),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              );
             }
           },
           builder: (context, state) {
@@ -98,27 +149,25 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   ],
                 ),
               ),
-              child: SafeArea(
-                child: CustomScrollView(
-                  slivers: [
-                    // Header Section
-                    SliverToBoxAdapter(
-                      child: _buildHeader(),
-                    ),
-                    
-                    // Login Form Section
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: FadeTransition(
-                        opacity: _fadeAnimation,
-                        child: SlideTransition(
-                          position: _slideAnimation,
-                          child: _buildLoginForm(context, state),
-                        ),
+              child: CustomScrollView(
+                slivers: [
+                  // Header Section
+                  SliverToBoxAdapter(
+                    child: _buildHeader(),
+                  ),
+                  
+                  // Login Form Section
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: _buildLoginForm(context, state),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           },
@@ -265,18 +314,23 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             key: _formKey,
             child: Column(
               children: [
-                // Email Field
-                _buildEmailField(),
+                // Unit Dropdown
+                _buildUnitDropdown(),
+                
+                const SizedBox(height: 20),
+                
+                // Login Name Field
+                _buildLoginNameField(),
                 
                 const SizedBox(height: 20),
                 
                 // Password Field
                 _buildPasswordField(),
                 
-                const SizedBox(height: 16),
+                // const SizedBox(height: 16),
                 
-                // Remember Me & Forgot Password
-                _buildRememberMeRow(),
+                // // Remember Me & Forgot Password
+                // _buildRememberMeRow(),
                 
                 const SizedBox(height: 32),
                 
@@ -297,161 +351,240 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
     );
   }
 
-  Widget _buildEmailField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+  Widget _buildUnitDropdown() {
+    return DropdownButtonFormField<Unit>(
+      value: _selectedUnit,
+      decoration: InputDecoration(
+        hintText: _isLoadingUnits ? 'Đang tải...' : 'Chọn đơn vị',
+        prefixIcon: Container(
+          margin: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF059669).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
-        ],
-      ),
-      child: TextFormField(
-        controller: _emailController,
-        keyboardType: TextInputType.emailAddress,
-        autocorrect: false,
-        style: TextStyle(
-          fontSize: 16,
-          fontFamily: FontFamily.productSans,
+          child: const Icon(
+            Icons.business_outlined,
+            color: Color(0xFF059669),
+            size: 20,
+          ),
         ),
-        decoration: InputDecoration(
-          labelText: 'Email',
-          hintText: 'example@email.com',
-          prefixIcon: Container(
-            margin: const EdgeInsets.all(12),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF059669).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.email_outlined,
-              color: Color(0xFF059669),
-              size: 20,
-            ),
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFFDC2626), width: 2),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFFDC2626), width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
         ),
-        validator: (val) {
-          if (val == null || val.isEmpty) {
-            return 'Vui lòng nhập email';
-          }
-          if (!val.contains('@') || !val.contains('.')) {
-            return 'Email không hợp lệ';
-          }
-          return null;
-        },
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFDC2626), width: 2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFDC2626), width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       ),
+      items: _isLoadingUnits
+          ? []
+          : _units.map((Unit unit) {
+              return DropdownMenuItem<Unit>(
+                value: unit,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      unit.label ?? '',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        fontFamily: FontFamily.productSans,
+                      ),
+                    ),
+                    if (unit.description != null && unit.description!.isNotEmpty)
+                      Text(
+                        unit.description!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: const Color(0xFF6B7280),
+                          fontFamily: FontFamily.productSans,
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            }).toList(),
+      onChanged: _isLoadingUnits
+          ? null
+          : (Unit? unit) {
+              setState(() {
+                _selectedUnit = unit;
+              });
+            },
+      validator: (Unit? value) {
+        if (value == null) {
+          return 'Vui lòng chọn đơn vị';
+        }
+        return null;
+      },
+      style: TextStyle(
+        fontSize: 16,
+        color: Colors.black,
+        fontFamily: FontFamily.productSans,
+      ),
+      dropdownColor: Colors.white,
+      icon: _isLoadingUnits
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
+              ),
+            )
+          : const Icon(
+              Icons.keyboard_arrow_down,
+              color: Color(0xFF6B7280),
+            ),
+    );
+  }
+
+  Widget _buildLoginNameField() {
+    return TextFormField(
+      controller: _loginNameController,
+      keyboardType: TextInputType.text,
+      autocorrect: false,
+      style: TextStyle(
+        fontSize: 16,
+        fontFamily: FontFamily.productSans,
+      ),
+      decoration: InputDecoration(
+        labelText: 'Tên đăng nhập',
+        hintText: 'Nhập tên đăng nhập',
+        prefixIcon: Container(
+          margin: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF059669).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Icon(
+            Icons.person_outline,
+            color: Color(0xFF059669),
+            size: 20,
+          ),
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFDC2626), width: 2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFDC2626), width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      ),
+      validator: (val) {
+        if (val == null || val.isEmpty) {
+          return 'Vui lòng nhập tên đăng nhập';
+        }
+        if (val.length < 3) {
+          return 'Tên đăng nhập phải có ít nhất 3 ký tự';
+        }
+        return null;
+      },
     );
   }
 
   Widget _buildPasswordField() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    return TextFormField(
+      controller: _passwordController,
+      obscureText: !_isPasswordVisible,
+      style: TextStyle(
+        fontSize: 16,
+        fontFamily: FontFamily.productSans,
       ),
-      child: TextFormField(
-        controller: _passwordController,
-        obscureText: !_isPasswordVisible,
-        style: TextStyle(
-          fontSize: 16,
-          fontFamily: FontFamily.productSans,
+      decoration: InputDecoration(
+        labelText: 'Mật khẩu',
+        hintText: 'Nhập mật khẩu của bạn',
+        prefixIcon: Container(
+          margin: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF059669).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: const Icon(
+            Icons.lock_outline,
+            color: Color(0xFF059669),
+            size: 20,
+          ),
         ),
-        decoration: InputDecoration(
-          labelText: 'Mật khẩu',
-          hintText: 'Nhập mật khẩu của bạn',
-          prefixIcon: Container(
-            margin: const EdgeInsets.all(12),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF059669).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.lock_outline,
-              color: Color(0xFF059669),
-              size: 20,
-            ),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _isPasswordVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            color: const Color(0xFF6B7280),
           ),
-          suffixIcon: IconButton(
-            icon: Icon(
-              _isPasswordVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-              color: const Color(0xFF6B7280),
-            ),
-            onPressed: () => setState(() {
-              _isPasswordVisible = !_isPasswordVisible;
-            }),
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFFDC2626), width: 2),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFFDC2626), width: 2),
-          ),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          onPressed: () => setState(() {
+            _isPasswordVisible = !_isPasswordVisible;
+          }),
         ),
-        validator: (val) {
-          if (val == null || val.isEmpty) {
-            return 'Vui lòng nhập mật khẩu';
-          }
-          if (val.length < 6) {
-            return 'Mật khẩu phải có ít nhất 6 ký tự';
-          }
-          return null;
-        },
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFDC2626), width: 2),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFDC2626), width: 2),
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       ),
+      validator: (val) {
+        if (val == null || val.isEmpty) {
+          return 'Vui lòng nhập mật khẩu';
+        }
+        if (val.length < 3) {
+          return 'Mật khẩu phải có ít nhất 3 ký tự';
+        }
+        return null;
+      },
     );
   }
 
@@ -555,54 +688,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   Widget _buildFooter() {
     return Column(
       children: [
-        // Demo Credentials
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF059669).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: const Color(0xFF059669).withOpacity(0.2),
-              width: 1,
-            ),
-          ),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: const Color(0xFF059669),
-                    size: 16,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Demo Account',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF059669),
-                      fontFamily: FontFamily.productSans,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Email: demo@trashpay.com\nPassword: 123456',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: const Color(0xFF6B7280),
-                  fontFamily: FontFamily.productSans,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-        
-        const SizedBox(height: 16),
-        
+
         // Copyright
         Text(
           '© 2024 TrashPay. All rights reserved.',
@@ -618,30 +704,23 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
   void _handleLogin(BuildContext context) {
     if (_formKey.currentState!.validate()) {
-      context.read<SignInBloc>().add(
-        SignInEmailEvent(
-          _emailController.text.trim(),
+      if (_selectedUnit == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vui lòng chọn đơn vị'),
+            backgroundColor: Color(0xFFDC2626),
+          ),
+        );
+        return;
+      }
+      
+      _signInBloc.add(
+        SignInWithLoginNameEvent(
+          _loginNameController.text.trim(),
           _passwordController.text,
+          _selectedUnit!.code!,
         ),
       );
     }
-  }
-
-  void _handleGoogleLogin(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Tính năng đăng nhập Google đang được phát triển'),
-        backgroundColor: Color(0xFF059669),
-      ),
-    );
-  }
-
-  void _handleAppleLogin(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Tính năng đăng nhập Apple đang được phát triển'),
-        backgroundColor: Color(0xFF059669),
-      ),
-    );
   }
 }

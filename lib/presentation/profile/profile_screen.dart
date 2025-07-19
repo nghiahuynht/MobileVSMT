@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:trash_pay/domain/entities/profile/profile.dart';
 import 'package:trash_pay/presentation/profile/logics/profile_bloc.dart';
 import 'package:trash_pay/presentation/profile/logics/profile_events.dart';
@@ -26,58 +27,56 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
           ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                // Professional Header
-                ProfessionalHeaders.detail(
-                  title: 'Hồ Sơ Cá Nhân',
-                  subtitle: 'Thông tin tài khoản và cài đặt',
+          child: Column(
+            children: [
+              // Professional Header
+              ProfessionalHeaders.detail(
+                title: 'Hồ Sơ Cá Nhân',
+                subtitle: 'Thông tin tài khoản và cài đặt',
+              ),
+              
+              // Profile Content
+              Expanded(
+                child: BlocConsumer<ProfileBloc, ProfileState>(
+                  listener: (context, state) {
+                    if (state is ProfileUpdateSuccess || state is PasswordChangeSuccess) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state is ProfileUpdateSuccess 
+                              ? state.message 
+                              : (state as PasswordChangeSuccess).message),
+                          backgroundColor: const Color(0xFF059669),
+                        ),
+                      );
+                    } else if (state is ProfileError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state.message),
+                          backgroundColor: const Color(0xFFDC2626),
+                        ),
+                      );
+                    } else if (state is LogoutSuccess) {
+                      context.go('/login');
+                    }
+                  },
+                  builder: (context, state) {
+                    if (state is ProfileLoading) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF059669),
+                        ),
+                      );
+                    }
+                    
+                    if (state is ProfileLoaded) {
+                      return _buildProfileContent(context, state.profile);
+                    }
+                    
+                    return const SizedBox.shrink();
+                  },
                 ),
-                
-                // Profile Content
-                Expanded(
-                  child: BlocConsumer<ProfileBloc, ProfileState>(
-                    listener: (context, state) {
-                      if (state is ProfileUpdateSuccess || state is PasswordChangeSuccess) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(state is ProfileUpdateSuccess 
-                                ? state.message 
-                                : (state as PasswordChangeSuccess).message),
-                            backgroundColor: const Color(0xFF059669),
-                          ),
-                        );
-                      } else if (state is ProfileError) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(state.message),
-                            backgroundColor: const Color(0xFFDC2626),
-                          ),
-                        );
-                      } else if (state is LogoutSuccess) {
-                        Navigator.of(context).pushReplacementNamed('/login');
-                      }
-                    },
-                    builder: (context, state) {
-                      if (state is ProfileLoading) {
-                        return const Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFF059669),
-                          ),
-                        );
-                      }
-                      
-                      if (state is ProfileLoaded) {
-                        return _buildProfileContent(context, state.profile);
-                      }
-                      
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -199,10 +198,10 @@ class ProfileScreen extends StatelessWidget {
           
           const SizedBox(height: 20),
           
-          // Settings Section
-          _buildSettingsSection(context, profile),
+          // // Settings Section
+          // _buildSettingsSection(context, profile),
           
-          const SizedBox(height: 20),
+          // const SizedBox(height: 20),
           
           // Action Buttons
           _buildActionButtons(context),
@@ -575,6 +574,7 @@ class ProfileScreen extends StatelessWidget {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
             ),
             child: const Text('Đăng xuất'),
           ),

@@ -1,29 +1,33 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:logger/logger.dart';
+import 'package:trash_pay/constants/api_config.dart';
 import 'package:trash_pay/domain/entities/based_api_result/api_result_model.dart';
 import 'package:trash_pay/domain/entities/based_api_result/error_result_model.dart';
+import 'package:trash_pay/services/user_prefs.dart';
 import 'package:trash_pay/utils/dio/dio_error_util.dart';
 import 'package:trash_pay/utils/dio/dio_retry_interceptor.dart';
 
 class DioNetwork {
   static DioNetwork? _instance;
   static DioNetwork get instance => _instance ??= DioNetwork._internal();
-  
+
   late Dio _dio;
   final Logger _logger = Logger();
-  
+  final UserPrefs _userPrefs = UserPrefs.I;
+
   DioNetwork._internal() {
     _dio = Dio();
     _setupDio();
   }
 
   void _setupDio() {
-    // Base configuration
+    // Base configuration using ApiConfig
     _dio.options = BaseOptions(
-      connectTimeout: const Duration(milliseconds: 30000),
-      receiveTimeout: const Duration(milliseconds: 30000),
-      sendTimeout: const Duration(milliseconds: 30000),
+      baseUrl: ApiConfig.baseUrl,
+      connectTimeout: ApiConfig.connectTimeout,
+      receiveTimeout: ApiConfig.receiveTimeout,
+      sendTimeout: ApiConfig.sendTimeout,
       headers: _getDefaultHeaders(),
     );
 
@@ -31,9 +35,9 @@ class DioNetwork {
     _dio.interceptors.add(
       RetryInterceptor(
         dio: _dio,
-        options: const RetryOptions(
-          retries: 3,
-          retryInterval: Duration(seconds: 2),
+        options: RetryOptions(
+          retries: ApiConfig.maxRetries,
+          retryInterval: ApiConfig.retryInterval,
         ),
       ),
     );
@@ -52,7 +56,7 @@ class DioNetwork {
     );
 
     // Add auth interceptor
-    _dio.interceptors.add(_AuthInterceptor());
+    _dio.interceptors.add(_AuthInterceptor(_userPrefs));
   }
 
   Map<String, String> _getDefaultHeaders() {
@@ -98,7 +102,7 @@ class DioNetwork {
         options: options,
         cancelToken: cancelToken,
       );
-      
+
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
       return _handleError<T>(e);
@@ -122,7 +126,7 @@ class DioNetwork {
         options: options,
         cancelToken: cancelToken,
       );
-      
+
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
       return _handleError<T>(e);
@@ -146,7 +150,7 @@ class DioNetwork {
         options: options,
         cancelToken: cancelToken,
       );
-      
+
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
       return _handleError<T>(e);
@@ -170,7 +174,7 @@ class DioNetwork {
         options: options,
         cancelToken: cancelToken,
       );
-      
+
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
       return _handleError<T>(e);
@@ -194,7 +198,7 @@ class DioNetwork {
         options: options,
         cancelToken: cancelToken,
       );
-      
+
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
       return _handleError<T>(e);
@@ -221,7 +225,7 @@ class DioNetwork {
         data: formData,
         onSendProgress: onSendProgress,
       );
-      
+
       return _handleResponse<T>(response, fromJson);
     } catch (e) {
       return _handleError<T>(e);
@@ -242,7 +246,7 @@ class DioNetwork {
         onReceiveProgress: onReceiveProgress,
         cancelToken: cancelToken,
       );
-      
+
       return const ApiResultModel.success(data: 'Download completed');
     } catch (e) {
       return _handleError<String>(e);
@@ -262,44 +266,44 @@ class DioNetwork {
           return ApiResultModel.success(data: response.data as T);
         }
       } else {
-                 return ApiResultModel.failure(
-           errorResultEntity: ErrorResultModel(
-             statusCode: response.statusCode ?? 0,
-             message: response.statusMessage ?? 'Unknown error',
-           ),
-         );
+        return ApiResultModel.failure(
+          errorResultEntity: ErrorResultModel(
+            statusCode: response.statusCode ?? 0,
+            message: response.statusMessage ?? 'Unknown error',
+          ),
+        );
       }
     } catch (e) {
       _logger.e('Error parsing response: $e');
-             return ApiResultModel.failure(
-         errorResultEntity: ErrorResultModel(
-           statusCode: 0,
-           message: 'Error parsing response: $e',
-         ),
-       );
+      return ApiResultModel.failure(
+        errorResultEntity: ErrorResultModel(
+          statusCode: 0,
+          message: 'Error parsing response: $e',
+        ),
+      );
     }
   }
 
-     ApiResultModel<T> _handleError<T>(dynamic error) {
-     String errorMessage = 'Unknown error occurred';
-     int statusCode = 0;
+  ApiResultModel<T> _handleError<T>(dynamic error) {
+    String errorMessage = 'Unknown error occurred';
+    int statusCode = 0;
 
-     if (error is DioException) {
-       errorMessage = DioExceptionUtil.handleError(error);
-       statusCode = error.response?.statusCode ?? 0;
-      
+    if (error is DioException) {
+      errorMessage = DioExceptionUtil.handleError(error);
+      statusCode = error.response?.statusCode ?? 0;
+
       _logger.e('DioException: $errorMessage', error: error);
     } else {
       errorMessage = error.toString();
       _logger.e('General error: $errorMessage', error: error);
     }
 
-         return ApiResultModel.failure(
-       errorResultEntity: ErrorResultModel(
-         statusCode: statusCode,
-         message: errorMessage,
-       ),
-     );
+    return ApiResultModel.failure(
+      errorResultEntity: ErrorResultModel(
+        statusCode: statusCode,
+        message: errorMessage,
+      ),
+    );
   }
 
   // Get raw Dio instance if needed
@@ -308,6 +312,20 @@ class DioNetwork {
 
 // Auth interceptor to handle token refresh
 class _AuthInterceptor extends Interceptor {
+  final UserPrefs _userPrefs;
+
+  _AuthInterceptor(this._userPrefs);
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    // Add auth token to all requests
+    final token = _userPrefs.getToken();
+    if (token != null) {
+      options.headers['Authorization'] = 'Bearer $token';
+    }
+    handler.next(options);
+  }
+
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (err.response?.statusCode == 401) {
@@ -317,4 +335,4 @@ class _AuthInterceptor extends Interceptor {
     }
     handler.next(err);
   }
-} 
+}

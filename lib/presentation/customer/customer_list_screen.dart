@@ -51,146 +51,144 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               ],
             ),
           ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                // Professional Header
-                ProfessionalHeaders.list(
-                  title: 'Danh Sách Khách Hàng',
-                  subtitle: 'Quản lý thông tin khách hàng',
-                  onAddPressed: () {
-                    // TODO: Navigate to add customer screen
+          child: Column(
+            children: [
+              // Professional Header
+              ProfessionalHeaders.list(
+                title: 'Danh Sách Khách Hàng',
+                subtitle: 'Quản lý thông tin khách hàng',
+                onAddPressed: () {
+                  // TODO: Navigate to add customer screen
+                },
+              ),
+              
+              // Search bar
+              Container(
+                margin: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFE2E8F0),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: const InputDecoration(
+                    hintText: 'Tìm kiếm khách hàng...',
+                    hintStyle: TextStyle(
+                      color: Color(0xFF94A3B8),
+                      fontSize: 16,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search_rounded,
+                      color: Color(0xFF64748B),
+                      size: 22,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+              
+              // Customer list
+              Expanded(
+                child: BlocConsumer<CustomerBloc, CustomerState>(
+                  listener: (context, state) {
+                    if (state is CustomerOperationSuccess) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state.message),
+                          backgroundColor: const Color(0xFF059669),
+                        ),
+                      );
+                    } else if (state is CustomerError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state.message),
+                          backgroundColor: const Color(0xFFDC2626),
+                        ),
+                      );
+                    }
+                  },
+                  builder: (context, state) {
+                    if (state is CustomerLoading) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF059669),
+                        ),
+                      );
+                    }
+                    
+                    if (state is CustomersLoaded) {
+                      final customers = state.filteredCustomers;
+                      
+                      if (customers.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.people_outline,
+                                size: 64,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Không có khách hàng nào',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Thêm khách hàng mới để bắt đầu',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      
+                      return ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        itemCount: customers.length,
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => CustomerDetailScreen(
+                                    customer: customers[index],
+                                  ),
+                                ),
+                              );
+                            },
+                            child: _buildCustomerCard(customers[index]),
+                          );
+                        },
+                      );
+                    }
+                    
+                    return const SizedBox.shrink();
                   },
                 ),
-                
-                // Search bar
-                Container(
-                  margin: const EdgeInsets.all(20),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFFE2E8F0),
-                      width: 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: const InputDecoration(
-                      hintText: 'Tìm kiếm khách hàng...',
-                      hintStyle: TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 16,
-                      ),
-                      prefixIcon: Icon(
-                        Icons.search_rounded,
-                        color: Color(0xFF64748B),
-                        size: 22,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 16),
-                    ),
-                  ),
-                ),
-                
-                // Customer list
-                Expanded(
-                  child: BlocConsumer<CustomerBloc, CustomerState>(
-                    listener: (context, state) {
-                      if (state is CustomerOperationSuccess) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(state.message),
-                            backgroundColor: const Color(0xFF059669),
-                          ),
-                        );
-                      } else if (state is CustomerError) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(state.message),
-                            backgroundColor: const Color(0xFFDC2626),
-                          ),
-                        );
-                      }
-                    },
-                    builder: (context, state) {
-                      if (state is CustomerLoading) {
-                        return const Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFF059669),
-                          ),
-                        );
-                      }
-                      
-                      if (state is CustomersLoaded) {
-                        final customers = state.filteredCustomers;
-                        
-                        if (customers.isEmpty) {
-                          return Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.people_outline,
-                                  size: 64,
-                                  color: Colors.grey.shade400,
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Không có khách hàng nào',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Thêm khách hàng mới để bắt đầu',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade500,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        }
-                        
-                        return ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          itemCount: customers.length,
-                          itemBuilder: (context, index) {
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (context) => CustomerDetailScreen(
-                                      customer: customers[index],
-                                    ),
-                                  ),
-                                );
-                              },
-                              child: _buildCustomerCard(customers[index]),
-                            );
-                          },
-                        );
-                      }
-                      
-                      return const SizedBox.shrink();
-                    },
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

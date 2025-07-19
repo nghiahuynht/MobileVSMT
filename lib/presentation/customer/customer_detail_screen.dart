@@ -4,8 +4,6 @@ import 'package:trash_pay/domain/entities/customer/customer.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_bloc.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_events.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_state.dart';
-import 'package:trash_pay/presentation/transaction/transaction_history_screen.dart';
-import 'package:trash_pay/presentation/transaction/logics/transaction_bloc.dart';
 import 'package:trash_pay/presentation/widgets/common/professional_header.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -34,87 +32,85 @@ class CustomerDetailScreen extends StatelessWidget {
               ],
             ),
           ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                // Professional Header
-                ProfessionalHeaders.detail(
-                  title: 'Chi Tiết Khách Hàng',
-                  subtitle: 'Thông tin và lịch sử giao dịch',
-                  actionWidget: PopupMenuButton(
-                    icon: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
-                          width: 1,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.more_vert_rounded,
-                        size: 18,
-                        color: Colors.white,
+          child: Column(
+            children: [
+              // Professional Header
+              ProfessionalHeaders.detail(
+                title: 'Chi Tiết Khách Hàng',
+                subtitle: 'Thông tin và lịch sử giao dịch',
+                actionWidget: PopupMenuButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
                       ),
                     ),
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: Row(
-                          children: [
-                            Icon(Icons.edit_outlined, size: 18),
-                            SizedBox(width: 8),
-                            Text('Chỉnh sửa'),
-                          ],
-                        ),
-                      ),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                            SizedBox(width: 8),
-                            Text('Xóa', style: TextStyle(color: Colors.red)),
-                          ],
-                        ),
-                      ),
-                    ],
-                    onSelected: (value) => _handleMenuAction(context, value),
+                    child: const Icon(
+                      Icons.more_vert_rounded,
+                      size: 18,
+                      color: Colors.white,
+                    ),
                   ),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          Icon(Icons.edit_outlined, size: 18),
+                          SizedBox(width: 8),
+                          Text('Chỉnh sửa'),
+                        ],
+                      ),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete_outline, size: 18, color: Colors.red),
+                          SizedBox(width: 8),
+                          Text('Xóa', style: TextStyle(color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ],
+                  onSelected: (value) => _handleMenuAction(context, value),
                 ),
-                
-                // Customer Detail Content
-                Expanded(
-                  child: BlocConsumer<CustomerBloc, CustomerState>(
-                    listener: (context, state) {
-                      if (state is CustomerOperationSuccess) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(state.message),
-                            backgroundColor: const Color(0xFF059669),
-                          ),
-                        );
-                        // Go back after delete success
-                        if (state.message.contains('xóa')) {
-                          Navigator.of(context).pop();
-                        }
-                      } else if (state is CustomerError) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(state.message),
-                            backgroundColor: const Color(0xFFDC2626),
-                          ),
-                        );
+              ),
+              
+              // Customer Detail Content
+              Expanded(
+                child: BlocConsumer<CustomerBloc, CustomerState>(
+                  listener: (context, state) {
+                    if (state is CustomerOperationSuccess) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state.message),
+                          backgroundColor: const Color(0xFF059669),
+                        ),
+                      );
+                      // Go back after delete success
+                      if (state.message.contains('xóa')) {
+                        context.pop();
                       }
-                    },
-                    builder: (context, state) {
-                      return _buildCustomerDetailContent(context);
-                    },
-                  ),
+                    } else if (state is CustomerError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(state.message),
+                          backgroundColor: const Color(0xFFDC2626),
+                        ),
+                      );
+                    }
+                  },
+                  builder: (context, state) {
+                    return _buildCustomerDetailContent(context);
+                  },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -424,17 +420,10 @@ class CustomerDetailScreen extends StatelessWidget {
               const Spacer(),
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => BlocProvider(
-                        create: (context) => TransactionBloc(),
-                        child: TransactionHistoryScreen(
-                          customerId: customer.id,
-                          customerName: customer.name,
-                        ),
-                      ),
-                    ),
-                  );
+                  context.go('/transaction-history', extra: {
+                    'customerId': customer.id,
+                    'customerName': customer.name,
+                  });
                 },
                 child: const Text(
                   'Xem tất cả',
@@ -681,12 +670,12 @@ class CustomerDetailScreen extends StatelessWidget {
         content: Text('Bạn có chắc chắn muốn xóa khách hàng "${customer.name}"?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
+            onPressed: () => context.pop(),
             child: const Text('Hủy'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.of(dialogContext).pop();
+              context.pop();
               context.read<CustomerBloc>().add(DeleteCustomerEvent(customer.id));
             },
             style: ElevatedButton.styleFrom(
@@ -733,7 +722,7 @@ class CustomerDetailScreen extends StatelessWidget {
                 title: const Text('Gọi điện'),
                 subtitle: Text(customer.phone!),
                 onTap: () {
-                  Navigator.pop(context);
+                  context.pop();
                   // TODO: Open phone dialer
                 },
               ),
@@ -754,7 +743,7 @@ class CustomerDetailScreen extends StatelessWidget {
                 title: const Text('Gửi email'),
                 subtitle: Text(customer.email!),
                 onTap: () {
-                  Navigator.pop(context);
+                  context.pop();
                   // TODO: Open email client
                 },
               ),
@@ -774,7 +763,7 @@ class CustomerDetailScreen extends StatelessWidget {
               title: const Text('Gửi tin nhắn'),
               subtitle: const Text('Gửi thông báo trong app'),
               onTap: () {
-                Navigator.pop(context);
+                context.pop();
                 // TODO: Send in-app message
               },
             ),

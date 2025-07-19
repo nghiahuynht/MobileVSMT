@@ -28,153 +28,151 @@ class HomePage extends StatelessWidget {
               ],
             ),
           ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                // Professional Header
-                ProfessionalHeaders.home(
-                  profileWidget: GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const ProfileScreen(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.2),
-                          width: 1,
-                        ),
+          child: Column(
+            children: [
+              // Professional Header
+              ProfessionalHeaders.home(
+                profileWidget: GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileScreen(),
                       ),
-                      child: const Icon(
-                        Icons.account_circle_outlined,
-                        size: 22,
-                        color: Colors.white,
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.2),
+                        width: 1,
                       ),
+                    ),
+                    child: const Icon(
+                      Icons.account_circle_outlined,
+                      size: 22,
+                      color: Colors.white,
                     ),
                   ),
                 ),
-                
-                // Main content area
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 8),
-                        
-                        // Orders Card
-                        _buildProfessionalFeatureCard(
-                          context: context,
-                          title: 'ĐƠN HÀNG',
-                          subtitle: 'Quản lý đơn hàng thu gom',
-                          icon: Icons.assignment_outlined,
-                          iconColor: const Color(0xFF059669),
-                          backgroundColor: const Color(0xFFF0FDF4),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => BlocProvider(
-                                  create: (context) => OrderBloc(),
-                                  child: const OrderScreen(),
-                                ),
+              ),
+              
+              // Main content area
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 8),
+                      
+                      // Orders Card
+                      _buildProfessionalFeatureCard(
+                        context: context,
+                        title: 'ĐƠN HÀNG',
+                        subtitle: 'Quản lý đơn hàng thu gom',
+                        icon: Icons.assignment_outlined,
+                        iconColor: const Color(0xFF059669),
+                        backgroundColor: const Color(0xFFF0FDF4),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => BlocProvider(
+                                create: (context) => OrderBloc(),
+                                child: const OrderScreen(),
                               ),
-                            );
-                          },
-                        ),
-                        
-                        const SizedBox(height: 20),
-                        
-                        // Customer List Card
-                        _buildProfessionalFeatureCard(
-                          context: context,
-                          title: 'KHÁCH HÀNG',
-                          subtitle: 'Danh sách và quản lý khách hàng',
-                          icon: Icons.people_outline,
-                          iconColor: const Color(0xFF0EA5E9),
-                          backgroundColor: const Color(0xFFF0F9FF),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => const CustomerListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      
+                      const SizedBox(height: 20),
+                      
+                      // Customer List Card
+                      _buildProfessionalFeatureCard(
+                        context: context,
+                        title: 'KHÁCH HÀNG',
+                        subtitle: 'Danh sách và quản lý khách hàng',
+                        icon: Icons.people_outline,
+                        iconColor: const Color(0xFF0EA5E9),
+                        backgroundColor: const Color(0xFFF0F9FF),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const CustomerListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      
+                      const SizedBox(height: 20),
+                      
+                      // Reports Card
+                      _buildProfessionalFeatureCard(
+                        context: context,
+                        title: 'BÁO CÁO',
+                        subtitle: 'Thống kê và phân tích doanh thu',
+                        icon: Icons.analytics_outlined,
+                        iconColor: const Color(0xFFDC2626),
+                        backgroundColor: const Color(0xFFFEF2F2),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => BlocProvider(
+                                create: (context) => ReportBloc(),
+                                child: const ReportsScreen(),
                               ),
-                            );
-                          },
-                        ),
-                        
-                        const SizedBox(height: 20),
-                        
-                        // Reports Card
-                        _buildProfessionalFeatureCard(
-                          context: context,
-                          title: 'BÁO CÁO',
-                          subtitle: 'Thống kê và phân tích doanh thu',
-                          icon: Icons.analytics_outlined,
-                          iconColor: const Color(0xFFDC2626),
-                          backgroundColor: const Color(0xFFFEF2F2),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => BlocProvider(
-                                  create: (context) => ReportBloc(),
-                                  child: const ReportsScreen(),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        
-                        // const SizedBox(height: 20),
-                        
-                        // // Settings Card
-                        // _buildProfessionalFeatureCard(
-                        //   context: context,
-                        //   title: 'CÀI ĐẶT',
-                        //   subtitle: 'Cấu hình hệ thống và tài khoản',
-                        //   icon: Icons.settings_outlined,
-                        //   iconColor: const Color(0xFF7C3AED),
-                        //   backgroundColor: const Color(0xFFFAF5FF),
-                        //   onTap: () {
-                        //     // Navigate to settings
-                        //   },
-                        // ),
-                        
-                        const Spacer(),
-                        
-                        // Bottom info
-                        Container(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.info_outline,
-                                size: 16,
+                            ),
+                          );
+                        },
+                      ),
+                      
+                      // const SizedBox(height: 20),
+                      
+                      // // Settings Card
+                      // _buildProfessionalFeatureCard(
+                      //   context: context,
+                      //   title: 'CÀI ĐẶT',
+                      //   subtitle: 'Cấu hình hệ thống và tài khoản',
+                      //   icon: Icons.settings_outlined,
+                      //   iconColor: const Color(0xFF7C3AED),
+                      //   backgroundColor: const Color(0xFFFAF5FF),
+                      //   onTap: () {
+                      //     // Navigate to settings
+                      //   },
+                      // ),
+                      
+                      const Spacer(),
+                      
+                      // Bottom info
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              size: 16,
+                              color: Colors.grey.shade600,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Version 1.0.1.3 • © 2024 TrashPay',
+                              style: TextStyle(
+                                fontSize: 12,
                                 color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w400,
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Version 1.0.1.3 • © 2024 TrashPay',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey.shade600,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

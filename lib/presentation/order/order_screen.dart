@@ -83,7 +83,7 @@ class _OrderScreenState extends State<OrderScreen> {
 
   Widget _buildHeader() {
     return Container(
-      height: 120,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF2D3748), Color(0xFF4A5568)],
@@ -92,87 +92,84 @@ class _OrderScreenState extends State<OrderScreen> {
         ),
       ),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: () => Navigator.pop(context),
-                icon: const Icon(Icons.arrow_back_outlined, color: Colors.white),
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back_outlined, color: Colors.white),
+            ),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.customer != null 
+                      ? 'Đơn hàng cho ${widget.customer!.name}'
+                      : 'Đặt hàng',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: FontFamily.productSans,
+                    ),
+                  ),
+                  Text(
+                    widget.customer != null
+                      ? 'Mã KH: ${widget.customer!.id} • ${widget.customer!.phone ?? "Chưa có SĐT"}'
+                      : 'Chọn sản phẩm để thêm vào đơn hàng',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontFamily: FontFamily.productSans,
+                    ),
+                  ),
+                ],
               ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            BlocBuilder<OrderBloc, OrderState>(
+              builder: (context, state) {
+                int cartItemCount = 0;
+                if (state is OrderScreenState) {
+                  cartItemCount = state.cartItemCount;
+                }
+                
+                return Stack(
                   children: [
-                    Text(
-                      widget.customer != null 
-                        ? 'Đơn hàng cho ${widget.customer!.name}'
-                        : 'Đặt hàng',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: FontFamily.productSans,
-                      ),
+                    IconButton(
+                      onPressed: () => _navigateToCheckout(context),
+                      icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
                     ),
-                    Text(
-                      widget.customer != null
-                        ? 'Mã KH: ${widget.customer!.id} • ${widget.customer!.phone ?? "Chưa có SĐT"}'
-                        : 'Chọn sản phẩm để thêm vào đơn hàng',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontFamily: FontFamily.productSans,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              BlocBuilder<OrderBloc, OrderState>(
-                builder: (context, state) {
-                  int cartItemCount = 0;
-                  if (state is OrderScreenState) {
-                    cartItemCount = state.cartItemCount;
-                  }
-                  
-                  return Stack(
-                    children: [
-                      IconButton(
-                        onPressed: () => _navigateToCheckout(context),
-                        icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
-                      ),
-                      if (cartItemCount > 0)
-                        Positioned(
-                          right: 8,
-                          top: 8,
-                          child: Container(
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
+                    if (cartItemCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '$cartItemCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
                             ),
-                            constraints: const BoxConstraints(
-                              minWidth: 16,
-                              minHeight: 16,
-                            ),
-                            child: Text(
-                              '$cartItemCount',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
+                            textAlign: TextAlign.center,
                           ),
                         ),
-                    ],
-                  );
-                },
-              ),
-            ],
-          ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ],
         ),
       ),
     );
