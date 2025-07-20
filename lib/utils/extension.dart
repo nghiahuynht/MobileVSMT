@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 extension StringUrl on String {
   String urlTrim() {
     String text = trim().toLowerCase();
@@ -10,5 +12,11 @@ extension StringUrl on String {
       text = text.substring(0, text.length - 1);
     }
     return text;
+  }
+}
+
+extension DateTimeExtension on DateTime {
+  String getDateString() {
+    return DateFormat('yyyy-MM-dd').format(this);
   }
 }

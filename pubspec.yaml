@@ -52,6 +52,7 @@ dependencies:
   permission_handler: ^11.3.1
   cached_network_image: ^3.4.1
   sunmi_printer_plus: ^4.1.0
+  rxdart: ^0.27.7  # Add this for better stream handling (optional)
 
 dev_dependencies:
   flutter_test:

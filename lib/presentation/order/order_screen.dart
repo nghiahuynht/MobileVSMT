@@ -25,9 +25,7 @@ class _OrderScreenState extends State<OrderScreen> {
 
   @override
   void initState() {
-    super.initState();
-    context.read<OrderBloc>().add(LoadProductsEvent());
-    
+    super.initState();    
     // Pre-select customer if provided
     if (widget.customer != null) {
       context.read<OrderBloc>().add(SelectCustomerEvent(widget.customer));
@@ -91,87 +89,87 @@ class _OrderScreenState extends State<OrderScreen> {
           end: Alignment.bottomRight,
         ),
       ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back_outlined, color: Colors.white),
-            ),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.customer != null 
-                      ? 'Đơn hàng cho ${widget.customer!.name}'
-                      : 'Đặt hàng',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: FontFamily.productSans,
-                    ),
-                  ),
-                  Text(
-                    widget.customer != null
-                      ? 'Mã KH: ${widget.customer!.id} • ${widget.customer!.phone ?? "Chưa có SĐT"}'
-                      : 'Chọn sản phẩm để thêm vào đơn hàng',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontFamily: FontFamily.productSans,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            BlocBuilder<OrderBloc, OrderState>(
-              builder: (context, state) {
-                int cartItemCount = 0;
-                if (state is OrderScreenState) {
-                  cartItemCount = state.cartItemCount;
-                }
+      // child: SafeArea(
+      //   child: Row(
+      //     children: [
+      //       IconButton(
+      //         onPressed: () => Navigator.pop(context),
+      //         icon: const Icon(Icons.arrow_back_outlined, color: Colors.white),
+      //       ),
+      //       Expanded(
+      //         child: Column(
+      //           mainAxisAlignment: MainAxisAlignment.center,
+      //           crossAxisAlignment: CrossAxisAlignment.start,
+      //           children: [
+      //             Text(
+      //               widget.customer != null 
+      //                 ? 'Đơn hàng cho ${widget.customer!.name}'
+      //                 : 'Đặt hàng',
+      //               style: TextStyle(
+      //                 color: Colors.white,
+      //                 fontSize: 24,
+      //                 fontWeight: FontWeight.bold,
+      //                 fontFamily: FontFamily.productSans,
+      //               ),
+      //             ),
+      //             Text(
+      //               widget.customer != null
+      //                 ? 'Mã KH: ${widget.customer!.id} • ${widget.customer!.phone ?? "Chưa có SĐT"}'
+      //                 : 'Chọn sản phẩm để thêm vào đơn hàng',
+      //               style: TextStyle(
+      //                 color: Colors.white70,
+      //                 fontSize: 14,
+      //                 fontFamily: FontFamily.productSans,
+      //               ),
+      //             ),
+      //           ],
+      //         ),
+      //       ),
+      //       BlocBuilder<OrderBloc, OrderState>(
+      //         builder: (context, state) {
+      //           int cartItemCount = 0;
+      //           if (state is OrderScreenState) {
+      //             cartItemCount = state.cartItemCount;
+      //           }
                 
-                return Stack(
-                  children: [
-                    IconButton(
-                      onPressed: () => _navigateToCheckout(context),
-                      icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
-                    ),
-                    if (cartItemCount > 0)
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 16,
-                            minHeight: 16,
-                          ),
-                          child: Text(
-                            '$cartItemCount',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
-      ),
+      //           return Stack(
+      //             children: [
+      //               IconButton(
+      //                 onPressed: () => _navigateToCheckout(context),
+      //                 icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
+      //               ),
+      //               if (cartItemCount > 0)
+      //                 Positioned(
+      //                   right: 8,
+      //                   top: 8,
+      //                   child: Container(
+      //                     padding: const EdgeInsets.all(2),
+      //                     decoration: BoxDecoration(
+      //                       color: Colors.red,
+      //                       borderRadius: BorderRadius.circular(10),
+      //                     ),
+      //                     constraints: const BoxConstraints(
+      //                       minWidth: 16,
+      //                       minHeight: 16,
+      //                     ),
+      //                     child: Text(
+      //                       '$cartItemCount',
+      //                       style: const TextStyle(
+      //                         color: Colors.white,
+      //                         fontSize: 10,
+      //                         fontWeight: FontWeight.bold,
+      //                       ),
+      //                       textAlign: TextAlign.center,
+      //                     ),
+      //                   ),
+      //                 ),
+      //             ],
+      //           );
+      //         },
+      //       ),
+      //     ],
+      //   ),
+      // ),
     );
   }
 
@@ -191,9 +189,9 @@ class _OrderScreenState extends State<OrderScreen> {
       ),
       child: TextField(
         controller: _searchController,
-        onChanged: (value) {
-          context.read<OrderBloc>().add(SearchProductsEvent(value));
-        },
+        // onChanged: (value) {
+        //   context.read<OrderBloc>().add(SearchProductsEvent(value));
+        // },
         decoration: InputDecoration(
           hintText: 'Tìm kiếm sản phẩm...',
           hintStyle: TextStyle(
@@ -333,7 +331,7 @@ class _OrderScreenState extends State<OrderScreen> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${product.price.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}',
+                  '${(product.priceSale ?? 0).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -376,9 +374,9 @@ class _OrderScreenState extends State<OrderScreen> {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () {
-                    context.read<OrderBloc>().add(
-                      AddToCartEvent(product: product),
-                    );
+                    // context.read<OrderBloc>().add(
+                    //   AddToCartEvent(product: product),
+                    // );
                     
                     // Show success feedback
                     ScaffoldMessenger.of(context).showSnackBar(

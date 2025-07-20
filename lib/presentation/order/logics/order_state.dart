@@ -121,6 +121,11 @@ class OrderListState extends OrderState {
   final String searchQuery;
   final OrderStatus? selectedStatus;
   final bool isLoading;
+  final bool isLoadingMore;
+  final bool hasReachedMax;
+  final int currentPage;
+  final int pageSize;
+  final int totalItem;
 
   OrderListState({
     required this.orders,
@@ -128,6 +133,11 @@ class OrderListState extends OrderState {
     this.searchQuery = '',
     this.selectedStatus,
     this.isLoading = false,
+    this.isLoadingMore = false,
+    this.hasReachedMax = false,
+    this.currentPage = 1,
+    this.pageSize = 10,
+    this.totalItem = 0,
   });
 
   OrderListState copyWith({
@@ -136,6 +146,11 @@ class OrderListState extends OrderState {
     String? searchQuery,
     OrderStatus? selectedStatus,
     bool? isLoading,
+    bool? isLoadingMore,
+    bool? hasReachedMax,
+    int? currentPage,
+    int? pageSize,
+    int? totalItem,
   }) {
     return OrderListState(
       orders: orders ?? this.orders,
@@ -143,6 +158,11 @@ class OrderListState extends OrderState {
       searchQuery: searchQuery ?? this.searchQuery,
       selectedStatus: selectedStatus ?? this.selectedStatus,
       isLoading: isLoading ?? this.isLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      hasReachedMax: hasReachedMax ?? this.hasReachedMax,
+      currentPage: currentPage ?? this.currentPage,
+      pageSize: pageSize ?? this.pageSize,
+      totalItem: totalItem ?? this.totalItem,
     );
   }
 }

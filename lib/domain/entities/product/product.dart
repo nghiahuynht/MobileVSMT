@@ -1,48 +1,88 @@
 class ProductModel {
-  final String id;
-  final String code; // Mã SP như THANG-1, THANG-2
-  final String name;
-  final double price;
+  final int id;
+  final String? code;
+  final String? name;
+  final String? unitCode;
+  final num? priceSale;
   final String? description;
-  final String? category;
-  final String? unit; // đơn vị tính: kg, thùng, lít
-  final bool isActive;
-  final DateTime createdAt;
+  final bool? isActive;
+  final num? vat;
+  final num? priceBox;
+  final String? unitCodeBox;
+  final int? heSoQuyDoi;
 
   const ProductModel({
     required this.id,
-    required this.code,
-    required this.name,
-    required this.price,
+    this.code,
+    this.name,
+    this.unitCode,
+    this.priceSale,
     this.description,
-    this.category,
-    this.unit,
-    this.isActive = true,
-    required this.createdAt,
+    this.isActive,
+    this.vat,
+    this.priceBox,
+    this.unitCodeBox,
+    this.heSoQuyDoi,
   });
 
   ProductModel copyWith({
-    String? id,
+    int? id,
     String? code,
     String? name,
-    double? price,
+    String? unitCode,
+    num? priceSale,
     String? description,
-    String? category,
-    String? unit,
     bool? isActive,
-    DateTime? createdAt,
+    num? vat,
+    num? priceBox,
+    String? unitCodeBox,
+    int? heSoQuyDoi,
   }) {
     return ProductModel(
       id: id ?? this.id,
       code: code ?? this.code,
       name: name ?? this.name,
-      price: price ?? this.price,
+      unitCode: unitCode ?? this.unitCode,
+      priceSale: priceSale ?? this.priceSale,
       description: description ?? this.description,
-      category: category ?? this.category,
-      unit: unit ?? this.unit,
       isActive: isActive ?? this.isActive,
-      createdAt: createdAt ?? this.createdAt,
+      vat: vat ?? this.vat,
+      priceBox: priceBox ?? this.priceBox,
+      unitCodeBox: unitCodeBox ?? this.unitCodeBox,
+      heSoQuyDoi: heSoQuyDoi ?? this.heSoQuyDoi,
     );
+  }
+
+  factory ProductModel.fromJson(Map<String, dynamic> json) {
+    return ProductModel(
+      id: json['id'] as int,
+      code: json['code'] as String?,
+      name: json['name'] as String?,
+      unitCode: json['unitCode'] as String?,
+      priceSale: json['priceSale'] as num?,
+      description: json['description'] as String?,
+      isActive: json['isActive'] as bool?,
+      vat: json['vat'] as num?,
+      priceBox: json['priceBox'] as num?,
+      unitCodeBox: json['unitCodeBox'] as String?,
+      heSoQuyDoi: json['heSoQuyDoi'] as int?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'code': code,
+      'name': name,
+      'unitCode': unitCode,
+      'priceSale': priceSale,
+      'description': description,
+      'isActive': isActive,
+      'vat': vat,
+      'priceBox': priceBox,
+      'unitCodeBox': unitCodeBox,
+      'heSoQuyDoi': heSoQuyDoi,
+    };
   }
 
   @override
@@ -56,6 +96,6 @@ class ProductModel {
 
   @override
   String toString() {
-    return 'ProductModel{id: $id, code: $code, name: $name, price: $price}';
+    return 'ProductModel{id: $id, code: $code, name: $name, priceSale: $priceSale}';
   }
 } 

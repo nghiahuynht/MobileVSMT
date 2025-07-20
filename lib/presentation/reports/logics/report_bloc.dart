@@ -340,7 +340,7 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
     for (int i = 0; i < products.length; i++) {
       final product = products[i];
       final quantitySold = 10 + random.nextInt(50);
-      final revenue = quantitySold * product.price;
+              final revenue = quantitySold * (product.priceSale ?? 0);
       final orderCount = 5 + random.nextInt(20);
       final averageQuantityPerOrder = quantitySold / orderCount;
       final marketShare = (quantitySold / totalProductsSold) * 100;
@@ -350,7 +350,7 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
       final performance = ProductPerformance(
         product: product,
         quantitySold: quantitySold,
-        revenue: revenue,
+        revenue: revenue.toDouble(),
         orderCount: orderCount,
         averageQuantityPerOrder: averageQuantityPerOrder,
         marketShare: marketShare,
@@ -549,15 +549,15 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
 
   List<ProductModel> _generateMockProducts() {
     return [
-      ProductModel(id: '1', code: 'THANG-1', name: 'Thùng rác 20L', price: 45000, category: 'Thùng rác', unit: 'cái', createdAt: DateTime.now()),
-      ProductModel(id: '2', code: 'THANG-2', name: 'Thùng rác 40L', price: 45000, category: 'Thùng rác', unit: 'cái', createdAt: DateTime.now()),
-      ProductModel(id: '3', code: 'THANG-3', name: 'Thùng rác 60L', price: 45000, category: 'Thùng rác', unit: 'cái', createdAt: DateTime.now()),
-      ProductModel(id: '4', code: 'THANG-4', name: 'Thùng rác inox', price: 45000, category: 'Thùng rác', unit: 'cái', createdAt: DateTime.now()),
-      ProductModel(id: '5', code: 'THANG-5', name: 'Thùng rác công cộng', price: 45000, category: 'Thùng rác', unit: 'cái', createdAt: DateTime.now()),
-      ProductModel(id: '6', code: 'THANG-6', name: 'Thùng rác phân loại', price: 45000, category: 'Thùng rác', unit: 'cái', createdAt: DateTime.now()),
-      ProductModel(id: '7', code: 'THANG-7', name: 'Túi rác sinh học', price: 45000, category: 'Túi rác', unit: 'thùng', createdAt: DateTime.now()),
-      ProductModel(id: '8', code: 'THANG-8', name: 'Túi rác tái chế', price: 45000, category: 'Túi rác', unit: 'thùng', createdAt: DateTime.now()),
-      ProductModel(id: '9', code: 'THANG-9', name: 'Phụ kiện thu gom', price: 45000, category: 'Phụ kiện', unit: 'bộ', createdAt: DateTime.now()),
+      ProductModel(id: 1, code: 'THANG-1', name: 'Thùng rác 20L', priceSale: 45000, unitCode: 'cái', isActive: true),
+      ProductModel(id: 2, code: 'THANG-2', name: 'Thùng rác 40L', priceSale: 45000, unitCode: 'cái', isActive: true),
+      ProductModel(id: 3, code: 'THANG-3', name: 'Thùng rác 60L', priceSale: 45000, unitCode: 'cái', isActive: true),
+      ProductModel(id: 4, code: 'THANG-4', name: 'Thùng rác inox', priceSale: 45000, unitCode: 'cái', isActive: true),
+      ProductModel(id: 5, code: 'THANG-5', name: 'Thùng rác công cộng', priceSale: 45000, unitCode: 'cái', isActive: true),
+      ProductModel(id: 6, code: 'THANG-6', name: 'Thùng rác phân loại', priceSale: 45000, unitCode: 'cái', isActive: true),
+      ProductModel(id: 7, code: 'THANG-7', name: 'Túi rác sinh học', priceSale: 45000, unitCode: 'thùng', isActive: true),
+      ProductModel(id: 8, code: 'THANG-8', name: 'Túi rác tái chế', priceSale: 45000, unitCode: 'thùng', isActive: true),
+      ProductModel(id: 9, code: 'THANG-9', name: 'Phụ kiện thu gom', priceSale: 45000, unitCode: 'bộ', isActive: true),
     ];
   }
 

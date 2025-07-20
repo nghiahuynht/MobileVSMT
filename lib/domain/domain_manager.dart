@@ -1,4 +1,5 @@
 import 'package:trash_pay/domain/repository/auth/auth_repository_impl.dart';
+import 'package:trash_pay/domain/repository/order/order_repository_impl.dart';
 import 'package:trash_pay/domain/repository/payment/payment_repository_impl.dart';
 
 class DomainManager {
@@ -11,4 +12,5 @@ class DomainManager {
 
   final auth = AuthRepositoryImpl();
   final payment = PaymentRepositoryImpl();
+  final order = OrderRepositoryImpl();
 }

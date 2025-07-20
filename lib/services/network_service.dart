@@ -90,6 +90,7 @@ class DioNetwork {
   Future<ApiResultModel<T>> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,
+    dynamic data,
     Options? options,
     CancelToken? cancelToken,
     T Function(dynamic)? fromJson,

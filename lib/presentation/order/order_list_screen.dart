@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:trash_pay/services/receipt_printer_service.dart';
+import 'package:trash_pay/constants/strings.dart';
 import '../../constants/font_family.dart';
 import '../../domain/entities/order/order.dart';
-import '../../domain/entities/order/order_item.dart';
 import 'logics/order_bloc.dart';
 import 'logics/order_events.dart';
 import 'logics/order_state.dart';
 import 'order_screen.dart';
+import '../order_detail/order_detail_screen.dart';
+import '../widgets/common/professional_header.dart';
 
 class OrderListScreen extends StatefulWidget {
   const OrderListScreen({super.key});
@@ -18,25 +19,55 @@ class OrderListScreen extends StatefulWidget {
 
 class _OrderListScreenState extends State<OrderListScreen> {
   final TextEditingController _searchController = TextEditingController();
-  OrderStatus? _selectedStatus;
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _fromDateController = TextEditingController();
+  final TextEditingController _toDateController = TextEditingController();
+  
   bool _showFilter = false;
+  String? _selectedArea;
+  String? _selectedRoute;
+  String? _selectedSalesUser;
+  bool _filterByDate = false;
+  int _dateType = 1; // 1: Theo ngày tạo, 2: Theo ngày duyệt
+  DateTime? _fromDate;
+  DateTime? _toDate;
 
   @override
   void initState() {
     super.initState();
-    // Load orders when screen initializes
-    context.read<OrderBloc>().add(LoadOrdersEvent());
+    context.read<OrderBloc>().add(InitOrderEvent());
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
+    _fromDateController.dispose();
+    _toDateController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    final state = context.read<OrderBloc>().state;
+    if (state is OrderListState) {
+      if (_isBottom && !state.hasReachedMax && !state.isLoadingMore) {
+        context.read<OrderBloc>().add(LoadMoreOrdersEvent());
+      }
+    }
+  }
+
+  bool get _isBottom {
+    if (!_scrollController.hasClients) return false;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.offset;
+    return currentScroll >= (maxScroll * 0.9); // Load when reach 90% of scroll
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: Colors.grey[50],
       body: BlocListener<OrderBloc, OrderState>(
         listener: (context, state) {
@@ -53,10 +84,10 @@ class _OrderListScreenState extends State<OrderListScreen> {
           children: [
             // Header
             _buildHeader(),
-            
+
             // Search and Filter Section
             _buildSearchAndFilterSection(),
-            
+
             // Order List
             Expanded(
               child: _buildOrderList(),
@@ -83,59 +114,29 @@ class _OrderListScreenState extends State<OrderListScreen> {
   }
 
   Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Color(0xFF2D3748), Color(0xFF4A5568)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back_outlined, color: Colors.white),
+    return ProfessionalHeaders.list(
+      title: 'Danh sách đơn hàng',
+      subtitle: 'Quản lý và theo dõi đơn hàng',
+      onBackPressed: () => Navigator.pop(context),
+      customActionWidget: GestureDetector(
+        onTap: () {
+          _showFilterBottomSheet();
+        },
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+              width: 1,
             ),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Danh sách đơn hàng',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: FontFamily.productSans,
-                    ),
-                  ),
-                  Text(
-                    'Quản lý và theo dõi đơn hàng',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontFamily: FontFamily.productSans,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            IconButton(
-              onPressed: () {
-                setState(() {
-                  _showFilter = !_showFilter;
-                });
-              },
-              icon: Icon(
-                _showFilter ? Icons.filter_alt : Icons.filter_alt_outlined,
-                color: Colors.white,
-              ),
-            ),
-          ],
+          ),
+          child: Icon(
+            Icons.filter_alt_outlined,
+            size: 22,
+            color: Colors.white,
+          ),
         ),
       ),
     );
@@ -170,7 +171,8 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   color: Colors.grey[500],
                   fontFamily: FontFamily.productSans,
                 ),
-                prefixIcon: Icon(Icons.search_outlined, color: Colors.grey[500]),
+                prefixIcon:
+                    Icon(Icons.search_outlined, color: Colors.grey[500]),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -179,146 +181,817 @@ class _OrderListScreenState extends State<OrderListScreen> {
               ),
             ),
           ),
-          
-          // Filter Section
-          if (_showFilter) ...[
-            const SizedBox(height: 16),
-            _buildFilterSection(),
-          ],
         ],
       ),
     );
   }
 
-  Widget _buildFilterSection() {
+  void _showFilterBottomSheet() {
+    // Create temporary variables for the bottom sheet
+    String? tempSelectedArea = _selectedArea;
+    String? tempSelectedRoute = _selectedRoute;
+    String? tempSelectedSalesUser = _selectedSalesUser;
+    bool tempFilterByDate = _filterByDate;
+    int tempDateType = _dateType;
+    DateTime? tempFromDate = _fromDate;
+    DateTime? tempToDate = _toDate;
+    TextEditingController tempFromDateController = TextEditingController();
+    TextEditingController tempToDateController = TextEditingController();
+    
+    // Initialize temp controllers with current values
+    if (_fromDate != null) {
+      tempFromDateController.text = '${_fromDate!.day.toString().padLeft(2, '0')}/${_fromDate!.month.toString().padLeft(2, '0')}/${_fromDate!.year}';
+    }
+    if (_toDate != null) {
+      tempToDateController.text = '${_toDate!.day.toString().padLeft(2, '0')}/${_toDate!.month.toString().padLeft(2, '0')}/${_toDate!.year}';
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.85,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Handle bar
+                  Container(
+                    margin: const EdgeInsets.only(top: 8),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Bộ lọc',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: FontFamily.productSans,
+                          ),
+                        ),
+                        const Spacer(),
+                        TextButton(
+                          onPressed: () {
+                            setModalState(() {
+                              tempSelectedArea = null;
+                              tempSelectedRoute = null;
+                              tempSelectedSalesUser = null;
+                              tempFilterByDate = false;
+                              tempDateType = 1;
+                              tempFromDate = null;
+                              tempToDate = null;
+                              tempFromDateController.clear();
+                              tempToDateController.clear();
+                            });
+                          },
+                          child: Text(
+                            'Xóa tất cả',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontFamily: FontFamily.productSans,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const Divider(height: 1),
+                  
+                  // Filter content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Area, Route Row
+                          Row(
+                            children: [
+                              // Area Filter
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.location_on_outlined, size: 16, color: Colors.grey[600]),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Khu vực',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            fontFamily: FontFamily.productSans,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _buildModalDropdownField(
+                                      value: tempSelectedArea,
+                                      hint: 'Chọn khu vực',
+                                      items: ['Khu vực 1', 'Khu vực 2', 'Khu vực 3'],
+                                      onChanged: (value) {
+                                        setModalState(() {
+                                          tempSelectedArea = value;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              
+                              // Route Filter
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(Icons.route_outlined, size: 16, color: Colors.grey[600]),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          'Tuyến',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            fontFamily: FontFamily.productSans,
+                                            color: Colors.grey[700],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _buildModalDropdownField(
+                                      value: tempSelectedRoute,
+                                      hint: 'Chọn Tuyến',
+                                      items: ['Tuyến A', 'Tuyến B', 'Tuyến C'],
+                                      onChanged: (value) {
+                                        setModalState(() {
+                                          tempSelectedRoute = value;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          
+                          const SizedBox(height: 16),
+                          
+                          // Sales User Filter
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Nhân viên bán hàng',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: FontFamily.productSans,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              _buildModalDropdownField(
+                                value: tempSelectedSalesUser,
+                                hint: 'Chọn Nhân viên bán hàng',
+                                items: ['Nguyễn Văn A', 'Trần Thị B', 'Lê Văn C'],
+                                onChanged: (value) {
+                                  setModalState(() {
+                                    tempSelectedSalesUser = value;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                          
+                          const SizedBox(height: 20),
+                          
+                          // Date Filter Section
+                          Row(
+                            children: [
+                              Icon(Icons.calendar_today_outlined, size: 16, color: Colors.grey[600]),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Theo ngày',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: FontFamily.productSans,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                              const Spacer(),
+                              Switch(
+                                value: tempFilterByDate,
+                                onChanged: (value) {
+                                  setModalState(() {
+                                    tempFilterByDate = value;
+                                    if (!value) {
+                                      tempFromDate = null;
+                                      tempToDate = null;
+                                      tempFromDateController.clear();
+                                      tempToDateController.clear();
+                                    }
+                                  });
+                                },
+                                activeColor: const Color(0xFF059669),
+                              ),
+                            ],
+                          ),
+                          
+                          if (tempFilterByDate) ...[
+                            const SizedBox(height: 16),
+                            
+                            // Date Type Selection
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF059669).withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: const Color(0xFF059669).withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Loại ngày',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: FontFamily.productSans,
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildModalDateTypeOption(
+                                          title: 'Theo ngày tạo',
+                                          value: 1,
+                                          groupValue: tempDateType,
+                                          onChanged: (value) {
+                                            setModalState(() {
+                                              tempDateType = value!;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: _buildModalDateTypeOption(
+                                          title: 'Theo ngày duyệt',
+                                          value: 2,
+                                          groupValue: tempDateType,
+                                          onChanged: (value) {
+                                            setModalState(() {
+                                              tempDateType = value!;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            
+                            const SizedBox(height: 16),
+                            
+                            Row(
+                              children: [
+                                // From Date
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.date_range_outlined, size: 16, color: Colors.grey[600]),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Từ ngày',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              fontFamily: FontFamily.productSans,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      _buildModalDateField(
+                                        controller: tempFromDateController,
+                                        hint: '14/07/2025',
+                                        onTap: () async {
+                                          final picked = await _selectModalDate(
+                                            context,
+                                            tempFromDate ?? DateTime.now(),
+                                            DateTime(2020),
+                                            DateTime.now(),
+                                          );
+                                          if (picked != null) {
+                                            setModalState(() {
+                                              tempFromDate = picked;
+                                              tempFromDateController.text = '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                
+                                // To Date
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.date_range_outlined, size: 16, color: Colors.grey[600]),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'Đến ngày',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              fontFamily: FontFamily.productSans,
+                                              color: Colors.grey[700],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      _buildModalDateField(
+                                        controller: tempToDateController,
+                                        hint: '20/07/2025',
+                                        onTap: () async {
+                                          final picked = await _selectModalDate(
+                                            context,
+                                            tempToDate ?? DateTime.now(),
+                                            tempFromDate ?? DateTime(2020),
+                                            DateTime.now(),
+                                          );
+                                          if (picked != null) {
+                                            setModalState(() {
+                                              tempToDate = picked;
+                                              tempToDateController.text = '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+                                            });
+                                          }
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Bottom buttons
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border(
+                        top: BorderSide(color: Colors.grey[200]!),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              side: BorderSide(color: Colors.grey[300]!),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              'Hủy',
+                              style: TextStyle(
+                                fontFamily: FontFamily.productSans,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // Apply filters
+                              setState(() {
+                                _selectedArea = tempSelectedArea;
+                                _selectedRoute = tempSelectedRoute;
+                                _selectedSalesUser = tempSelectedSalesUser;
+                                _filterByDate = tempFilterByDate;
+                                _dateType = tempDateType;
+                                _fromDate = tempFromDate;
+                                _toDate = tempToDate;
+                                _fromDateController.text = tempFromDateController.text;
+                                _toDateController.text = tempToDateController.text;
+                              });
+                              
+                              // Call API with filters
+                              context.read<OrderBloc>().add(FilterOrdersByMultipleCriteriaEvent(
+                                areaSaleCode: tempSelectedArea,
+                                routeSaleCode: tempSelectedRoute,
+                                saleUserCode: tempSelectedSalesUser,
+                                dateType: tempFilterByDate ? tempDateType : null,
+                                fromDate: tempFilterByDate ? tempFromDate : null,
+                                toDate: tempFilterByDate ? tempToDate : null,
+                              ));
+                              
+                              Navigator.pop(context);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF059669),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              'Áp dụng lọc',
+                              style: TextStyle(
+                                fontFamily: FontFamily.productSans,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    ).then((_) {
+      // Cleanup temp controllers
+      tempFromDateController.dispose();
+      tempToDateController.dispose();
+    });
+  }
+
+  // Helper widgets for bottom sheet
+  Widget _buildModalDropdownField({
+    required String? value,
+    required String hint,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.grey[50],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Lọc theo trạng thái',
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          hint: Text(
+            hint,
             style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+              color: Colors.grey[500],
+              fontSize: 14,
               fontFamily: FontFamily.productSans,
             ),
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _buildFilterChip('Tất cả', null),
-              _buildFilterChip('Đã duyệt', OrderStatus.confirmed),
-              _buildFilterChip('Đã hủy', OrderStatus.cancelled),
-              _buildFilterChip('Hoàn thành', OrderStatus.completed),
-              _buildFilterChip('Chờ xác nhận', OrderStatus.pending),
-            ],
-          ),
-        ],
+          isExpanded: true,
+          items: items.map((String item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Text(
+                item,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontFamily: FontFamily.productSans,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: onChanged,
+          icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
+        ),
       ),
     );
   }
 
-  Widget _buildFilterChip(String label, OrderStatus? status) {
-    final isSelected = _selectedStatus == status;
-    return FilterChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.white : Colors.grey[700],
-          fontFamily: FontFamily.productSans,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+  Widget _buildModalDateField({
+    required TextEditingController controller,
+    required String hint,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey[300]!),
+          borderRadius: BorderRadius.circular(8),
+          color: Colors.grey[50],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                controller.text.isEmpty ? hint : controller.text,
+                style: TextStyle(
+                  color: controller.text.isEmpty ? Colors.grey[500] : Colors.black87,
+                  fontSize: 14,
+                  fontFamily: FontFamily.productSans,
+                ),
+              ),
+            ),
+            Icon(Icons.calendar_today, size: 18, color: Colors.grey[600]),
+          ],
         ),
       ),
-      selected: isSelected,
-      onSelected: (selected) {
-        setState(() {
-          _selectedStatus = selected ? status : null;
-        });
-        context.read<OrderBloc>().add(FilterOrdersByStatusEvent(status));
-      },
-      backgroundColor: Colors.grey[100],
-      selectedColor: const Color(0xFF059669),
-      checkmarkColor: Colors.white,
-      side: BorderSide(
-        color: isSelected ? const Color(0xFF059669) : Colors.grey[300]!,
-        width: 1,
+    );
+  }
+
+  Widget _buildModalDateTypeOption({
+    required String title,
+    required int value,
+    required int groupValue,
+    required ValueChanged<int?> onChanged,
+  }) {
+    final isSelected = value == groupValue;
+    return GestureDetector(
+      onTap: () => onChanged(value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF059669) : Colors.white,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF059669) : Colors.grey[300]!,
+            width: 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected ? Colors.white : Colors.transparent,
+                border: Border.all(
+                  color: isSelected ? Colors.white : Colors.grey[400]!,
+                  width: 2,
+                ),
+              ),
+              child: isSelected
+                  ? Center(
+                      child: Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFF059669),
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected ? Colors.white : Colors.grey[700],
+                  fontFamily: FontFamily.productSans,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Future<DateTime?> _selectModalDate(
+    BuildContext context,
+    DateTime initialDate,
+    DateTime firstDate,
+    DateTime lastDate,
+  ) async {
+    return await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: firstDate,
+      lastDate: lastDate,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: const Color(0xFF059669),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 
   Widget _buildOrderList() {
-    return BlocBuilder<OrderBloc, OrderState>(
-      builder: (context, state) {
-        if (state is OrderLoading) {
-          return const Center(
-            child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
-            ),
-          );
-        }
-
-        if (state is OrderListState) {
-          if (state.filteredOrders.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.receipt_long_outlined,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Không có đơn hàng nào',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                      fontFamily: FontFamily.productSans,
-                    ),
-                  ),
-                  if (state.searchQuery.isNotEmpty || _selectedStatus != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'Thử thay đổi bộ lọc hoặc tìm kiếm',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[500],
-                        fontFamily: FontFamily.productSans,
-                      ),
-                    ),
-                  ],
-                ],
+    return SingleChildScrollView(
+      controller: _scrollController,
+      child: BlocBuilder<OrderBloc, OrderState>(
+        builder: (context, state) {
+          if (state is OrderLoading) {
+            return const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
               ),
             );
           }
+      
+          if (state is OrderListState) {
+            return Column(
+              children: [
+                // Order count summary
+                if (state.filteredOrders.isNotEmpty)
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF059669).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: const Color(0xFF059669).withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.receipt_long,
+                          size: 20,
+                          color: const Color(0xFF059669),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Hiển thị ${state.filteredOrders.length} trong tổng số ${state.totalItem} đơn hàng',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF059669),
+                            fontFamily: FontFamily.productSans,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: state.filteredOrders.length,
-            itemBuilder: (context, index) {
-              final order = state.filteredOrders[index];
-              return _buildOrderCard(order);
-            },
-          );
-        }
-
-        return const SizedBox.shrink();
-      },
+                // Order list
+                if (state.filteredOrders.isEmpty)
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.receipt_long_outlined,
+                          size: 64,
+                          color: Colors.grey[400],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Không có đơn hàng nào',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                            fontFamily: FontFamily.productSans,
+                          ),
+                        ),
+                        if (state.searchQuery.isNotEmpty ||
+                            _selectedArea != null ||
+                            _selectedRoute != null ||
+                            _selectedSalesUser != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            'Thử thay đổi bộ lọc hoặc tìm kiếm',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[500],
+                              fontFamily: FontFamily.productSans,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  )
+                else ...[
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: state.filteredOrders.length,
+                    itemBuilder: (context, index) {
+                      final order = state.filteredOrders[index];
+                      return _buildOrderCard(order);
+                    },
+                  ),
+                  
+                  // Loading more indicator
+                  if (state.isLoadingMore)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
+                        ),
+                      ),
+                    ),
+                  
+                  // End of list indicator
+                  if (state.hasReachedMax && state.filteredOrders.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.grey[300])),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'Đã hiển thị tất cả đơn hàng',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                                fontFamily: FontFamily.productSans,
+                              ),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: Colors.grey[300])),
+                        ],
+                      ),
+                    ),
+                ],
+              ],
+            );
+          }
+      
+          return const SizedBox.shrink();
+        },
+      ),
     );
   }
 
@@ -340,7 +1013,6 @@ class _OrderListScreenState extends State<OrderListScreen> {
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            // Navigate to order detail
             _showOrderDetail(order);
           },
           borderRadius: BorderRadius.circular(12),
@@ -357,7 +1029,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Đơn hàng #${order.orderNumber}',
+                            'Đơn hàng #${order.code}',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -366,7 +1038,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Tạo lúc: ${_formatDateTime(order.createdAt)}',
+                            'Tạo lúc: ${_formatDateTime(order.createdDate)}',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[600],
@@ -376,57 +1048,71 @@ class _OrderListScreenState extends State<OrderListScreen> {
                         ],
                       ),
                     ),
-                    _buildStatusChip(order.status),
+                    _buildStatusChip(order.orderStatus),
                   ],
                 ),
-                
+
                 const SizedBox(height: 12),
-                
-                // Customer info
-                if (order.customer != null) ...[
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.person_outline,
-                        size: 16,
-                        color: Colors.grey[600],
+
+                // Customer info - Enhanced with better styling
+                if (order.customerName != null &&
+                    order.customerName!.isNotEmpty)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF059669).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: const Color(0xFF059669).withOpacity(0.2),
+                        width: 1,
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          order.customer!.name,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[700],
-                            fontFamily: FontFamily.productSans,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.person,
+                          size: 18,
+                          color: const Color(0xFF059669),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Khách hàng',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: const Color(0xFF059669),
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: FontFamily.productSans,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                order.customerName!,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[800],
+                                  fontFamily: FontFamily.productSans,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                ],
-                
+                const SizedBox(height: 8),
+
                 // Order summary
                 Row(
                   children: [
-                    Icon(
-                      Icons.shopping_basket_outlined,
-                      size: 16,
-                      color: Colors.grey[600],
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${order.itemCount} sản phẩm',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                        fontFamily: FontFamily.productSans,
-                      ),
-                    ),
                     const Spacer(),
                     Text(
-                      'Tổng: ${_formatCurrency(order.total)}',
+                      'Tổng: ${_formatCurrency(order.totalNoVAT?.toDouble())}',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -445,54 +1131,19 @@ class _OrderListScreenState extends State<OrderListScreen> {
   }
 
   Widget _buildStatusChip(OrderStatus status) {
-    Color backgroundColor;
-    Color textColor;
-    IconData icon;
-
-    switch (status) {
-      case OrderStatus.confirmed:
-        backgroundColor = const Color(0xFF059669);
-        textColor = Colors.white;
-        icon = Icons.check_circle_outline;
-        break;
-      case OrderStatus.cancelled:
-        backgroundColor = const Color(0xFFDC2626);
-        textColor = Colors.white;
-        icon = Icons.cancel_outlined;
-        break;
-      case OrderStatus.completed:
-        backgroundColor = const Color(0xFF0EA5E9);
-        textColor = Colors.white;
-        icon = Icons.done_all;
-        break;
-      case OrderStatus.pending:
-        backgroundColor = const Color(0xFFF59E0B);
-        textColor = Colors.white;
-        icon = Icons.schedule;
-        break;
-      case OrderStatus.processing:
-        backgroundColor = const Color(0xFF8B5CF6);
-        textColor = Colors.white;
-        icon = Icons.pending;
-        break;
-      case OrderStatus.draft:
-        backgroundColor = Colors.grey[300]!;
-        textColor = Colors.grey[700]!;
-        icon = Icons.edit_outlined;
-        break;
-    }
+    Color textColor = Colors.white;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: backgroundColor,
+        color: status.color,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            icon,
+            status.icon,
             size: 14,
             color: textColor,
           ),
@@ -511,576 +1162,31 @@ class _OrderListScreenState extends State<OrderListScreen> {
     );
   }
 
-  String _formatDateTime(DateTime dateTime) {
+  String _formatDateTime(DateTime? dateTime) {
+    if (dateTime == null) {
+      return Strings.defaultEmpty;
+    }
+
     return '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
-  String _formatCurrency(double amount) {
+  String _formatCurrency(double? amount) {
+    if (amount == null) {
+      return Strings.defaultEmpty;
+    }
+
     return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ';
   }
 
   String _getStatusDisplayName(OrderStatus status) {
-    switch (status) {
-      case OrderStatus.draft:
-        return 'Đang soạn thảo';
-      case OrderStatus.pending:
-        return 'Chờ xác nhận';
-      case OrderStatus.confirmed:
-        return 'Đã xác nhận';
-      case OrderStatus.processing:
-        return 'Đang xử lý';
-      case OrderStatus.completed:
-        return 'Hoàn thành';
-      case OrderStatus.cancelled:
-        return 'Đã hủy';
-    }
-  }
-
-  Widget _buildPrintButton(OrderModel order) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF059669),
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF059669).withOpacity(0.3),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showPrintOptions(order),
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.print_outlined,
-                  color: Colors.white,
-                  size: 16,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  'In',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: FontFamily.productSans,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showPrintOptions(OrderModel order) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Handle bar
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Text(
-                    'Chọn loại hóa đơn',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: FontFamily.productSans,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  
-                  // Nút in hóa đơn đầy đủ
-                  _buildPrintOptionButton(
-                    title: 'Hóa đơn đầy đủ',
-                    subtitle: 'In chi tiết tất cả thông tin',
-                    icon: Icons.receipt_long,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _printFullReceipt(order);
-                    },
-                  ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  // Nút in hóa đơn đơn giản
-                  _buildPrintOptionButton(
-                    title: 'Hóa đơn đơn giản',
-                    subtitle: 'In thông tin cơ bản',
-                    icon: Icons.receipt,
-                    onTap: () {
-                      Navigator.pop(context);
-                      _printSimpleReceipt(order);
-                    },
-                  ),
-                  
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPrintOptionButton({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF059669),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: Colors.white,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: FontFamily.productSans,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                          fontFamily: FontFamily.productSans,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: Colors.grey[400],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _printFullReceipt(OrderModel order) async {
-    _showPrintingDialog();
-    
-    try {
-      final printerService = ReceiptPrinterService();
-      final success = await printerService.printReceipt(order);
-      
-      Navigator.pop(context); // Đóng dialog in
-      
-      if (success) {
-        _showSuccessMessage('In hóa đơn thành công!');
-      } else {
-        _showErrorMessage('Lỗi khi in hóa đơn. Vui lòng kiểm tra máy in.');
-      }
-    } catch (e) {
-      Navigator.pop(context); // Đóng dialog in
-      _showErrorMessage('Lỗi: $e');
-    }
-  }
-
-  Future<void> _printSimpleReceipt(OrderModel order) async {
-    _showPrintingDialog();
-    
-    try {
-      final printerService = ReceiptPrinterService();
-      final success = await printerService.printSimpleReceipt(order);
-      
-      Navigator.pop(context); // Đóng dialog in
-      
-      if (success) {
-        _showSuccessMessage('In hóa đơn đơn giản thành công!');
-      } else {
-        _showErrorMessage('Lỗi khi in hóa đơn. Vui lòng kiểm tra máy in.');
-      }
-    } catch (e) {
-      Navigator.pop(context); // Đóng dialog in
-      _showErrorMessage('Lỗi: $e');
-    }
-  }
-
-  void _showPrintingDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        content: Row(
-          children: [
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              'Đang in hóa đơn...',
-              style: TextStyle(
-                fontFamily: FontFamily.productSans,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showSuccessMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFF059669),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  void _showErrorMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
+    return status.statusDisplayName;
   }
 
   void _showOrderDetail(OrderModel order) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _buildOrderDetailSheet(order),
-    );
-  }
-
-  Widget _buildOrderDetailSheet(OrderModel order) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          
-          // Header
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Đơn hàng #${order.orderNumber}',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: FontFamily.productSans,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Tạo lúc: ${_formatDateTime(order.createdAt)}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                          fontFamily: FontFamily.productSans,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  children: [
-                    _buildStatusChip(order.status),
-                    const SizedBox(height: 8),
-                    _buildPrintButton(order),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          
-          const Divider(height: 1),
-          
-          // Content
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Customer info
-                  if (order.customer != null) ...[
-                    Text(
-                      'Thông tin khách hàng',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: FontFamily.productSans,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildInfoRow('Tên', order.customer!.name),
-                    if (order.customer!.phone != null)
-                      _buildInfoRow('SĐT', order.customer!.phone!),
-                    if (order.customer!.address != null)
-                      _buildInfoRow('Địa chỉ', order.customer!.address!),
-                    const SizedBox(height: 20),
-                  ],
-                  
-                  // Order items
-                  Text(
-                    'Sản phẩm (${order.itemCount})',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: FontFamily.productSans,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ...order.items.map((item) => _buildOrderItemTile(item)),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Order summary
-                  Text(
-                    'Tổng kết',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      fontFamily: FontFamily.productSans,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildSummaryRow('Tổng tiền hàng', order.subtotal),
-                  if (order.discount > 0)
-                    _buildSummaryRow('Giảm giá', -order.discount),
-                  if (order.tax > 0)
-                    _buildSummaryRow('Thuế', order.tax),
-                  const Divider(),
-                  _buildSummaryRow('Tổng thanh toán', order.total, isTotal: true),
-                  
-                  if (order.notes != null && order.notes!.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    Text(
-                      'Ghi chú',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        fontFamily: FontFamily.productSans,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[50],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        order.notes!,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                          fontFamily: FontFamily.productSans,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ],
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => OrderDetailScreen(order: order),
       ),
     );
   }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(
-              '$label:',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
-                fontFamily: FontFamily.productSans,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[800],
-                fontFamily: FontFamily.productSans,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOrderItemTile(OrderItemModel item) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.product.name,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: FontFamily.productSans,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '${item.quantity} x ${_formatCurrency(item.unitPrice)}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontFamily: FontFamily.productSans,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            _formatCurrency(item.subtotal),
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF059669),
-              fontFamily: FontFamily.productSans,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryRow(String label, double amount, {bool isTotal = false}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: isTotal ? 16 : 14,
-                fontWeight: isTotal ? FontWeight.w600 : FontWeight.w400,
-                fontFamily: FontFamily.productSans,
-              ),
-            ),
-          ),
-          Text(
-            _formatCurrency(amount),
-            style: TextStyle(
-              fontSize: isTotal ? 16 : 14,
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
-              color: isTotal ? const Color(0xFF059669) : Colors.grey[800],
-              fontFamily: FontFamily.productSans,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-} 
+}

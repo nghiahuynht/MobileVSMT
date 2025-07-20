@@ -475,7 +475,7 @@ class _ReportsScreenState extends State<ReportsScreen> with TickerProviderStateM
               ),
               StatisticTile(
                 title: 'Sản phẩm bán chạy',
-                value: productReport.bestPerformer.product.code,
+                value: productReport.bestPerformer.product.code ?? '',
                 subtitle: '${productReport.bestPerformer.quantitySold} đã bán',
                 icon: Icons.star_outline,
                 iconColor: const Color(0xFF7C3AED),

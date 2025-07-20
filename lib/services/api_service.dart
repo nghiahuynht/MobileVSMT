@@ -130,19 +130,6 @@ class ApiService {
     );
   }
   
-  Future<ApiResultModel<T>> logout<T>({T Function(dynamic)? fromJson}) {
-    return post<T>(
-      ApiConfig.logoutEndpoint,
-      fromJson: fromJson,
-    );
-  }
-  
-  Future<ApiResultModel<T>> refreshToken<T>({T Function(dynamic)? fromJson}) {
-    return post<T>(
-      ApiConfig.refreshTokenEndpoint,
-      fromJson: fromJson,
-    );
-  }
   
   // Profile endpoints
   Future<ApiResultModel<T>> getProfile<T>({T Function(dynamic)? fromJson}) {
@@ -167,6 +154,18 @@ class ApiService {
   Future<ApiResultModel<T>> getUnits<T>({T Function(dynamic)? fromJson}) {
     return get<T>(
       ApiConfig.unitsEndpoint,
+      fromJson: fromJson,
+    );
+  }
+  
+  // Products endpoints
+  Future<ApiResultModel<T>> getProducts<T>({
+    Map<String, dynamic>? queryParameters,
+    T Function(dynamic)? fromJson,
+  }) {
+    return get<T>(
+      ApiConfig.productsEndpoint,
+      queryParameters: queryParameters,
       fromJson: fromJson,
     );
   }

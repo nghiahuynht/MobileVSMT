@@ -1,44 +1,7 @@
-import '../../../domain/entities/product/product.dart';
 import '../../../domain/entities/customer/customer.dart';
 import '../../../domain/entities/order/order.dart';
 
 abstract class OrderEvent {}
-
-// Product related events
-class LoadProductsEvent extends OrderEvent {}
-
-class SearchProductsEvent extends OrderEvent {
-  final String query;
-  SearchProductsEvent(this.query);
-}
-
-// Cart management events
-class AddToCartEvent extends OrderEvent {
-  final ProductModel product;
-  final int quantity;
-
-  AddToCartEvent({
-    required this.product,
-    this.quantity = 1,
-  });
-}
-
-class RemoveFromCartEvent extends OrderEvent {
-  final String productId;
-  RemoveFromCartEvent(this.productId);
-}
-
-class UpdateCartItemQuantityEvent extends OrderEvent {
-  final String productId;
-  final int quantity;
-
-  UpdateCartItemQuantityEvent({
-    required this.productId,
-    required this.quantity,
-  });
-}
-
-class ClearCartEvent extends OrderEvent {}
 
 // Customer selection
 class SelectCustomerEvent extends OrderEvent {
@@ -53,7 +16,7 @@ class CreateOrderEvent extends OrderEvent {
 }
 
 // Order management
-class LoadOrdersEvent extends OrderEvent {}
+class InitOrderEvent extends OrderEvent {}
 
 class LoadOrderDetailEvent extends OrderEvent {
   final String orderId;
@@ -86,4 +49,32 @@ class FilterOrdersByStatusEvent extends OrderEvent {
   FilterOrdersByStatusEvent(this.status);
 }
 
-class ClearOrderFiltersEvent extends OrderEvent {} 
+class ClearOrderFiltersEvent extends OrderEvent {}
+
+// Pagination events
+class LoadMoreOrdersEvent extends OrderEvent {}
+
+class RefreshOrdersEvent extends OrderEvent {}
+
+class GetOrderDetailEvent extends OrderEvent {
+  final String orderId;
+  GetOrderDetailEvent(this.orderId);
+}
+
+class FilterOrdersByMultipleCriteriaEvent extends OrderEvent {
+  final String? areaSaleCode;
+  final String? routeSaleCode;
+  final String? saleUserCode;
+  final int? dateType; // 1: Theo ngày tạo, 2: Theo ngày duyệt
+  final DateTime? fromDate;
+  final DateTime? toDate;
+
+  FilterOrdersByMultipleCriteriaEvent({
+    this.areaSaleCode,
+    this.routeSaleCode,
+    this.saleUserCode,
+    this.dateType,
+    this.fromDate,
+    this.toDate,
+  });
+}

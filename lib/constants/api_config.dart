@@ -31,13 +31,16 @@ class ApiConfig {
   // API Endpoints
   static const String userEndpoint = '/User';
   static const String loginEndpoint = '$userEndpoint/Login';
-  static const String logoutEndpoint = '$userEndpoint/logout';
-  static const String refreshTokenEndpoint = '$userEndpoint/refresh';
   static const String profileEndpoint = '$userEndpoint/GetAccountInfo';
-  
+
+  static const String saleOrderEndpoint = '/SaleOrder';
+  static const String getSaleOrderPaging = '$saleOrderEndpoint/GetSaleOrderPaging';
+  static const String getSaleOrderById = '$saleOrderEndpoint/GetSaleOrderById';
+
 
   static const String metaData = '/MetaData';
   static const String unitsEndpoint = '$metaData/GetAllCompany';
+  static const String productsEndpoint = '$metaData/GetAllProduct';
   static const String customersEndpoint = '/customers';
   static const String ordersEndpoint = '/orders';
   static const String transactionsEndpoint = '/transactions';
