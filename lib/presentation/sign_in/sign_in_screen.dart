@@ -110,6 +110,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                 context.read<AuthBloc>().add(CheckAuthStatus());
               }
               context.replace('/home');
+            } else if (state is SignInSuccessWithUser) {
+              // User info already retrieved, trigger AuthBloc and navigate
+              if (mounted) {
+                context.read<AuthBloc>().add(CheckAuthStatus());
+              }
+              context.replace('/home');
             } else if (state is UnitsLoaded) {
               setState(() {
                 _units = state.units;

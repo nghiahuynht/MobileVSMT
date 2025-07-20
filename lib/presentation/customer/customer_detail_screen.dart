@@ -185,7 +185,6 @@ class CustomerDetailScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                _buildStatusBadge(customer.status),
                 
                 if (customer.createdAt != null) ...[
                   const SizedBox(height: 8),
@@ -222,6 +221,42 @@ class CustomerDetailScreen extends StatelessWidget {
                   onTap: () {
                     // TODO: Open maps
                   }),
+            ],
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Location Information
+          _buildInfoSection(
+            'Thông Tin Khu Vực',
+            [
+              if (customer.areaName != null)
+                _buildInfoItem(Icons.map_outlined, 'Khu vực', customer.areaName!),
+              if (customer.groupName != null)
+                _buildInfoItem(Icons.group_outlined, 'Nhóm', customer.groupName!),
+              if (customer.wardName != null)
+                _buildInfoItem(Icons.location_city_outlined, 'Phường/Xã', customer.wardName!),
+            ],
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Service Information
+          _buildInfoSection(
+            'Thông Tin Dịch Vụ',
+            [
+              if (customer.customerGroup != null)
+                _buildInfoItem(
+                  Icons.star_outlined, 
+                  'Nhóm khách hàng', 
+                  _getCustomerGroupText(customer.customerGroup!)
+                ),
+              if (customer.price != null)
+                _buildInfoItem(
+                  Icons.attach_money_outlined, 
+                  'Giá dịch vụ', 
+                  NumberFormat.currency(locale: 'vi_VN', symbol: '₫').format(customer.price)
+                ),
             ],
           ),
           
@@ -361,26 +396,27 @@ class CustomerDetailScreen extends StatelessWidget {
   }
   
   Widget _buildTransactionHistory(BuildContext context) {
-    // Mock transaction data
+    // Mock transaction data - using customer's service price if available
+    final basePrice = customer.price ?? 300000; // Default price if not set
     final transactions = [
       {
         'id': 'TXN001',
         'date': DateTime.now().subtract(const Duration(days: 2)),
-        'amount': 450000,
+        'amount': basePrice,
         'description': 'Thu gom rác sinh hoạt',
         'status': 'completed'
       },
       {
         'id': 'TXN002', 
         'date': DateTime.now().subtract(const Duration(days: 15)),
-        'amount': 320000,
+        'amount': basePrice * 0.8, // Discount for regular customers
         'description': 'Thu gom rác tái chế',
         'status': 'completed'
       },
       {
         'id': 'TXN003',
         'date': DateTime.now().subtract(const Duration(days: 30)),
-        'amount': 680000,
+        'amount': basePrice * 1.2, // Premium service
         'description': 'Thu gom rác công nghiệp',
         'status': 'completed'
       },
@@ -625,7 +661,73 @@ class CustomerDetailScreen extends StatelessWidget {
     );
   }
   
+  Widget _buildCustomerGroupBadge(String customerGroup) {
+    Color backgroundColor;
+    Color textColor;
+    String text;
+    IconData icon;
+    
+    switch (customerGroup) {
+      case 'vip':
+        backgroundColor = const Color(0xFFFEF3C7);
+        textColor = const Color(0xFFD97706);
+        text = 'VIP';
+        icon = Icons.star;
+        break;
+      case 'premium':
+        backgroundColor = const Color(0xFFF3E8FF);
+        textColor = const Color(0xFF7C3AED);
+        text = 'PREMIUM';
+        icon = Icons.diamond;
+        break;
+      default:
+        backgroundColor = const Color(0xFFF1F5F9);
+        textColor = const Color(0xFF64748B);
+        text = customerGroup.toUpperCase();
+        icon = Icons.person;
+    }
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: textColor.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 12,
+            color: textColor,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: textColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
   List<Color> _getAvatarColors(String status) {
+    // If customer is VIP or Premium, use special colors
+    if (customer.customerGroup == 'vip') {
+      return [const Color(0xFFD97706), const Color(0xFFF59E0B)]; // Gold gradient
+    } else if (customer.customerGroup == 'premium') {
+      return [const Color(0xFF7C3AED), const Color(0xFF8B5CF6)]; // Purple gradient
+    }
+    
+    // Default status-based colors
     switch (status) {
       case 'active':
         return [const Color(0xFF059669), const Color(0xFF10B981)];
@@ -650,6 +752,21 @@ class CustomerDetailScreen extends StatelessWidget {
         return 'Chưa xác định';
     }
   }
+  
+  String _getCustomerGroupText(String customerGroup) {
+    switch (customerGroup) {
+      case 'regular':
+        return 'Khách hàng thường';
+      case 'vip':
+        return 'Khách hàng VIP';
+      case 'premium':
+        return 'Khách hàng Premium';
+      default:
+        return customerGroup;
+    }
+  }
+
+
   
   void _handleMenuAction(BuildContext context, String action) {
     switch (action) {

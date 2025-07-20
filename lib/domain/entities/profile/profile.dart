@@ -1,3 +1,5 @@
+import 'package:trash_pay/domain/entities/user/user.dart';
+
 class ProfileModel {
   final String id;
   final String name;
@@ -79,5 +81,43 @@ class ProfileModel {
       isActive: isActive ?? this.isActive,
       preferences: preferences ?? this.preferences,
     );
+  }
+}
+
+// Extension to convert UserModel to ProfileModel
+extension UserModelToProfile on UserModel {
+  ProfileModel toProfileModel() {
+    return ProfileModel(
+      id: userId.toString(),
+      name: fullName ?? loginName ?? 'Unknown User',
+      email: email,
+      phone: phone,
+      role: _mapRoleCodeToRole(roleCode),
+      department: 'Waste Management', // Default department
+      isActive: isActive,
+      preferences: {
+        'notifications': true,
+        'darkMode': false,
+        'language': 'vi',
+        'autoSync': true,
+      },
+    );
+  }
+
+  String _mapRoleCodeToRole(String? roleCode) {
+    switch (roleCode?.toLowerCase()) {
+      case 'admin':
+      case 'administrator':
+        return 'admin';
+      case 'manager':
+      case 'management':
+        return 'manager';
+      case 'employee':
+      case 'staff':
+      case 'user':
+        return 'employee';
+      default:
+        return 'employee';
+    }
   }
 } 

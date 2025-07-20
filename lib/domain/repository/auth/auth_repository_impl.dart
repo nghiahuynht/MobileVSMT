@@ -1,9 +1,11 @@
+import 'package:dio/dio.dart';
 import 'package:trash_pay/constants/api_config.dart';
 import 'package:trash_pay/domain/entities/based_api_result/api_result_model.dart';
 import 'package:trash_pay/domain/entities/sign_in/sign_in_response.dart';
 import 'package:trash_pay/domain/entities/user/user.dart';
 import 'package:trash_pay/domain/repository/auth/auth_repository.dart';
 import 'package:trash_pay/services/network_service.dart';
+import 'package:trash_pay/services/token_manager.dart';
 import 'package:trash_pay/services/user_prefs.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -51,16 +53,19 @@ class AuthRepositoryImpl implements AuthRepository {
       final token = _userPrefs.getToken();
       if (token == null || token.isEmpty) return null;
 
-      final userJson = _userPrefs.getUser();
-      if (userJson != null && userJson.isNotEmpty) {
-        return UserModel.fromJson(userJson);
-      }
-
       try {
+        final tokenMap = TokenManager.instance.currentToken;
+
         final result = await _networkService.get<UserModel>(
           ApiConfig.profileEndpoint,
+          options: Options(
+            headers: {
+              'Authorization': tokenMap?.authorizationHeader,
+              'accept': '*/*'
+            },
+          ),
           fromJson: (data) {
-            return UserModel.fromMap(data);
+            return UserModel.fromJson(data);
           },
         );
 

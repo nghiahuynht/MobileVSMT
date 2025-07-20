@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trash_pay/domain/entities/profile/profile.dart';
+import 'package:trash_pay/presentation/flash/logics/auth_bloc.dart';
 import 'package:trash_pay/presentation/profile/logics/profile_bloc.dart';
 import 'package:trash_pay/presentation/profile/logics/profile_events.dart';
 import 'package:trash_pay/presentation/profile/logics/profile_state.dart';
@@ -14,7 +15,9 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => ProfileBloc()..add(LoadProfileEvent()),
+      create: (context) => ProfileBloc(
+        authBloc: context.read<AuthBloc>(),
+      ),
       child: Scaffold(
         body: Container(
           decoration: const BoxDecoration(
@@ -202,6 +205,7 @@ class ProfileScreen extends StatelessWidget {
           // _buildSettingsSection(context, profile),
           
           // const SizedBox(height: 20),
+          
           
           // Action Buttons
           _buildActionButtons(context),
@@ -396,32 +400,32 @@ class ProfileScreen extends StatelessWidget {
     return Column(
       children: [
         // Edit Profile Button
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () {
-              // TODO: Navigate to edit profile screen
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF059669),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-              elevation: 0,
-            ),
-            child: const Text(
-              'Chỉnh Sửa Hồ Sơ',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
+        // SizedBox(
+        //   width: double.infinity,
+        //   child: ElevatedButton(
+        //     onPressed: () {
+        //       // TODO: Navigate to edit profile screen
+        //     },
+        //     style: ElevatedButton.styleFrom(
+        //       backgroundColor: const Color(0xFF059669),
+        //       foregroundColor: Colors.white,
+        //       padding: const EdgeInsets.symmetric(vertical: 16),
+        //       shape: RoundedRectangleBorder(
+        //         borderRadius: BorderRadius.circular(8),
+        //       ),
+        //       elevation: 0,
+        //     ),
+        //     child: const Text(
+        //       'Chỉnh Sửa Hồ Sơ',
+        //       style: TextStyle(
+        //         fontSize: 16,
+        //         fontWeight: FontWeight.w600,
+        //       ),
+        //     ),
+        //   ),
+        // ),
         
-        const SizedBox(height: 12),
+        // const SizedBox(height: 12),
         
         // Change Password Button
         SizedBox(

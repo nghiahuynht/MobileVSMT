@@ -35,7 +35,18 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
         companyCode: event.companyCode,
       );
       if (response?.accessToken.isNotEmpty ?? false) {
-        emit(SignInSuccess());
+        // Get user info after successful sign in
+        try {
+          final user = await domainManager.auth.getCurrentUser();
+          if (user != null) {
+            emit(SignInSuccessWithUser(user));
+          } else {
+            emit(SignInSuccess());
+          }
+        } catch (userError) {
+          // If getting user info fails, still emit success but without user data
+          emit(SignInSuccess());
+        }
       } else {
         emit(SignInFailure('Sign in failed'));
       }

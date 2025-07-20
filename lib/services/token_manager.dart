@@ -7,12 +7,12 @@ import 'package:trash_pay/domain/entities/sign_in/sign_in_response.dart';
 import 'user_prefs.dart';
 
 class TokenManager {
-  static final TokenManager _instance = TokenManager._internal();
-  factory TokenManager() => _instance;
+  static final TokenManager instance = TokenManager._internal();
+  factory TokenManager() => instance;
   TokenManager._internal();
 
   final _userPrefs = UserPrefs.I;
-  final DomainManager domainManager = DomainManager();
+  final DomainManager _domainManager = DomainManager();
 
   SignInResponse? _currentToken;
   bool _isRefreshing = false;
@@ -26,10 +26,10 @@ class TokenManager {
   /// Load token từ UserPrefs
   Future<void> _loadTokenFromStorage() async {
     try {
-      final tokenJson = await _userPrefs.getToken();
+      final tokenJson = _userPrefs.getToken();
       if (tokenJson != null && tokenJson.isNotEmpty) {
         final tokenMap = jsonDecode(tokenJson);
-        _currentToken = SignInResponse.fromJson(tokenMap);
+        _currentToken = SignInResponse.fromMap(tokenMap);
         log('Token loaded from storage: ${_currentToken?.toString()}');
       }
     } catch (e) {
@@ -98,7 +98,7 @@ class TokenManager {
       final password = _userPrefs.getPassword();
       final companyCode = _userPrefs.getCompany();
 
-      final response = await domainManager.auth.signInWithLoginName(
+      final response = await _domainManager.auth.signInWithLoginName(
           loginName: loginName!,
           password: password!,
           companyCode: companyCode!);

@@ -10,6 +10,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   List<ProductModel> _allProducts = [];
   List<OrderItemModel> _cartItems = [];
   CustomerModel? _selectedCustomer;
+  List<OrderModel> _allOrders = [];
 
   OrderBloc() : super(OrderInitial()) {
     on<LoadProductsEvent>(_onLoadProducts);
@@ -20,6 +21,10 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     on<ClearCartEvent>(_onClearCart);
     on<SelectCustomerEvent>(_onSelectCustomer);
     on<CreateOrderEvent>(_onCreateOrder);
+    on<LoadOrdersEvent>(_onLoadOrders);
+    on<SearchOrdersEvent>(_onSearchOrders);
+    on<FilterOrdersByStatusEvent>(_onFilterOrdersByStatus);
+    on<ClearOrderFiltersEvent>(_onClearOrderFilters);
   }
 
   void _onLoadProducts(LoadProductsEvent event, Emitter<OrderState> emit) {
@@ -229,6 +234,237 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       emit(OrderError('Có lỗi xảy ra khi tạo đơn hàng: $e'));
       _emitOrderScreenState(emit);
     }
+  }
+
+  void _onLoadOrders(LoadOrdersEvent event, Emitter<OrderState> emit) {
+    emit(OrderLoading());
+    
+    // Mock data cho đơn hàng
+    _allOrders = _generateMockOrders();
+    
+    emit(OrderListState(
+      orders: _allOrders,
+      filteredOrders: _allOrders,
+      isLoading: false,
+    ));
+  }
+
+  void _onSearchOrders(SearchOrdersEvent event, Emitter<OrderState> emit) {
+    final currentState = state;
+    if (currentState is OrderListState) {
+      final query = event.query.toLowerCase();
+      List<OrderModel> filteredOrders = _allOrders;
+      
+      // Lọc theo trạng thái trước
+      if (currentState.selectedStatus != null) {
+        filteredOrders = filteredOrders.where(
+          (order) => order.status == currentState.selectedStatus
+        ).toList();
+      }
+      
+      // Sau đó lọc theo từ khóa tìm kiếm
+      if (query.isNotEmpty) {
+        filteredOrders = filteredOrders.where((order) {
+          return order.orderNumber.toLowerCase().contains(query) ||
+                 (order.customer?.name.toLowerCase().contains(query) ?? false) ||
+                 (order.customer?.phone?.contains(query) ?? false);
+        }).toList();
+      }
+      
+      emit(currentState.copyWith(
+        filteredOrders: filteredOrders,
+        searchQuery: query,
+      ));
+    }
+  }
+
+  void _onFilterOrdersByStatus(FilterOrdersByStatusEvent event, Emitter<OrderState> emit) {
+    final currentState = state;
+    if (currentState is OrderListState) {
+      List<OrderModel> filteredOrders = _allOrders;
+      
+      // Lọc theo trạng thái
+      if (event.status != null) {
+        filteredOrders = filteredOrders.where(
+          (order) => order.status == event.status
+        ).toList();
+      }
+      
+      // Sau đó lọc theo từ khóa tìm kiếm
+      if (currentState.searchQuery.isNotEmpty) {
+        filteredOrders = filteredOrders.where((order) {
+          return order.orderNumber.toLowerCase().contains(currentState.searchQuery) ||
+                 (order.customer?.name.toLowerCase().contains(currentState.searchQuery) ?? false) ||
+                 (order.customer?.phone?.contains(currentState.searchQuery) ?? false);
+        }).toList();
+      }
+      
+      emit(currentState.copyWith(
+        filteredOrders: filteredOrders,
+        selectedStatus: event.status,
+      ));
+    }
+  }
+
+  void _onClearOrderFilters(ClearOrderFiltersEvent event, Emitter<OrderState> emit) {
+    final currentState = state;
+    if (currentState is OrderListState) {
+      emit(currentState.copyWith(
+        filteredOrders: _allOrders,
+        selectedStatus: null,
+        searchQuery: '',
+      ));
+    }
+  }
+
+  List<OrderModel> _generateMockOrders() {
+    final customers = [
+      CustomerModel(
+        id: 'C001',
+        name: 'Nguyễn Văn An',
+        phone: '0123456789',
+        address: '123 Đường ABC, Quận 1, TP.HCM',
+        email: 'nguyenvanan@email.com',
+        createdAt: DateTime.now().subtract(const Duration(days: 30)),
+      ),
+      CustomerModel(
+        id: 'C002',
+        name: 'Trần Thị Bình',
+        phone: '0987654321',
+        address: '456 Đường XYZ, Quận 2, TP.HCM',
+        email: 'tranthibinh@email.com',
+        createdAt: DateTime.now().subtract(const Duration(days: 25)),
+      ),
+      CustomerModel(
+        id: 'C003',
+        name: 'Lê Văn Cường',
+        phone: '0369852147',
+        address: '789 Đường DEF, Quận 3, TP.HCM',
+        email: 'levancuong@email.com',
+        createdAt: DateTime.now().subtract(const Duration(days: 20)),
+      ),
+    ];
+
+    final products = [
+      ProductModel(
+        id: '1',
+        code: 'THANG-1',
+        name: 'Thùng rác loại 1',
+        price: 45000,
+        description: 'Thùng rác nhựa cao cấp',
+        category: 'Thùng rác',
+        unit: 'cái',
+        createdAt: DateTime.now().subtract(const Duration(days: 30)),
+      ),
+      ProductModel(
+        id: '2',
+        code: 'THANG-2',
+        name: 'Thùng rác loại 2',
+        price: 45000,
+        description: 'Thùng rác inox',
+        category: 'Thùng rác',
+        unit: 'cái',
+        createdAt: DateTime.now().subtract(const Duration(days: 25)),
+      ),
+    ];
+
+    return [
+      OrderModel(
+        id: 'order_1',
+        orderNumber: 'DH001',
+        customer: customers[0],
+        items: [
+          OrderItemModel.fromProduct(
+            id: 'item_1',
+            product: products[0],
+            quantity: 2,
+          ),
+          OrderItemModel.fromProduct(
+            id: 'item_2',
+            product: products[1],
+            quantity: 1,
+          ),
+        ],
+        subtotal: 135000,
+        total: 135000,
+        status: OrderStatus.confirmed,
+        notes: 'Giao hàng vào buổi sáng',
+        createdAt: DateTime.now().subtract(const Duration(days: 5)),
+        createdBy: 'admin',
+      ),
+      OrderModel(
+        id: 'order_2',
+        orderNumber: 'DH002',
+        customer: customers[1],
+        items: [
+          OrderItemModel.fromProduct(
+            id: 'item_3',
+            product: products[0],
+            quantity: 3,
+          ),
+        ],
+        subtotal: 135000,
+        total: 135000,
+        status: OrderStatus.cancelled,
+        notes: 'Khách hàng hủy đơn',
+        createdAt: DateTime.now().subtract(const Duration(days: 3)),
+        createdBy: 'admin',
+      ),
+      OrderModel(
+        id: 'order_3',
+        orderNumber: 'DH003',
+        customer: customers[2],
+        items: [
+          OrderItemModel.fromProduct(
+            id: 'item_4',
+            product: products[1],
+            quantity: 1,
+          ),
+        ],
+        subtotal: 45000,
+        total: 45000,
+        status: OrderStatus.completed,
+        notes: 'Đã giao hàng thành công',
+        createdAt: DateTime.now().subtract(const Duration(days: 1)),
+        createdBy: 'admin',
+      ),
+      OrderModel(
+        id: 'order_4',
+        orderNumber: 'DH004',
+        customer: customers[0],
+        items: [
+          OrderItemModel.fromProduct(
+            id: 'item_5',
+            product: products[0],
+            quantity: 1,
+          ),
+        ],
+        subtotal: 45000,
+        total: 45000,
+        status: OrderStatus.pending,
+        notes: 'Chờ xác nhận từ khách hàng',
+        createdAt: DateTime.now().subtract(const Duration(hours: 6)),
+        createdBy: 'admin',
+      ),
+      OrderModel(
+        id: 'order_5',
+        orderNumber: 'DH005',
+        customer: customers[1],
+        items: [
+          OrderItemModel.fromProduct(
+            id: 'item_6',
+            product: products[1],
+            quantity: 2,
+          ),
+        ],
+        subtotal: 90000,
+        total: 90000,
+        status: OrderStatus.processing,
+        notes: 'Đang chuẩn bị giao hàng',
+        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
+        createdBy: 'admin',
+      ),
+    ];
   }
 
   void _emitOrderScreenState(

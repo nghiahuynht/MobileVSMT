@@ -2,57 +2,87 @@
 import 'dart:convert';
 
 class UserModel {
-  final String uid;
+  final int userId;
+  final String? code;
+  final String? loginName;
+  final String? fullName;
   final String? email;
-  final String? name;
-  final String? photoUrl;
+  final String? phone;
+  final bool isActive;
+  final String? roleCode;
+  final String? coreRoles;
 
   UserModel({
-    required this.uid,
+    required this.userId,
+    this.code,
+    this.loginName,
+    this.fullName,
     this.email,
-    this.name,
-    this.photoUrl,
+    this.phone,
+    required this.isActive,
+    this.roleCode,
+    this.coreRoles,
   });
 
   UserModel copyWith({
-    String? uid,
+    int? userId,
+    String? code,
+    String? loginName,
+    String? fullName,
     String? email,
-    String? name,
-    String? photoUrl,
+    String? phone,
+    bool? isActive,
+    String? roleCode,
+    String? coreRoles,
   }) {
     return UserModel(
-      uid: uid ?? this.uid,
+      userId: userId ?? this.userId,
+      code: code ?? this.code,
+      loginName: loginName ?? this.loginName,
+      fullName: fullName ?? this.fullName,
       email: email ?? this.email,
-      name: name ?? this.name,
-      photoUrl: photoUrl ?? this.photoUrl,
+      phone: phone ?? this.phone,
+      isActive: isActive ?? this.isActive,
+      roleCode: roleCode ?? this.roleCode,
+      coreRoles: coreRoles ?? this.coreRoles,
     );
   }
 
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
-      'uid': uid,
+      'userId': userId,
+      'code': code,
+      'loginName': loginName,
+      'fullName': fullName,
       'email': email,
-      'name': name,
-      'photoUrl': photoUrl,
+      'phone': phone,
+      'isActive': isActive,
+      'roleCode': roleCode,
+      'coreRoles': coreRoles,
     };
   }
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
     return UserModel(
-      uid: map['uid'] as String,
+      userId: map['userId'] as int,
+      code: map['code'] != null ? map['code'] as String : null,
+      loginName: map['loginName'] != null ? map['loginName'] as String : null,
+      fullName: map['fullName'] != null ? map['fullName'] as String : null,
       email: map['email'] != null ? map['email'] as String : null,
-      name: map['name'] != null ? map['name'] as String : null,
-      photoUrl: map['photoUrl'] != null ? map['photoUrl'] as String : null,
+      phone: map['phone'] != null ? map['phone'] as String : null,
+      isActive: map['isActive'] as bool,
+      roleCode: map['roleCode'] != null ? map['roleCode'] as String : null,
+      coreRoles: map['coreRoles'] != null ? map['coreRoles'] as String : null,
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory UserModel.fromJson(String source) => UserModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory UserModel.fromJson(String source) => UserModel.fromMap(json.decode(source)['data'] as Map<String, dynamic>);
 
   @override
   String toString() {
-    return 'UserModel(uid: $uid, email: $email, name: $name, photoUrl: $photoUrl)';
+    return 'UserModel(userId: $userId, code: $code, loginName: $loginName, fullName: $fullName, email: $email, phone: $phone, isActive: $isActive, roleCode: $roleCode, coreRoles: $coreRoles)';
   }
 
   @override
@@ -60,17 +90,27 @@ class UserModel {
     if (identical(this, other)) return true;
   
     return 
-      other.uid == uid &&
+      other.userId == userId &&
+      other.code == code &&
+      other.loginName == loginName &&
+      other.fullName == fullName &&
       other.email == email &&
-      other.name == name &&
-      other.photoUrl == photoUrl;
+      other.phone == phone &&
+      other.isActive == isActive &&
+      other.roleCode == roleCode &&
+      other.coreRoles == coreRoles;
   }
 
   @override
   int get hashCode {
-    return uid.hashCode ^
+    return userId.hashCode ^
+      code.hashCode ^
+      loginName.hashCode ^
+      fullName.hashCode ^
       email.hashCode ^
-      name.hashCode ^
-      photoUrl.hashCode;
+      phone.hashCode ^
+      isActive.hashCode ^
+      roleCode.hashCode ^
+      coreRoles.hashCode;
   }
 }

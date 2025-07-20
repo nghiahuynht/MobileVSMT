@@ -4,7 +4,7 @@ import 'package:logger/logger.dart';
 import 'package:trash_pay/constants/api_config.dart';
 import 'package:trash_pay/domain/entities/based_api_result/api_result_model.dart';
 import 'package:trash_pay/domain/entities/based_api_result/error_result_model.dart';
-import 'package:trash_pay/services/user_prefs.dart';
+import 'package:trash_pay/services/token_manager.dart';
 import 'package:trash_pay/utils/dio/dio_error_util.dart';
 import 'package:trash_pay/utils/dio/dio_retry_interceptor.dart';
 
@@ -12,18 +12,17 @@ class DioNetwork {
   static DioNetwork? _instance;
   static DioNetwork get instance => _instance ??= DioNetwork._internal();
 
-  late Dio _dio;
+  late Dio dio;
   final Logger _logger = Logger();
-  final UserPrefs _userPrefs = UserPrefs.I;
 
   DioNetwork._internal() {
-    _dio = Dio();
+    dio = Dio();
     _setupDio();
   }
 
   void _setupDio() {
     // Base configuration using ApiConfig
-    _dio.options = BaseOptions(
+    dio.options = BaseOptions(
       baseUrl: ApiConfig.baseUrl,
       connectTimeout: ApiConfig.connectTimeout,
       receiveTimeout: ApiConfig.receiveTimeout,
@@ -32,9 +31,9 @@ class DioNetwork {
     );
 
     // Add interceptors
-    _dio.interceptors.add(
+    dio.interceptors.add(
       RetryInterceptor(
-        dio: _dio,
+        dio: dio,
         options: RetryOptions(
           retries: ApiConfig.maxRetries,
           retryInterval: ApiConfig.retryInterval,
@@ -43,7 +42,7 @@ class DioNetwork {
     );
 
     // Add logging interceptor in debug mode
-    _dio.interceptors.add(
+    dio.interceptors.add(
       LogInterceptor(
         request: true,
         requestHeader: true,
@@ -56,7 +55,7 @@ class DioNetwork {
     );
 
     // Add auth interceptor
-    _dio.interceptors.add(_AuthInterceptor(_userPrefs));
+    dio.interceptors.add(_AuthInterceptor());
   }
 
   Map<String, String> _getDefaultHeaders() {
@@ -68,23 +67,23 @@ class DioNetwork {
   }
 
   void setBaseUrl(String baseUrl) {
-    _dio.options.baseUrl = baseUrl;
+    dio.options.baseUrl = baseUrl;
   }
 
   void setAuthToken(String? token) {
     if (token != null) {
-      _dio.options.headers['Authorization'] = 'Bearer $token';
+      dio.options.headers['Authorization'] = 'Bearer $token';
     } else {
-      _dio.options.headers.remove('Authorization');
+      dio.options.headers.remove('Authorization');
     }
   }
 
   void addHeader(String key, String value) {
-    _dio.options.headers[key] = value;
+    dio.options.headers[key] = value;
   }
 
   void removeHeader(String key) {
-    _dio.options.headers.remove(key);
+    dio.options.headers.remove(key);
   }
 
   // GET method
@@ -96,7 +95,7 @@ class DioNetwork {
     T Function(dynamic)? fromJson,
   }) async {
     try {
-      final response = await _dio.get(
+      final response = await dio.get(
         path,
         queryParameters: queryParameters,
         options: options,
@@ -119,7 +118,7 @@ class DioNetwork {
     T Function(dynamic)? fromJson,
   }) async {
     try {
-      final response = await _dio.post(
+      final response = await dio.post(
         path,
         data: data,
         queryParameters: queryParameters,
@@ -143,7 +142,7 @@ class DioNetwork {
     T Function(dynamic)? fromJson,
   }) async {
     try {
-      final response = await _dio.put(
+      final response = await dio.put(
         path,
         data: data,
         queryParameters: queryParameters,
@@ -167,7 +166,7 @@ class DioNetwork {
     T Function(dynamic)? fromJson,
   }) async {
     try {
-      final response = await _dio.delete(
+      final response = await dio.delete(
         path,
         data: data,
         queryParameters: queryParameters,
@@ -191,7 +190,7 @@ class DioNetwork {
     T Function(dynamic)? fromJson,
   }) async {
     try {
-      final response = await _dio.patch(
+      final response = await dio.patch(
         path,
         data: data,
         queryParameters: queryParameters,
@@ -220,7 +219,7 @@ class DioNetwork {
         if (data != null) ...data,
       });
 
-      final response = await _dio.post(
+      final response = await dio.post(
         path,
         data: formData,
         onSendProgress: onSendProgress,
@@ -240,7 +239,7 @@ class DioNetwork {
     CancelToken? cancelToken,
   }) async {
     try {
-      await _dio.download(
+      await dio.download(
         urlPath,
         savePath,
         onReceiveProgress: onReceiveProgress,
@@ -305,23 +304,19 @@ class DioNetwork {
       ),
     );
   }
-
-  // Get raw Dio instance if needed
-  Dio get dio => _dio;
 }
 
 // Auth interceptor to handle token refresh
 class _AuthInterceptor extends Interceptor {
-  final UserPrefs _userPrefs;
 
-  _AuthInterceptor(this._userPrefs);
+  _AuthInterceptor();
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     // Add auth token to all requests
-    final token = _userPrefs.getToken();
+    final token = TokenManager.instance.currentToken;
     if (token != null) {
-      options.headers['Authorization'] = 'Bearer $token';
+      options.headers['Authorization'] = token.authorizationHeader;
     }
     handler.next(options);
   }

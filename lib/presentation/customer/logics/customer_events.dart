@@ -9,6 +9,18 @@ class SearchCustomersEvent extends CustomerEvents {
   SearchCustomersEvent(this.query);
 }
 
+class FilterCustomersByGroupEvent extends CustomerEvents {
+  final int? groupId;
+  FilterCustomersByGroupEvent(this.groupId);
+}
+
+class FilterCustomersByAreaEvent extends CustomerEvents {
+  final int? areaId;
+  FilterCustomersByAreaEvent(this.areaId);
+}
+
+class ClearFiltersEvent extends CustomerEvents {}
+
 class AddCustomerEvent extends CustomerEvents {
   final CustomerModel customer;
   AddCustomerEvent(this.customer);

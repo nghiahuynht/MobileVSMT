@@ -114,6 +114,39 @@ class OrderScreenState extends OrderState {
   bool get isCartEmpty => cartItems.isEmpty;
 }
 
+// Order list state
+class OrderListState extends OrderState {
+  final List<OrderModel> orders;
+  final List<OrderModel> filteredOrders;
+  final String searchQuery;
+  final OrderStatus? selectedStatus;
+  final bool isLoading;
+
+  OrderListState({
+    required this.orders,
+    required this.filteredOrders,
+    this.searchQuery = '',
+    this.selectedStatus,
+    this.isLoading = false,
+  });
+
+  OrderListState copyWith({
+    List<OrderModel>? orders,
+    List<OrderModel>? filteredOrders,
+    String? searchQuery,
+    OrderStatus? selectedStatus,
+    bool? isLoading,
+  }) {
+    return OrderListState(
+      orders: orders ?? this.orders,
+      filteredOrders: filteredOrders ?? this.filteredOrders,
+      searchQuery: searchQuery ?? this.searchQuery,
+      selectedStatus: selectedStatus ?? this.selectedStatus,
+      isLoading: isLoading ?? this.isLoading,
+    );
+  }
+}
+
 // Order operation states
 class OrderCreated extends OrderState {
   final OrderModel order;

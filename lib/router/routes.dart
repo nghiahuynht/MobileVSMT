@@ -4,6 +4,7 @@ import 'package:trash_pay/presentation/sign_in/sign_in_screen.dart';
 import 'package:trash_pay/presentation/order/order_screen.dart';
 import 'package:trash_pay/presentation/checkout/checkout_screen.dart';
 import 'package:trash_pay/presentation/transaction/transaction_history_screen.dart';
+import 'package:trash_pay/presentation/profile/profile_screen.dart';
 import 'package:trash_pay/domain/entities/customer/customer.dart';
 import 'package:trash_pay/domain/entities/checkout/checkout_data.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -26,6 +27,10 @@ final router = GoRouter(
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfileScreen(),
     ),
     GoRoute(
       path: '/order',

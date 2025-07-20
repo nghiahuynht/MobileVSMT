@@ -51,6 +51,7 @@ dependencies:
   flutter_esc_pos_utils: ^1.0.1
   permission_handler: ^11.3.1
   cached_network_image: ^3.4.1
+  sunmi_printer_plus: ^4.1.0
 
 dev_dependencies:
   flutter_test:

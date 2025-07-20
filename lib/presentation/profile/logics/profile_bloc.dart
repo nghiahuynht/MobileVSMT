@@ -2,28 +2,50 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:trash_pay/domain/domain_manager.dart';
 import 'package:trash_pay/domain/entities/profile/profile.dart';
+import 'package:trash_pay/presentation/flash/logics/auth_bloc.dart';
+import 'package:trash_pay/presentation/flash/logics/auth_events.dart';
+import 'package:trash_pay/presentation/flash/logics/auth_state.dart';
 import 'package:trash_pay/presentation/profile/logics/profile_events.dart';
 import 'package:trash_pay/presentation/profile/logics/profile_state.dart';
 
 class ProfileBloc extends Bloc<ProfileEvents, ProfileState> {
-  ProfileBloc() : super(ProfileInitial()) {
+  ProfileBloc({AuthBloc? authBloc}) : super(ProfileInitial()) {
     on<LoadProfileEvent>(_handleLoadProfile);
     on<UpdateProfileEvent>(_handleUpdateProfile);
     on<UpdatePreferencesEvent>(_handleUpdatePreferences);
     on<ChangePasswordEvent>(_handleChangePassword);
     on<LogoutEvent>(_handleLogout);
+    
+    _authBloc = authBloc;
+    
+    // Automatically load profile when bloc is created
+    add(LoadProfileEvent());
   }
 
   final DomainManager domainManager = GetIt.I<DomainManager>();
+  AuthBloc? _authBloc;
   ProfileModel? _currentProfile;
 
   Future<void> _handleLoadProfile(
       LoadProfileEvent event, Emitter<ProfileState> emit) async {
     emit(ProfileLoading());
     try {
-      // Simulated data - replace with actual repository call
-      _currentProfile = _generateMockProfile();
-      emit(ProfileLoaded(_currentProfile!));
+      // Try to get user from AuthBloc first
+      if (_authBloc != null) {
+        final authState = _authBloc!.state;
+        if (authState is Authenticated && authState.user != null) {
+          _currentProfile = authState.user!.toProfileModel();
+          emit(ProfileLoaded(_currentProfile!));
+          return;
+        }
+      }
+      
+      // If AuthBloc doesn't have user info, try to get from domain manager
+      final user = await domainManager.auth.getCurrentUser();
+      if (user != null) {
+        _currentProfile = user.toProfileModel();
+        emit(ProfileLoaded(_currentProfile!));
+      }
     } catch (e) {
       emit(ProfileError('Không thể tải thông tin hồ sơ: ${e.toString()}'));
     }
@@ -71,8 +93,14 @@ class ProfileBloc extends Bloc<ProfileEvents, ProfileState> {
   Future<void> _handleLogout(
       LogoutEvent event, Emitter<ProfileState> emit) async {
     try {
-      // Simulated logout - replace with actual repository call
-      await Future.delayed(const Duration(milliseconds: 500));
+      // Call AuthBloc to handle logout
+      if (_authBloc != null) {
+        _authBloc!.add(SignOut());
+      } else {
+        // Fallback logout
+        await domainManager.auth.signOut();
+      }
+      
       _currentProfile = null;
       emit(LogoutSuccess());
     } catch (e) {
@@ -80,7 +108,7 @@ class ProfileBloc extends Bloc<ProfileEvents, ProfileState> {
     }
   }
 
-  // Mock data generator - replace with actual repository
+  // Mock data generator - fallback when no user data available
   ProfileModel _generateMockProfile() {
     return ProfileModel(
       id: 'user_001',

@@ -1,5 +1,6 @@
 import '../../../domain/entities/product/product.dart';
 import '../../../domain/entities/customer/customer.dart';
+import '../../../domain/entities/order/order.dart';
 
 abstract class OrderEvent {}
 
@@ -72,4 +73,17 @@ class UpdateOrderStatusEvent extends OrderEvent {
 class CancelOrderEvent extends OrderEvent {
   final String orderId;
   CancelOrderEvent(this.orderId);
-} 
+}
+
+// Order list management
+class SearchOrdersEvent extends OrderEvent {
+  final String query;
+  SearchOrdersEvent(this.query);
+}
+
+class FilterOrdersByStatusEvent extends OrderEvent {
+  final OrderStatus? status;
+  FilterOrdersByStatusEvent(this.status);
+}
+
+class ClearOrderFiltersEvent extends OrderEvent {} 

@@ -23,10 +23,12 @@ class TransactionHistoryScreen extends StatefulWidget {
 
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   final TextEditingController _searchController = TextEditingController();
+  int? _selectedYear;
 
   @override
   void initState() {
     super.initState();
+    _selectedYear = DateTime.now().year;
     if (widget.customerId != null) {
       context.read<TransactionBloc>().add(LoadTransactionsEvent(widget.customerId!));
     } else {
@@ -80,9 +82,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   Widget _buildHeader() {
     return ProfessionalHeaders.detail(
       title: widget.customerId != null 
-        ? 'Lịch sử giao dịch'
-        : 'Tất cả giao dịch',
-      subtitle: widget.customerName ?? 'Quản lý giao dịch hệ thống',
+        ? 'Lịch sử thu tiền'
+        : 'Tất cả thu tiền',
+      subtitle: widget.customerName ?? 'Quản lý lịch sử thu tiền hệ thống',
       onBackPressed: () => Navigator.pop(context),
       actionWidget: IconButton(
         onPressed: () {
@@ -109,17 +111,21 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         }
 
         if (state is TransactionsLoaded) {
+          // Lọc chỉ các giao dịch thu tiền (credit transactions)
+          final creditTransactions = state.allTransactions.where((t) => t.isCredit).toList();
+          final filteredCreditTransactions = _filterTransactionsByYear(creditTransactions);
+          
           return Column(
             children: [
               // Statistics Section
-              _buildStatistics(state),
+              _buildStatistics(filteredCreditTransactions),
               
               // Filters and Search
-              _buildFiltersAndSearch(state),
+              _buildFiltersAndSearch(state, filteredCreditTransactions),
               
               // Transaction List
               Expanded(
-                child: _buildTransactionList(state),
+                child: _buildTransactionList(filteredCreditTransactions),
               ),
             ],
           );
@@ -132,7 +138,15 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     );
   }
 
-  Widget _buildStatistics(TransactionsLoaded state) {
+  List<TransactionModel> _filterTransactionsByYear(List<TransactionModel> transactions) {
+    if (_selectedYear == null) return transactions;
+    return transactions.where((t) => t.createdAt.year == _selectedYear).toList();
+  }
+
+  Widget _buildStatistics(List<TransactionModel> transactions) {
+    final totalAmount = transactions.fold<double>(0, (sum, t) => sum + t.amount);
+    final totalCount = transactions.length;
+    
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
@@ -155,7 +169,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
               Icon(Icons.analytics_outlined, color: Colors.grey[600], size: 20),
               const SizedBox(width: 8),
               Text(
-                'Thống kê giao dịch',
+                'Thống kê thu tiền',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
@@ -171,7 +185,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
               Expanded(
                 child: _buildStatCard(
                   'Tổng thu',
-                  state.totalCredit,
+                  totalAmount,
                   const Color(0xFF059669),
                   Icons.trending_up,
                 ),
@@ -179,19 +193,19 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
-                  'Tổng chi',
-                  state.totalDebit,
-                  const Color(0xFFDC2626),
-                  Icons.trending_down,
+                  'Số giao dịch',
+                  totalCount.toDouble(),
+                  const Color(0xFF3B82F6),
+                  Icons.receipt_long,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildStatCard(
-                  'Số dư',
-                  state.balance,
-                  state.balance >= 0 ? const Color(0xFF059669) : const Color(0xFFDC2626),
-                  Icons.account_balance_wallet,
+                  'Trung bình',
+                  totalCount > 0 ? totalAmount / totalCount : 0,
+                  const Color(0xFF8B5CF6),
+                  Icons.analytics,
                 ),
               ),
             ],
@@ -206,10 +220,10 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.receipt_long, size: 16, color: Colors.grey[600]),
+                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 8),
                 Text(
-                  'Tổng ${state.totalCount} giao dịch',
+                  'Năm ${_selectedYear ?? "Tất cả"}',
                   style: TextStyle(
                     fontSize: 14,
                     fontFamily: FontFamily.productSans,
@@ -253,7 +267,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            '${value.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ',
+            title == 'Số giao dịch' 
+              ? value.toInt().toString()
+              : '${value.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -266,7 +282,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     );
   }
 
-  Widget _buildFiltersAndSearch(TransactionsLoaded state) {
+  Widget _buildFiltersAndSearch(TransactionsLoaded state, List<TransactionModel> filteredTransactions) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -290,7 +306,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 context.read<TransactionBloc>().add(SearchTransactionsEvent(value));
               },
               decoration: InputDecoration(
-                hintText: 'Tìm kiếm giao dịch...',
+                hintText: 'Tìm kiếm giao dịch thu tiền...',
                 hintStyle: TextStyle(
                   color: Colors.grey[500],
                   fontFamily: FontFamily.productSans,
@@ -307,40 +323,75 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           
           const SizedBox(height: 12),
           
-          // Filter Chips
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Row(
-              children: [
-                _buildFilterChip(
-                  'Tất cả loại',
-                  state.selectedType == null,
-                  () => context.read<TransactionBloc>().add(FilterTransactionsByTypeEvent(null)),
-                ),
-                const SizedBox(width: 8),
-                ...TransactionType.values.map((type) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: _buildFilterChip(
-                    _getTypeDisplayName(type),
-                    state.selectedType == type,
-                    () => context.read<TransactionBloc>().add(FilterTransactionsByTypeEvent(type)),
-                  ),
-                )),
-                const SizedBox(width: 8),
-                _buildFilterChip(
-                  'Trạng thái',
-                  state.selectedStatus != null,
-                  () => _showStatusFilter(context, state),
-                ),
-                if (state.hasFilters) ...[
-                  const SizedBox(width: 8),
-                  _buildClearFiltersButton(),
-                ],
-              ],
-            ),
+          // Year Filter
+          Row(
+            children: [
+              Expanded(
+                child: _buildYearFilter(),
+              ),
+              const SizedBox(width: 8),
+              _buildFilterChip(
+                'Trạng thái',
+                state.selectedStatus != null,
+                () => _showStatusFilter(context, state),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildYearFilter() {
+    final currentYear = DateTime.now().year;
+    final years = List.generate(5, (index) => currentYear - index);
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: DropdownButtonFormField<int>(
+        value: _selectedYear,
+        decoration: InputDecoration(
+          hintText: 'Chọn năm',
+          hintStyle: TextStyle(
+            color: Colors.grey[500],
+            fontFamily: FontFamily.productSans,
+          ),
+          prefixIcon: Icon(Icons.calendar_today, color: Colors.grey[500]),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
+        ),
+        items: [
+          const DropdownMenuItem<int>(
+            value: null,
+            child: Text('Tất cả năm'),
+          ),
+          ...years.map((year) => DropdownMenuItem<int>(
+            value: year,
+            child: Text(year.toString()),
+          )),
+        ],
+        onChanged: (value) {
+          setState(() {
+            _selectedYear = value;
+          });
+        },
+        style: TextStyle(
+          fontFamily: FontFamily.productSans,
+          color: Colors.grey[700],
+        ),
       ),
     );
   }
@@ -382,6 +433,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     return GestureDetector(
       onTap: () {
         _searchController.clear();
+        setState(() {
+          _selectedYear = DateTime.now().year;
+        });
         context.read<TransactionBloc>().add(ClearFiltersEvent());
       },
       child: Container(
@@ -411,8 +465,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     );
   }
 
-  Widget _buildTransactionList(TransactionsLoaded state) {
-    if (state.filteredTransactions.isEmpty) {
+  Widget _buildTransactionList(List<TransactionModel> transactions) {
+    if (transactions.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -424,24 +478,22 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Không có giao dịch',
+              'Không có giao dịch thu tiền',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
                 fontFamily: FontFamily.productSans,
               ),
             ),
-            if (state.hasFilters) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Thử thay đổi bộ lọc',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[500],
-                  fontFamily: FontFamily.productSans,
-                ),
+            const SizedBox(height: 8),
+            Text(
+              'Thử thay đổi bộ lọc hoặc năm',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+                fontFamily: FontFamily.productSans,
               ),
-            ],
+            ),
           ],
         ),
       );
@@ -449,16 +501,15 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: state.filteredTransactions.length,
+      itemCount: transactions.length,
       itemBuilder: (context, index) {
-        final transaction = state.filteredTransactions[index];
+        final transaction = transactions[index];
         return _buildTransactionCard(transaction);
       },
     );
   }
 
   Widget _buildTransactionCard(TransactionModel transaction) {
-    final isCredit = transaction.isCredit;
     final statusColor = _getStatusColor(transaction.status);
     
     return Container(
@@ -487,14 +538,12 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: isCredit 
-                      ? const Color(0xFF059669).withOpacity(0.1)
-                      : const Color(0xFFDC2626).withOpacity(0.1),
+                    color: const Color(0xFF059669).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Icon(
                     _getTypeIcon(transaction.type),
-                    color: isCredit ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                    color: const Color(0xFF059669),
                     size: 20,
                   ),
                 ),
@@ -530,11 +579,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '${isCredit ? '+' : '-'}${transaction.amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ',
+                      '+${transaction.amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: isCredit ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                        color: const Color(0xFF059669),
                         fontFamily: FontFamily.productSans,
                       ),
                     ),
@@ -625,37 +674,16 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     );
   }
 
-  String _getTypeDisplayName(TransactionType type) {
-    switch (type) {
-      case TransactionType.deposit:
-        return 'Nạp tiền';
-      case TransactionType.withdraw:
-        return 'Rút tiền';
-      case TransactionType.purchase:
-        return 'Mua hàng';
-      case TransactionType.refund:
-        return 'Hoàn tiền';
-      case TransactionType.bonus:
-        return 'Thưởng';
-      case TransactionType.penalty:
-        return 'Phạt';
-    }
-  }
-
   IconData _getTypeIcon(TransactionType type) {
     switch (type) {
       case TransactionType.deposit:
         return Icons.add_circle_outline;
-      case TransactionType.withdraw:
-        return Icons.remove_circle_outline;
-      case TransactionType.purchase:
-        return Icons.shopping_cart_outlined;
       case TransactionType.refund:
         return Icons.refresh;
       case TransactionType.bonus:
         return Icons.star_outline;
-      case TransactionType.penalty:
-        return Icons.warning_outlined;
+      default:
+        return Icons.payment;
     }
   }
 

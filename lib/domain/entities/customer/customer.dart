@@ -7,6 +7,16 @@ class CustomerModel {
   final DateTime? createdAt;
   final double? totalSpent;
   final String status; // 'active', 'inactive', 'pending'
+  
+  // New fields for location and customer group
+  final int? wardId;
+  final String? wardName;
+  final int? groupId;
+  final String? groupName;
+  final int? areaId;
+  final String? areaName;
+  final String? customerGroup; // 'regular', 'vip', 'premium'
+  final double? price; // Giá tiền dịch vụ
 
   CustomerModel({
     required this.id,
@@ -17,6 +27,14 @@ class CustomerModel {
     this.createdAt,
     this.totalSpent,
     this.status = 'active',
+    this.wardId,
+    this.wardName,
+    this.groupId,
+    this.groupName,
+    this.areaId,
+    this.areaName,
+    this.customerGroup,
+    this.price,
   });
 
   factory CustomerModel.fromJson(Map<String, dynamic> json) {
@@ -31,6 +49,14 @@ class CustomerModel {
           : null,
       totalSpent: json['totalSpent']?.toDouble(),
       status: json['status'] ?? 'active',
+      wardId: json['wardId'],
+      wardName: json['wardName'],
+      groupId: json['groupId'],
+      groupName: json['groupName'],
+      areaId: json['areaId'],
+      areaName: json['areaName'],
+      customerGroup: json['customerGroup'],
+      price: json['price']?.toDouble(),
     );
   }
 
@@ -44,6 +70,14 @@ class CustomerModel {
       'createdAt': createdAt?.toIso8601String(),
       'totalSpent': totalSpent,
       'status': status,
+      'wardId': wardId,
+      'wardName': wardName,
+      'groupId': groupId,
+      'groupName': groupName,
+      'areaId': areaId,
+      'areaName': areaName,
+      'customerGroup': customerGroup,
+      'price': price,
     };
   }
 } 

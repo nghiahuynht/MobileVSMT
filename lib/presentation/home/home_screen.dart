@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:trash_pay/presentation/home/logics/home_bloc.dart';
 import 'package:trash_pay/presentation/customer/customer_list_screen.dart';
-import 'package:trash_pay/presentation/profile/profile_screen.dart';
-import 'package:trash_pay/presentation/order/order_screen.dart';
+import 'package:trash_pay/presentation/order/order_list_screen.dart';
 import 'package:trash_pay/presentation/order/logics/order_bloc.dart';
 import 'package:trash_pay/presentation/reports/reports_screen.dart';
 import 'package:trash_pay/presentation/reports/logics/report_bloc.dart';
@@ -34,11 +34,7 @@ class HomePage extends StatelessWidget {
               ProfessionalHeaders.home(
                 profileWidget: GestureDetector(
                   onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => const ProfileScreen(),
-                      ),
-                    );
+                    context.push('/profile');
                   },
                   child: Container(
                     padding: const EdgeInsets.all(10),
@@ -80,7 +76,7 @@ class HomePage extends StatelessWidget {
                             MaterialPageRoute(
                               builder: (context) => BlocProvider(
                                 create: (context) => OrderBloc(),
-                                child: const OrderScreen(),
+                                child: const OrderListScreen(),
                               ),
                             ),
                           );

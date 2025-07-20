@@ -1,6 +1,8 @@
 import 'package:trash_pay/domain/entities/profile/profile.dart';
 
-abstract class ProfileEvents {}
+abstract class ProfileEvents {
+  
+}
 
 class LoadProfileEvent extends ProfileEvents {}
 

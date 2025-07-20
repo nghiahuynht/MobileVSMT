@@ -33,9 +33,7 @@ class ApiConfig {
   static const String loginEndpoint = '$userEndpoint/Login';
   static const String logoutEndpoint = '$userEndpoint/logout';
   static const String refreshTokenEndpoint = '$userEndpoint/refresh';
-  
-  static const String usersEndpoint = '/users';
-  static const String profileEndpoint = '$usersEndpoint/profile';
+  static const String profileEndpoint = '$userEndpoint/GetAccountInfo';
   
 
   static const String metaData = '/MetaData';
