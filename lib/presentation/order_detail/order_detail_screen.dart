@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trash_pay/constants/strings.dart';
+import 'package:trash_pay/presentation/order/enum.dart';
 import 'package:trash_pay/presentation/order_detail/logics/order_detail_bloc.dart';
 import 'package:trash_pay/presentation/order_detail/logics/order_detail_events.dart';
 import 'package:trash_pay/presentation/order_detail/logics/order_detail_state.dart';
@@ -207,7 +208,7 @@ class OrderDetailScreen extends StatelessWidget {
   Widget _buildStatusChip(OrderStatus status) {
     Color textColor = Colors.white;
 
-    if (status == OrderStatus.newStatus) {
+    if (status == OrderStatus.waiting) {
       textColor = Colors.grey[700]!;
     }
     return Container(

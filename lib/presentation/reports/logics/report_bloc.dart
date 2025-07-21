@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/entities/report/report.dart';
 import '../../../domain/entities/report/report_period.dart';
 import '../../../domain/entities/transaction/transaction.dart';
-import '../../../domain/entities/customer/customer.dart';
 import '../../../domain/entities/product/product.dart';
 import 'report_events.dart';
 import 'report_state.dart';
@@ -268,28 +267,28 @@ class ReportBloc extends Bloc<ReportEvent, ReportState> {
 
     // Generate top spending customers
     final topSpendingCustomers = <CustomerSpending>[];
-    for (int i = 0; i < 10; i++) {
-      final customer = CustomerModel(
-        id: 'customer_$i',
-        name: _getRandomCustomerName(i),
-        phone: '+84${900000000 + random.nextInt(99999999)}',
-        status: 'active',
-        totalSpent: 500000 + random.nextDouble() * 2000000,
-      );
+    // for (int i = 0; i < 10; i++) {
+    //   final customer = CustomerModel(
+    //     id: 'customer_$i',
+    //     name: _getRandomCustomerName(i),
+    //     phone: '+84${900000000 + random.nextInt(99999999)}',
+    //     status: 'active',
+    //     totalSpent: 500000 + random.nextDouble() * 2000000,
+    //   );
       
-      final orderCount = 3 + random.nextInt(12);
-      final totalSpent = customer.totalSpent ?? 0;
-      final averageOrderValue = totalSpent / orderCount;
-      final lastOrderDate = DateTime.now().subtract(Duration(days: random.nextInt(30)));
+    //   final orderCount = 3 + random.nextInt(12);
+    //   final totalSpent = customer.totalSpent ?? 0;
+    //   final averageOrderValue = totalSpent / orderCount;
+    //   final lastOrderDate = DateTime.now().subtract(Duration(days: random.nextInt(30)));
 
-      topSpendingCustomers.add(CustomerSpending(
-        customer: customer,
-        totalSpent: totalSpent,
-        orderCount: orderCount,
-        averageOrderValue: averageOrderValue,
-        lastOrderDate: lastOrderDate,
-      ));
-    }
+    //   topSpendingCustomers.add(CustomerSpending(
+    //     customer: customer,
+    //     totalSpent: totalSpent,
+    //     orderCount: orderCount,
+    //     averageOrderValue: averageOrderValue,
+    //     lastOrderDate: lastOrderDate,
+    //   ));
+    // }
 
     topSpendingCustomers.sort((a, b) => b.totalSpent.compareTo(a.totalSpent));
 

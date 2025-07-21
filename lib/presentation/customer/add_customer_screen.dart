@@ -166,23 +166,23 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      final customerData = CustomerModel(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        name: _nameController.text.trim(),
-        phone: _phoneController.text.trim(),
-        address: _addressController.text.trim(),
-        wardId: _selectedWard?.id,
-        wardName: _selectedWard?.name,
-        groupId: _selectedGroup?.id,
-        groupName: _selectedGroup?.name,
-        areaId: _selectedArea?.id,
-        areaName: _selectedArea?.name,
-        customerGroup: _customerGroupController.text.trim(),
-        price: double.tryParse(_priceController.text) ?? 0.0,
-        createdAt: DateTime.now(),
-      );
+      // final customerData = CustomerModel(
+      //   id: DateTime.now().millisecondsSinceEpoch.toString(),
+      //   name: _nameController.text.trim(),
+      //   phone: _phoneController.text.trim(),
+      //   address: _addressController.text.trim(),
+      //   wardId: _selectedWard?.id,
+      //   wardName: _selectedWard?.name,
+      //   groupId: _selectedGroup?.id,
+      //   groupName: _selectedGroup?.name,
+      //   areaId: _selectedArea?.id,
+      //   areaName: _selectedArea?.name,
+      //   customerGroup: _customerGroupController.text.trim(),
+      //   price: double.tryParse(_priceController.text) ?? 0.0,
+      //   createdAt: DateTime.now(),
+      // );
 
-      context.read<CustomerBloc>().add(AddCustomerEvent(customerData));
+      // context.read<CustomerBloc>().add(AddCustomerEvent(customerData));
     }
   }
 

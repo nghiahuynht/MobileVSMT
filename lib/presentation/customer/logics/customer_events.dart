@@ -2,7 +2,14 @@ import 'package:trash_pay/domain/entities/customer/customer.dart';
 
 abstract class CustomerEvents {}
 
-class LoadCustomersEvent extends CustomerEvents {}
+class LoadCustomersEvent extends CustomerEvents {
+  final int? pageIndex;
+  final int? pageSize;
+  
+  LoadCustomersEvent({this.pageIndex, this.pageSize});
+}
+
+class LoadMoreCustomersEvent extends CustomerEvents {}
 
 class SearchCustomersEvent extends CustomerEvents {
   final String query;
@@ -32,6 +39,6 @@ class UpdateCustomerEvent extends CustomerEvents {
 }
 
 class DeleteCustomerEvent extends CustomerEvents {
-  final String customerId;
+  final int customerId;
   DeleteCustomerEvent(this.customerId);
 } 

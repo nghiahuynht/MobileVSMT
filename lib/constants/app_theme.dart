@@ -37,7 +37,7 @@ class AppThemeData {
       colorScheme: colorScheme,
       // textTheme: _textTheme,
       // Matches manifest.json colors and background color.
-      primaryColor: const Color(0xFF030303),
+      primaryColor: const Color(0xFFff8c1c),
       appBarTheme: AppBarTheme(
         backgroundColor: colorScheme.surface,
         elevation: 0,
@@ -60,8 +60,8 @@ class AppThemeData {
   }
 
   static const ColorScheme lightColorScheme = ColorScheme(
-    primary: Color(0xFFd21e1d),
-    primaryContainer: Color(0xFF9e1718),
+    primary: Color(0xFFff8c1c),
+    primaryContainer: Color(0xFFe67a00),
     secondary: Color(0xFFEFF3F3),
     secondaryContainer: Color(0xFFFAFBFB),
     surface: Color(0xFFFAFBFB),
@@ -74,8 +74,8 @@ class AppThemeData {
   );
 
   static const ColorScheme darkColorScheme = ColorScheme(
-    primary: Color(0xFFFF8383),
-    primaryContainer: Color(0xFF1CDEC9),
+    primary: Color(0xFFffad5c),
+    primaryContainer: Color(0xFFff8c1c),
     secondary: Color(0xFF4D1F7C),
     secondaryContainer: Color(0xFF451B6F),
     surface: Color(0xFF1F1929),

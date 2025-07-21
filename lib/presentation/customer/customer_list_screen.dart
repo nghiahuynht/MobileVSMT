@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trash_pay/constants/strings.dart';
 import 'package:trash_pay/domain/entities/customer/customer.dart';
 import 'package:trash_pay/domain/entities/location/group.dart';
 import 'package:trash_pay/domain/entities/location/area.dart';
@@ -20,38 +21,71 @@ class CustomerListScreen extends StatefulWidget {
 
 class _CustomerListScreenState extends State<CustomerListScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   Group? _selectedGroup;
   Area? _selectedArea;
+  late CustomerBloc _customerBloc;
+  bool _isLoadingMore = false; // Add flag to prevent duplicate calls
 
   @override
   void initState() {
     super.initState();
+    _customerBloc = CustomerBloc();
     _searchController.addListener(_onSearchChanged);
+    _scrollController.addListener(_onScroll);
+    
+    // Load initial customers
+    _customerBloc.add(LoadCustomersEvent());
   }
 
   @override
   void dispose() {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
+    _scrollController.dispose();
+    _customerBloc.close();
     super.dispose();
   }
 
+  void _onScroll() {
+    final state = _customerBloc.state;
+    if (state is CustomersLoaded) {
+      if (_isBottom && !state.hasReachedMax && !state.isLoadingMore && !_isLoadingMore) {
+        _isLoadingMore = true; // Set flag to prevent duplicate calls
+        _customerBloc.add(LoadMoreCustomersEvent());
+        // Reset flag after a short delay to allow for the next load more
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            _isLoadingMore = false;
+          }
+        });
+      }
+    }
+  }
+
+  bool get _isBottom {
+    if (!_scrollController.hasClients) return false;
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final currentScroll = _scrollController.offset;
+    return currentScroll >= (maxScroll * 0.85); // Load when reach 85% of scroll
+  }
+
   void _onSearchChanged() {
-    context.read<CustomerBloc>().add(SearchCustomersEvent(_searchController.text));
+    _customerBloc.add(SearchCustomersEvent(_searchController.text));
   }
 
   void _onGroupChanged(Group? group) {
     setState(() {
       _selectedGroup = group;
     });
-    context.read<CustomerBloc>().add(FilterCustomersByGroupEvent(group?.id));
+    _customerBloc.add(FilterCustomersByGroupEvent(group?.id));
   }
 
   void _onAreaChanged(Area? area) {
     setState(() {
       _selectedArea = area;
     });
-    context.read<CustomerBloc>().add(FilterCustomersByAreaEvent(area?.id));
+    _customerBloc.add(FilterCustomersByAreaEvent(area?.id));
   }
 
   void _clearFilters() {
@@ -60,13 +94,13 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       _selectedArea = null;
       _searchController.clear();
     });
-    context.read<CustomerBloc>().add(ClearFiltersEvent());
+    _customerBloc.add(ClearFiltersEvent());
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => CustomerBloc()..add(LoadCustomersEvent()),
+    return BlocProvider.value(
+      value: _customerBloc,
       child: Scaffold(
         body: Container(
           decoration: const BoxDecoration(
@@ -93,11 +127,11 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   );
                   if (result == true) {
                     // Refresh customer list if customer was added successfully
-                    context.read<CustomerBloc>().add(LoadCustomersEvent());
+                    _customerBloc.add(LoadCustomersEvent());
                   }
                 },
               ),
-              
+
               // Search and Filter Section
               Container(
                 margin: const EdgeInsets.all(20),
@@ -139,9 +173,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         ),
                       ),
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Filter Row
                     Row(
                       children: [
@@ -168,9 +202,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                             },
                           ),
                         ),
-                        
+
                         const SizedBox(width: 12),
-                        
+
                         // Area Filter
                         Expanded(
                           child: BlocBuilder<CustomerBloc, CustomerState>(
@@ -178,9 +212,12 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                               if (state is CustomersLoaded) {
                                 // Filter areas based on selected group
                                 final availableAreas = _selectedGroup != null
-                                    ? state.areas.where((area) => area.groupId == _selectedGroup!.id).toList()
+                                    ? state.areas
+                                        .where((area) =>
+                                            area.groupId == _selectedGroup!.id)
+                                        .toList()
                                     : state.areas;
-                                
+
                                 return _buildFilterDropdown<Area>(
                                   value: _selectedArea,
                                   items: availableAreas,
@@ -199,9 +236,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                             },
                           ),
                         ),
-                        
+
                         const SizedBox(width: 12),
-                        
+
                         // Clear Filters Button
                         Container(
                           decoration: BoxDecoration(
@@ -224,20 +261,22 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         ),
                       ],
                     ),
-                    
+
                     // Customer Count Info
                     const SizedBox(height: 16),
                     BlocBuilder<CustomerBloc, CustomerState>(
                       builder: (context, state) {
                         if (state is CustomersLoaded) {
-                          final totalCustomers = state.customers.length;
-                          final filteredCustomers = state.filteredCustomers.length;
-                          final hasFilters = _selectedGroup != null || 
-                                           _selectedArea != null || 
-                                           _searchController.text.isNotEmpty;
-                          
+                          final totalCustomers = state.totalCustomers;
+                          final filteredCustomers =
+                              state.filteredCustomers.length;
+                          final hasFilters = _selectedGroup != null ||
+                              _selectedArea != null ||
+                              _searchController.text.isNotEmpty;
+
                           return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(8),
@@ -256,7 +295,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    hasFilters 
+                                    hasFilters
                                         ? 'Hiển thị $filteredCustomers/$totalCustomers khách hàng'
                                         : 'Tổng cộng $totalCustomers khách hàng',
                                     style: const TextStyle(
@@ -268,7 +307,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                 ),
                                 if (hasFilters) ...[
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF0FDF4),
                                       borderRadius: BorderRadius.circular(4),
@@ -293,7 +333,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   ],
                 ),
               ),
-              
+
               // Customer list
               Expanded(
                 child: BlocConsumer<CustomerBloc, CustomerState>(
@@ -322,62 +362,11 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         ),
                       );
                     }
-                    
+
                     if (state is CustomersLoaded) {
-                      final customers = state.filteredCustomers;
-                      
-                      if (customers.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.people_outline,
-                                size: 64,
-                                color: Colors.grey.shade400,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Không có khách hàng nào',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Thêm khách hàng mới để bắt đầu',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey.shade500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                      
-                      return ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: customers.length,
-                        itemBuilder: (context, index) {
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => CustomerDetailScreen(
-                                    customer: customers[index],
-                                  ),
-                                ),
-                              );
-                            },
-                            child: _buildCustomerCard(customers[index]),
-                          );
-                        },
-                      );
+                      return _buildCustomerList(state);
                     }
-                    
+
                     return const SizedBox.shrink();
                   },
                 ),
@@ -385,6 +374,104 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCustomerList(CustomersLoaded state) {
+    final customers = state.filteredCustomers;
+
+    if (customers.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.people_outline,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Không có khách hàng nào',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Thêm khách hàng mới để bắt đầu',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      controller: _scrollController,
+      child: Column(
+        children: [
+          // Customer list
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: customers.length,
+            itemBuilder: (context, index) {
+              return GestureDetector(
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => CustomerDetailScreen(
+                        customer: customers[index],
+                      ),
+                    ),
+                  );
+                },
+                child: _buildCustomerCard(customers[index]),
+              );
+            },
+          ),
+          
+          // Loading more indicator
+          if (state.isLoadingMore)
+            Container(
+              padding: const EdgeInsets.all(20),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF059669),
+                ),
+              ),
+            ),
+          
+          // End of list indicator
+          if (state.hasReachedMax && customers.isNotEmpty)
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(child: Divider(color: Colors.grey[300])),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'Đã hiển thị tất cả khách hàng',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[500],
+                      ),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: Colors.grey[300])),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -418,16 +505,18 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               ),
             ),
           ),
-          ...items.map((item) => DropdownMenuItem<T>(
-            value: item,
-            child: Text(
-              itemBuilder(item),
-              style: const TextStyle(
-                color: Color(0xFF1E293B),
-                fontSize: 14,
-              ),
-            ),
-          )).toList(),
+          ...items
+              .map((item) => DropdownMenuItem<T>(
+                    value: item,
+                    child: Text(
+                      itemBuilder(item),
+                      style: const TextStyle(
+                        color: Color(0xFF1E293B),
+                        fontSize: 14,
+                      ),
+                    ),
+                  ))
+              .toList(),
         ],
         onChanged: onChanged,
         decoration: const InputDecoration(
@@ -448,7 +537,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       ),
     );
   }
-  
+
   Widget _buildCustomerCard(CustomerModel customer) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -479,13 +568,15 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 height: 48,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: _getAvatarColors(customer.status),
+                    colors: _getAvatarColors(null),
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Center(
                   child: Text(
-                    customer.name.isNotEmpty ? customer.name[0].toUpperCase() : 'U',
+                    (customer.name?.isNotEmpty ?? false)
+                        ? customer.name![0].toUpperCase()
+                        : 'U',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -494,16 +585,16 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(width: 16),
-              
+
               // Customer info
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      customer.name,
+                      customer.name ?? Strings.defaultEmpty,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -532,10 +623,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   ],
                 ),
               ),
-
             ],
           ),
-          
+
           if (customer.address != null) ...[
             const SizedBox(height: 12),
             Row(
@@ -560,11 +650,12 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               ],
             ),
           ],
-          
+
           const SizedBox(height: 12),
-          
+
           // Location info
-          if (customer.groupName != null || customer.areaName != null) ...[
+          if (customer.areaSaleName != null ||
+              customer.routeSaleName != null) ...[
             Row(
               children: [
                 Icon(
@@ -574,7 +665,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '${customer.groupName ?? ''}${customer.groupName != null && customer.areaName != null ? ' - ' : ''}${customer.areaName ?? ''}',
+                  '${customer.routeSaleName ?? ''}${customer.routeSaleName != null && customer.areaSaleName != null ? ' - ' : ''}${customer.areaSaleName ?? ''}',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade600,
@@ -585,19 +676,43 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
             ),
             const SizedBox(height: 8),
           ],
-          
+
+          // Location info
+          if (customer.customerGroupName != null) ...[
+            Row(
+              children: [
+                Icon(
+                  Icons.people_outline,
+                  size: 14,
+                  color: Colors.grey.shade600,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  customer.customerGroupName!,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+
           // Bottom stats
           Row(
             children: [
-              if (customer.totalSpent != null) ...[
+              if (customer.currentPrice != null) ...[
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF0FDF4),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    'Tổng: ${NumberFormat.currency(locale: 'vi_VN', symbol: '₫').format(customer.totalSpent)}',
+                    'Giá tiền: ${NumberFormat.currency(locale: 'vi_VN', symbol: '₫').format(customer.currentPrice)}',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -613,52 +728,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       ),
     );
   }
-  
-  Widget _buildStatusBadge(String status) {
-    Color backgroundColor;
-    Color textColor;
-    String text;
-    
-    switch (status) {
-      case 'active':
-        backgroundColor = const Color(0xFFF0FDF4);
-        textColor = const Color(0xFF059669);
-        text = 'Hoạt động';
-        break;
-      case 'inactive':
-        backgroundColor = const Color(0xFFFEF2F2);
-        textColor = const Color(0xFFDC2626);
-        text = 'Không hoạt động';
-        break;
-      case 'pending':
-        backgroundColor = const Color(0xFFFEF3C7);
-        textColor = const Color(0xFFD97706);
-        text = 'Chờ xử lý';
-        break;
-      default:
-        backgroundColor = const Color(0xFFF1F5F9);
-        textColor = const Color(0xFF64748B);
-        text = 'Không xác định';
-    }
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: textColor,
-        ),
-      ),
-    );
-  }
-  
-  List<Color> _getAvatarColors(String status) {
+
+  List<Color> _getAvatarColors(String? status) {
     switch (status) {
       case 'active':
         return [const Color(0xFF059669), const Color(0xFF10B981)];
@@ -670,5 +741,4 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
         return [const Color(0xFF64748B), const Color(0xFF94A3B8)];
     }
   }
-
-} 
+}

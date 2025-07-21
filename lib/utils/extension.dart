@@ -19,4 +19,8 @@ extension DateTimeExtension on DateTime {
   String getDateString() {
     return DateFormat('yyyy-MM-dd').format(this);
   }
+
+  String toDDMMYYY() {
+    return DateFormat('dd/MM/yyyy').format(this);
+  }
 }

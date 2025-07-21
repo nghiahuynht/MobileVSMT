@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trash_pay/constants/strings.dart';
+import 'package:trash_pay/presentation/order/enum.dart';
 import '../../constants/font_family.dart';
 import '../../domain/entities/order/order.dart';
 import 'logics/order_bloc.dart';

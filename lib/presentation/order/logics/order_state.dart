@@ -1,3 +1,5 @@
+import 'package:trash_pay/presentation/order/enum.dart';
+
 import '../../../domain/entities/product/product.dart';
 import '../../../domain/entities/order/order.dart';
 import '../../../domain/entities/order/order_item.dart';

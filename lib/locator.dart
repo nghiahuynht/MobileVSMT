@@ -8,6 +8,8 @@ import 'package:trash_pay/domain/repository/unit/unit_repository.dart';
 import 'package:trash_pay/domain/repository/unit/unit_repository_impl.dart';
 import 'package:trash_pay/domain/repository/location/location_repository.dart';
 import 'package:trash_pay/domain/repository/location/location_repository_impl.dart';
+import 'package:trash_pay/presentation/app/logics/app_bloc.dart';
+import 'package:trash_pay/presentation/app/master_data_manager.dart';
 import 'package:trash_pay/services/auth/firebase_auth_service.dart';
 import 'package:trash_pay/services/token_manager.dart';
 import 'package:trash_pay/services/user_prefs.dart';
@@ -42,4 +44,6 @@ void _locator() {
   GetIt.I.registerLazySingleton<LocationRepository>(() => LocationRepositoryImpl());
   GetIt.I.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
   GetIt.I.registerLazySingleton(() => DomainManager());
+  GetIt.I.registerLazySingleton(() => MasterDataManager());
+  // GetIt.I.registerLazySingleton(() => AppBloc());
 }

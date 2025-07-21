@@ -1,58 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:trash_pay/domain/entities/common/base_model.dart';
+import 'package:trash_pay/presentation/order/enum.dart';
 
 import 'order_item.dart';
 
-enum OrderStatus {
-  newStatus,
-  confirmed,
-  cancelled;
-
-  String get statusDisplayName {
-    switch (this) {
-      case OrderStatus.newStatus:
-        return 'Mới';
-      case OrderStatus.confirmed:
-        return 'Đã duyệt';
-      case OrderStatus.cancelled:
-        return 'Đã hủy';
-    }
-  }
-
-  Color get color {
-    switch (this) {
-      case OrderStatus.newStatus:
-        return Colors.grey[300] ?? Colors.grey;
-      case OrderStatus.confirmed:
-        return const Color(0xFF059669);
-      case OrderStatus.cancelled:
-        return const Color(0xFFDC2626);
-    }
-  }
-
-  IconData get icon {
-    switch (this) {
-      case OrderStatus.newStatus:
-        return Icons.edit_outlined;
-      case OrderStatus.confirmed:
-        return Icons.check_circle_outline;
-      case OrderStatus.cancelled:
-        return Icons.cancel_outlined;
-    }
-  }
-
-  static OrderStatus fromMap(String status) {
-    switch (status) {
-      case 'new':
-        return newStatus;
-      default:
-        return cancelled;
-    }
-  }
-}
 
 class OrderModel extends BaseModel {
   final int id;

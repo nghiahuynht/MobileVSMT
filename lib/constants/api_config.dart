@@ -37,6 +37,8 @@ class ApiConfig {
   static const String getSaleOrderPaging = '$saleOrderEndpoint/GetSaleOrderPaging';
   static const String getSaleOrderById = '$saleOrderEndpoint/GetSaleOrderById';
 
+  static const String customerEndpoint = '/Customer';
+  static const String getCustomerPaging = '$customerEndpoint/GetCustomerPaging';
 
   static const String metaData = '/MetaData';
   static const String unitsEndpoint = '$metaData/GetAllCompany';
@@ -54,7 +56,7 @@ class ApiConfig {
   
   // Retry configuration
   static const int maxRetries = 3;
-  static const Duration retryInterval = Duration(seconds: 2);
+  static const Duration retryInterval = Duration(seconds: 1);
   
   // Pagination
   static const int defaultPageSize = 20;
@@ -62,8 +64,8 @@ class ApiConfig {
 }
 
 enum Environment {
-  production,
-  staging, 
   development,
+  staging,
+  production,
   local,
 } 

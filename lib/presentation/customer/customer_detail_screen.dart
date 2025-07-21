@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trash_pay/constants/strings.dart';
 import 'package:trash_pay/domain/entities/customer/customer.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_bloc.dart';
-import 'package:trash_pay/presentation/customer/logics/customer_events.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_state.dart';
 import 'package:trash_pay/presentation/widgets/common/professional_header.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:trash_pay/utils/extension.dart';
 
 class CustomerDetailScreen extends StatelessWidget {
   final CustomerModel customer;
@@ -37,10 +38,11 @@ class CustomerDetailScreen extends StatelessWidget {
               // Professional Header
               ProfessionalHeaders.detail(
                 title: 'Chi Tiết Khách Hàng',
-                subtitle: 'Thông tin và lịch sử giao dịch',
-                actionWidget: PopupMenuButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(10),
+                actionWidget: InkWell(
+                  onTap: () => _handleMenuAction(context, 'edit'),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
@@ -50,37 +52,14 @@ class CustomerDetailScreen extends StatelessWidget {
                       ),
                     ),
                     child: const Icon(
-                      Icons.more_vert_rounded,
+                      Icons.edit_outlined,
                       size: 18,
                       color: Colors.white,
                     ),
                   ),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit_outlined, size: 18),
-                          SizedBox(width: 8),
-                          Text('Chỉnh sửa'),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete_outline, size: 18, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Xóa', style: TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
-                  onSelected: (value) => _handleMenuAction(context, value),
                 ),
               ),
-              
+
               // Customer Detail Content
               Expanded(
                 child: BlocConsumer<CustomerBloc, CustomerState>(
@@ -116,7 +95,7 @@ class CustomerDetailScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildCustomerDetailContent(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -149,12 +128,12 @@ class CustomerDetailScreen extends StatelessWidget {
                   height: 80,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: _getAvatarColors(customer.status),
+                      colors: _getAvatarColors(null),
                     ),
                     borderRadius: BorderRadius.circular(40),
                     boxShadow: [
                       BoxShadow(
-                        color: _getAvatarColors(customer.status)[0].withOpacity(0.3),
+                        color: _getAvatarColors(null)[0].withOpacity(0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -162,7 +141,9 @@ class CustomerDetailScreen extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      customer.name.isNotEmpty ? customer.name[0].toUpperCase() : 'U',
+                      (customer.name?.isNotEmpty ?? false)
+                          ? customer.name![0].toUpperCase()
+                          : 'U',
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -171,12 +152,12 @@ class CustomerDetailScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Name and Status
                 Text(
-                  customer.name,
+                  customer.name ?? Strings.defaultEmpty,
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -184,12 +165,22 @@ class CustomerDetailScreen extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
-                
-                if (customer.createdAt != null) ...[
+
+                if (customer.code != null) ...[
                   const SizedBox(height: 8),
                   Text(
-                    'Khách hàng từ ${DateFormat('dd/MM/yyyy').format(customer.createdAt!)}',
+                    'Mã KH: ${customer.code}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+
+                if (customer.createdDate != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    'Khách hàng từ ${customer.createdDate!.toDDMMYYY()}',
                     style: TextStyle(
                       fontSize: 14,
                       color: Colors.grey.shade600,
@@ -199,110 +190,101 @@ class CustomerDetailScreen extends StatelessWidget {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Contact Information
           _buildInfoSection(
             'Thông Tin Liên Hệ',
             [
               if (customer.phone != null)
-                _buildInfoItem(Icons.phone_outlined, 'Số điện thoại', customer.phone!, 
-                  onTap: () {
-                    // TODO: Open phone dialer
-                  }),
-              if (customer.email != null)
-                _buildInfoItem(Icons.email_outlined, 'Email', customer.email!,
-                  onTap: () {
-                    // TODO: Open email client
-                  }),
+                _buildInfoItem(
+                  Icons.phone_outlined,
+                  'Số điện thoại',
+                  customer.phone!,
+                ),
               if (customer.address != null)
-                _buildInfoItem(Icons.location_on_outlined, 'Địa chỉ', customer.address!,
-                  onTap: () {
-                    // TODO: Open maps
-                  }),
+                _buildInfoItem(
+                  Icons.home_outlined,
+                  'Địa chỉ',
+                  customer.address!,
+                ),
+              if (customer.provinceCode != null)
+                _buildInfoItem(
+                  Icons.location_city_outlined,
+                  'Tỉnh/Thành phố',
+                  customer.provinceCode!,
+                ),
+              if (customer.wardCode != null)
+                _buildInfoItem(
+                  Icons.place_outlined,
+                  'Phường/Xã',
+                  customer.wardCode!,
+                ),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Location Information
           _buildInfoSection(
             'Thông Tin Khu Vực',
             [
-              if (customer.areaName != null)
-                _buildInfoItem(Icons.map_outlined, 'Khu vực', customer.areaName!),
-              if (customer.groupName != null)
-                _buildInfoItem(Icons.group_outlined, 'Nhóm', customer.groupName!),
-              if (customer.wardName != null)
-                _buildInfoItem(Icons.location_city_outlined, 'Phường/Xã', customer.wardName!),
+              if (customer.areaSaleName != null)
+                _buildInfoItem(
+                    Icons.explore_outlined, 'Khu vực', customer.areaSaleName!),
+              if (customer.routeSaleName != null)
+                _buildInfoItem(
+                    Icons.route_outlined, 'Tuyến', customer.routeSaleName!),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
+
           // Service Information
           _buildInfoSection(
             'Thông Tin Dịch Vụ',
             [
-              if (customer.customerGroup != null)
+              if (customer.customerGroupName != null)
+                _buildInfoItem(Icons.group_outlined, 'Loại hình kinh doanh',
+                    customer.customerGroupName!),
+              if (customer.oldPrice != null)
                 _buildInfoItem(
-                  Icons.star_outlined, 
-                  'Nhóm khách hàng', 
-                  _getCustomerGroupText(customer.customerGroup!)
-                ),
+                    Icons.attach_money_outlined,
+                    'Giá dịch vụ cũ',
+                    NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
+                        .format(customer.oldPrice)),
+              if (customer.currentPrice != null)
+                _buildInfoItem(
+                    Icons.attach_money_outlined,
+                    'Giá dịch vụ hiện tại',
+                    NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
+                        .format(customer.currentPrice)),
               if (customer.price != null)
                 _buildInfoItem(
-                  Icons.attach_money_outlined, 
-                  'Giá dịch vụ', 
-                  NumberFormat.currency(locale: 'vi_VN', symbol: '₫').format(customer.price)
-                ),
+                    Icons.attach_money_outlined,
+                    'Giá dịch vụ',
+                    NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
+                        .format(customer.price)),
             ],
           ),
-          
+
           const SizedBox(height: 20),
-          
-          // Financial Information
-          _buildInfoSection(
-            'Thông Tin Tài Chính',
-            [
-              if (customer.totalSpent != null)
-                _buildInfoItem(
-                  Icons.account_balance_wallet_outlined, 
-                  'Tổng chi tiêu', 
-                  NumberFormat.currency(locale: 'vi_VN', symbol: '₫').format(customer.totalSpent)
-                ),
-              _buildInfoItem(
-                Icons.history_outlined, 
-                'Lần thanh toán cuối', 
-                customer.createdAt != null 
-                    ? DateFormat('dd/MM/yyyy HH:mm').format(customer.createdAt!)
-                    : 'Chưa có giao dịch'
-              ),
-              _buildInfoItem(
-                Icons.trending_up_outlined, 
-                'Trạng thái tài khoản', 
-                _getAccountStatusText(customer.status)
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 20),
-          
-          // Transaction History Section
-          _buildTransactionHistory(context),
-          
-          const SizedBox(height: 20),
-          
+
+          // // Transaction History Section
+          // _buildTransactionHistory(context),
+
+          // const SizedBox(height: 20),
+
           // Action Buttons
           _buildActionButtons(context),
-          
+
           const SizedBox(height: 20),
         ],
       ),
     );
   }
-  
+
   Widget _buildInfoSection(String title, List<Widget> items) {
     return Container(
       width: double.infinity,
@@ -339,8 +321,9 @@ class CustomerDetailScreen extends StatelessWidget {
       ),
     );
   }
-  
-  Widget _buildInfoItem(IconData icon, String label, String value, {VoidCallback? onTap}) {
+
+  Widget _buildInfoItem(IconData icon, String label, String value,
+      {VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -394,153 +377,201 @@ class CustomerDetailScreen extends StatelessWidget {
       ),
     );
   }
-  
-  Widget _buildTransactionHistory(BuildContext context) {
-    // Mock transaction data - using customer's service price if available
-    final basePrice = customer.price ?? 300000; // Default price if not set
-    final transactions = [
-      {
-        'id': 'TXN001',
-        'date': DateTime.now().subtract(const Duration(days: 2)),
-        'amount': basePrice,
-        'description': 'Thu gom rác sinh hoạt',
-        'status': 'completed'
-      },
-      {
-        'id': 'TXN002', 
-        'date': DateTime.now().subtract(const Duration(days: 15)),
-        'amount': basePrice * 0.8, // Discount for regular customers
-        'description': 'Thu gom rác tái chế',
-        'status': 'completed'
-      },
-      {
-        'id': 'TXN003',
-        'date': DateTime.now().subtract(const Duration(days: 30)),
-        'amount': basePrice * 1.2, // Premium service
-        'description': 'Thu gom rác công nghiệp',
-        'status': 'completed'
-      },
-    ];
-    
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Text(
-                'Lịch Sử Giao Dịch',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1E293B),
-                ),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: () {
-                  context.go('/transaction-history', extra: {
-                    'customerId': customer.id,
-                    'customerName': customer.name,
-                  });
-                },
-                child: const Text(
-                  'Xem tất cả',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF0EA5E9),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          ...transactions.map((transaction) => _buildTransactionItem(transaction)).toList(),
-        ],
-      ),
-    );
-  }
-  
-  Widget _buildTransactionItem(Map<String, dynamic> transaction) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Colors.grey.shade200,
-            width: 1,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF0FDF4),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(
-              Icons.check_circle_outline,
-              size: 18,
-              color: Color(0xFF059669),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  transaction['description'],
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1E293B),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  DateFormat('dd/MM/yyyy').format(transaction['date']),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            NumberFormat.currency(locale: 'vi_VN', symbol: '₫').format(transaction['amount']),
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF059669),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
+
+  // Widget _buildTransactionHistory(BuildContext context) {
+  //   // Mock transaction data - using customer's service price if available
+  //   final basePrice = customer.price ?? 300000; // Default price if not set
+  //   final transactions = [
+  //     {
+  //       'id': 'TXN001',
+  //       'date': DateTime.now().subtract(const Duration(days: 2)),
+  //       'amount': basePrice,
+  //       'description': 'Thu gom rác sinh hoạt',
+  //       'status': 'completed'
+  //     },
+  //     {
+  //       'id': 'TXN002',
+  //       'date': DateTime.now().subtract(const Duration(days: 15)),
+  //       'amount': basePrice * 0.8, // Discount for regular customers
+  //       'description': 'Thu gom rác tái chế',
+  //       'status': 'completed'
+  //     },
+  //     {
+  //       'id': 'TXN003',
+  //       'date': DateTime.now().subtract(const Duration(days: 30)),
+  //       'amount': basePrice * 1.2, // Premium service
+  //       'description': 'Thu gom rác công nghiệp',
+  //       'status': 'completed'
+  //     },
+  //   ];
+
+  //   return Container(
+  //     width: double.infinity,
+  //     padding: const EdgeInsets.all(20),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(12),
+  //       border: Border.all(
+  //         color: const Color(0xFFE2E8F0),
+  //         width: 1,
+  //       ),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.black.withOpacity(0.04),
+  //           blurRadius: 8,
+  //           offset: const Offset(0, 2),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           children: [
+  //             const Text(
+  //               'Lịch Sử Giao Dịch',
+  //               style: TextStyle(
+  //                 fontSize: 16,
+  //                 fontWeight: FontWeight.w700,
+  //                 color: Color(0xFF1E293B),
+  //               ),
+  //             ),
+  //             const Spacer(),
+  //             if (transactions.isNotEmpty)
+  //               TextButton(
+  //                 onPressed: () {
+  //                   context.go('/transaction-history', extra: {
+  //                     'customerId': customer.id,
+  //                     'customerName': customer.name,
+  //                   });
+  //                 },
+  //                 child: const Text(
+  //                   'Xem tất cả',
+  //                   style: TextStyle(
+  //                     fontSize: 12,
+  //                     color: Color(0xFF0EA5E9),
+  //                     fontWeight: FontWeight.w600,
+  //                   ),
+  //                 ),
+  //               ),
+  //           ],
+  //         ),
+  //         const SizedBox(height: 12),
+  //         if (transactions.isEmpty)
+  //           _buildEmptyTransactionState()
+  //         else
+  //           ...transactions
+  //               .map((transaction) => _buildTransactionItem(transaction))
+  //               .toList(),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // Widget _buildTransactionItem(Map<String, dynamic> transaction) {
+  //   return Container(
+  //     padding: const EdgeInsets.symmetric(vertical: 12),
+  //     decoration: BoxDecoration(
+  //       border: Border(
+  //         bottom: BorderSide(
+  //           color: Colors.grey.shade200,
+  //           width: 1,
+  //         ),
+  //       ),
+  //     ),
+  //     child: Row(
+  //       children: [
+  //         Container(
+  //           padding: const EdgeInsets.all(8),
+  //           decoration: BoxDecoration(
+  //             color: const Color(0xFFF0FDF4),
+  //             borderRadius: BorderRadius.circular(8),
+  //           ),
+  //           child: const Icon(
+  //             Icons.check_circle_outline,
+  //             size: 18,
+  //             color: Color(0xFF059669),
+  //           ),
+  //         ),
+  //         const SizedBox(width: 12),
+  //         Expanded(
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text(
+  //                 transaction['description'],
+  //                 style: const TextStyle(
+  //                   fontSize: 14,
+  //                   fontWeight: FontWeight.w600,
+  //                   color: Color(0xFF1E293B),
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 2),
+  //               Text(
+  //                 DateFormat('dd/MM/yyyy').format(transaction['date']),
+  //                 style: TextStyle(
+  //                   fontSize: 12,
+  //                   color: Colors.grey.shade600,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //         Text(
+  //           NumberFormat.currency(locale: 'vi_VN', symbol: '₫')
+  //               .format(transaction['amount']),
+  //           style: const TextStyle(
+  //             fontSize: 14,
+  //             fontWeight: FontWeight.w700,
+  //             color: Color(0xFF059669),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  // Widget _buildEmptyTransactionState() {
+  //   return Container(
+  //     padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+  //     child: Column(
+  //       children: [
+  //         Container(
+  //           padding: const EdgeInsets.all(16),
+  //           decoration: BoxDecoration(
+  //             color: const Color(0xFFF8FAFC),
+  //             borderRadius: BorderRadius.circular(50),
+  //           ),
+  //           child: Icon(
+  //             Icons.receipt_long_outlined,
+  //             size: 40,
+  //             color: Colors.grey.shade400,
+  //           ),
+  //         ),
+  //         const SizedBox(height: 16),
+  //         Text(
+  //           'Chưa có giao dịch',
+  //           style: TextStyle(
+  //             fontSize: 16,
+  //             fontWeight: FontWeight.w600,
+  //             color: Colors.grey.shade700,
+  //           ),
+  //         ),
+  //         const SizedBox(height: 8),
+  //         Text(
+  //           'Khách hàng này chưa có giao dịch nào.\nHãy tạo đơn hàng đầu tiên!',
+  //           style: TextStyle(
+  //             fontSize: 14,
+  //             color: Colors.grey.shade600,
+  //             height: 1.4,
+  //           ),
+  //           textAlign: TextAlign.center,
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
   Widget _buildActionButtons(BuildContext context) {
     return Column(
       children: [
@@ -576,9 +607,9 @@ class CustomerDetailScreen extends StatelessWidget {
             ),
           ),
         ),
-        
+
         const SizedBox(height: 12),
-        
+
         // Create New Order Button
         SizedBox(
           width: double.infinity,
@@ -616,117 +647,8 @@ class CustomerDetailScreen extends StatelessWidget {
       ],
     );
   }
-  
-  Widget _buildStatusBadge(String status) {
-    Color backgroundColor;
-    Color textColor;
-    String text;
-    
-    switch (status) {
-      case 'active':
-        backgroundColor = const Color(0xFFF0FDF4);
-        textColor = const Color(0xFF059669);
-        text = 'Hoạt động';
-        break;
-      case 'inactive':
-        backgroundColor = const Color(0xFFFEF2F2);
-        textColor = const Color(0xFFDC2626);
-        text = 'Không hoạt động';
-        break;
-      case 'pending':
-        backgroundColor = const Color(0xFFFEF3C7);
-        textColor = const Color(0xFFD97706);
-        text = 'Chờ xử lý';
-        break;
-      default:
-        backgroundColor = const Color(0xFFF1F5F9);
-        textColor = const Color(0xFF64748B);
-        text = 'Không xác định';
-    }
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: textColor,
-        ),
-      ),
-    );
-  }
-  
-  Widget _buildCustomerGroupBadge(String customerGroup) {
-    Color backgroundColor;
-    Color textColor;
-    String text;
-    IconData icon;
-    
-    switch (customerGroup) {
-      case 'vip':
-        backgroundColor = const Color(0xFFFEF3C7);
-        textColor = const Color(0xFFD97706);
-        text = 'VIP';
-        icon = Icons.star;
-        break;
-      case 'premium':
-        backgroundColor = const Color(0xFFF3E8FF);
-        textColor = const Color(0xFF7C3AED);
-        text = 'PREMIUM';
-        icon = Icons.diamond;
-        break;
-      default:
-        backgroundColor = const Color(0xFFF1F5F9);
-        textColor = const Color(0xFF64748B);
-        text = customerGroup.toUpperCase();
-        icon = Icons.person;
-    }
-    
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(
-          color: textColor.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: 12,
-            color: textColor,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: textColor,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-  
-  List<Color> _getAvatarColors(String status) {
-    // If customer is VIP or Premium, use special colors
-    if (customer.customerGroup == 'vip') {
-      return [const Color(0xFFD97706), const Color(0xFFF59E0B)]; // Gold gradient
-    } else if (customer.customerGroup == 'premium') {
-      return [const Color(0xFF7C3AED), const Color(0xFF8B5CF6)]; // Purple gradient
-    }
-    
+
+  List<Color> _getAvatarColors(String? status) {
     // Default status-based colors
     switch (status) {
       case 'active':
@@ -739,72 +661,15 @@ class CustomerDetailScreen extends StatelessWidget {
         return [const Color(0xFF64748B), const Color(0xFF94A3B8)];
     }
   }
-  
-  String _getAccountStatusText(String status) {
-    switch (status) {
-      case 'active':
-        return 'Tài khoản tốt';
-      case 'inactive':
-        return 'Tài khoản tạm ngưng';
-      case 'pending':
-        return 'Đang xem xét';
-      default:
-        return 'Chưa xác định';
-    }
-  }
-  
-  String _getCustomerGroupText(String customerGroup) {
-    switch (customerGroup) {
-      case 'regular':
-        return 'Khách hàng thường';
-      case 'vip':
-        return 'Khách hàng VIP';
-      case 'premium':
-        return 'Khách hàng Premium';
-      default:
-        return customerGroup;
-    }
-  }
 
-
-  
   void _handleMenuAction(BuildContext context, String action) {
     switch (action) {
       case 'edit':
         // TODO: Navigate to edit customer screen
         break;
-      case 'delete':
-        _showDeleteConfirmation(context);
-        break;
     }
   }
-  
-  void _showDeleteConfirmation(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Xác nhận xóa'),
-        content: Text('Bạn có chắc chắn muốn xóa khách hàng "${customer.name}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => context.pop(),
-            child: const Text('Hủy'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              context.pop();
-              context.read<CustomerBloc>().add(DeleteCustomerEvent(customer.id));
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFDC2626),
-            ),
-            child: const Text('Xóa'),
-          ),
-        ],
-      ),
-    );
-  }
-  
+
   void _showContactOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -840,54 +705,12 @@ class CustomerDetailScreen extends StatelessWidget {
                 subtitle: Text(customer.phone!),
                 onTap: () {
                   context.pop();
-                  // TODO: Open phone dialer
                 },
               ),
-            if (customer.email != null)
-              ListTile(
-                leading: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0EA5E9).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.email_outlined,
-                    color: Color(0xFF0EA5E9),
-                    size: 20,
-                  ),
-                ),
-                title: const Text('Gửi email'),
-                subtitle: Text(customer.email!),
-                onTap: () {
-                  context.pop();
-                  // TODO: Open email client
-                },
-              ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF7C3AED).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.message_outlined,
-                  color: Color(0xFF7C3AED),
-                  size: 20,
-                ),
-              ),
-              title: const Text('Gửi tin nhắn'),
-              subtitle: const Text('Gửi thông báo trong app'),
-              onTap: () {
-                context.pop();
-                // TODO: Send in-app message
-              },
-            ),
             const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
-} 
+}
