@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trash_pay/domain/entities/customer/customer.dart';
 import 'package:trash_pay/domain/entities/location/ward.dart';
 import 'package:trash_pay/domain/entities/location/group.dart';
-import 'package:trash_pay/domain/entities/location/area.dart';
-import 'package:trash_pay/domain/entities/customer/customer.dart';
+import 'package:trash_pay/domain/entities/meta_data/area.dart';
+import 'package:trash_pay/presentation/app/logics/app_bloc.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_bloc.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_events.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_state.dart';
 import 'package:trash_pay/presentation/widgets/common/professional_header.dart';
 import 'package:trash_pay/constants/font_family.dart';
+import 'package:trash_pay/domain/entities/meta_data/province.dart';
+import 'package:trash_pay/presentation/app/app_bloc_extension.dart';
+import 'package:trash_pay/domain/domain_manager.dart';
+import 'package:trash_pay/domain/entities/meta_data/route.dart' as MetaRoute;
 
 class AddCustomerScreen extends StatefulWidget {
   const AddCustomerScreen({super.key});
@@ -29,6 +34,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   List<Ward> _wards = [];
   List<Group> _groups = [];
   List<Area> _areas = [];
+  List<MetaRoute.Route> _routes = [];
+  MetaRoute.Route? _selectedRoute;
 
   Ward? _selectedWard;
   Group? _selectedGroup;
@@ -36,11 +43,11 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   bool _isLoadingWards = false;
   bool _isLoadingGroups = false;
   bool _isLoadingAreas = false;
+  Province? _selectedProvince;
 
   @override
   void initState() {
     super.initState();
-    _loadWards();
   }
 
   @override
@@ -52,109 +59,6 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     super.dispose();
   }
 
-  Future<void> _loadWards() async {
-    setState(() {
-      _isLoadingWards = true;
-    });
-
-    try {
-      // TODO: Replace with actual repository call
-      await Future.delayed(const Duration(milliseconds: 500)); // Simulate API call
-      setState(() {
-        _wards = [
-          const Ward(id: 1, code: 'PX001', name: 'Phường 1', description: 'Phường 1 - Quận 1'),
-          const Ward(id: 2, code: 'PX002', name: 'Phường 2', description: 'Phường 2 - Quận 1'),
-          const Ward(id: 3, code: 'PX003', name: 'Phường 3', description: 'Phường 3 - Quận 1'),
-          const Ward(id: 4, code: 'PX004', name: 'Phường 4', description: 'Phường 4 - Quận 1'),
-          const Ward(id: 5, code: 'PX005', name: 'Phường 5', description: 'Phường 5 - Quận 1'),
-        ];
-        _isLoadingWards = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoadingWards = false;
-      });
-      _showErrorSnackBar('Không thể tải danh sách phường xã');
-    }
-  }
-
-  Future<void> _loadGroups(int? wardId) async {
-    setState(() {
-      _isLoadingGroups = true;
-      _groups = [];
-      _selectedGroup = null;
-    });
-
-    try {
-      // TODO: Replace with actual repository call
-      await Future.delayed(const Duration(milliseconds: 300)); // Simulate API call
-      
-      final allGroups = [
-        const Group(id: 1, code: 'TO001', name: 'Tổ 1', description: 'Tổ 1 - Phường 1', wardId: 1),
-        const Group(id: 2, code: 'TO002', name: 'Tổ 2', description: 'Tổ 2 - Phường 1', wardId: 1),
-        const Group(id: 3, code: 'TO003', name: 'Tổ 3', description: 'Tổ 3 - Phường 1', wardId: 1),
-        const Group(id: 4, code: 'TO004', name: 'Tổ 1', description: 'Tổ 1 - Phường 2', wardId: 2),
-        const Group(id: 5, code: 'TO005', name: 'Tổ 2', description: 'Tổ 2 - Phường 2', wardId: 2),
-        const Group(id: 6, code: 'TO006', name: 'Tổ 1', description: 'Tổ 1 - Phường 3', wardId: 3),
-        const Group(id: 7, code: 'TO007', name: 'Tổ 2', description: 'Tổ 2 - Phường 3', wardId: 3),
-        const Group(id: 8, code: 'TO008', name: 'Tổ 1', description: 'Tổ 1 - Phường 4', wardId: 4),
-        const Group(id: 9, code: 'TO009', name: 'Tổ 1', description: 'Tổ 1 - Phường 5', wardId: 5),
-      ];
-
-      setState(() {
-        _groups = wardId != null 
-            ? allGroups.where((group) => group.wardId == wardId).toList()
-            : allGroups;
-        _isLoadingGroups = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoadingGroups = false;
-      });
-      _showErrorSnackBar('Không thể tải danh sách tổ');
-    }
-  }
-
-  Future<void> _loadAreas(int? groupId) async {
-    setState(() {
-      _isLoadingAreas = true;
-      _areas = [];
-      _selectedArea = null;
-    });
-
-    try {
-      // TODO: Replace with actual repository call
-      await Future.delayed(const Duration(milliseconds: 300)); // Simulate API call
-      
-      final allAreas = [
-        const Area(id: 1, code: 'KH001', name: 'Khu A', description: 'Khu A - Tổ 1', groupId: 1),
-        const Area(id: 2, code: 'KH002', name: 'Khu B', description: 'Khu B - Tổ 1', groupId: 1),
-        const Area(id: 3, code: 'KH003', name: 'Khu C', description: 'Khu C - Tổ 1', groupId: 1),
-        const Area(id: 4, code: 'KH004', name: 'Khu A', description: 'Khu A - Tổ 2', groupId: 2),
-        const Area(id: 5, code: 'KH005', name: 'Khu B', description: 'Khu B - Tổ 2', groupId: 2),
-        const Area(id: 6, code: 'KH006', name: 'Khu A', description: 'Khu A - Tổ 3', groupId: 3),
-        const Area(id: 7, code: 'KH007', name: 'Khu A', description: 'Khu A - Tổ 1 Phường 2', groupId: 4),
-        const Area(id: 8, code: 'KH008', name: 'Khu B', description: 'Khu B - Tổ 1 Phường 2', groupId: 4),
-        const Area(id: 9, code: 'KH009', name: 'Khu A', description: 'Khu A - Tổ 2 Phường 2', groupId: 5),
-        const Area(id: 10, code: 'KH010', name: 'Khu A', description: 'Khu A - Tổ 1 Phường 3', groupId: 6),
-        const Area(id: 11, code: 'KH011', name: 'Khu A', description: 'Khu A - Tổ 1 Phường 4', groupId: 8),
-        const Area(id: 12, code: 'KH012', name: 'Khu A', description: 'Khu A - Tổ 1 Phường 5', groupId: 9),
-      ];
-
-      setState(() {
-        _areas = groupId != null 
-            ? allAreas.where((area) => area.groupId == groupId).toList()
-            : allAreas;
-        _isLoadingAreas = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoadingAreas = false;
-      });
-      _showErrorSnackBar('Không thể tải danh sách khu');
-    }
-  }
-
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -164,30 +68,30 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     );
   }
 
-  void _submitForm() {
+  void _submitForm(BuildContext ctx) {
     if (_formKey.currentState!.validate()) {
-      // final customerData = CustomerModel(
-      //   id: DateTime.now().millisecondsSinceEpoch.toString(),
-      //   name: _nameController.text.trim(),
-      //   phone: _phoneController.text.trim(),
-      //   address: _addressController.text.trim(),
-      //   wardId: _selectedWard?.id,
-      //   wardName: _selectedWard?.name,
-      //   groupId: _selectedGroup?.id,
-      //   groupName: _selectedGroup?.name,
-      //   areaId: _selectedArea?.id,
-      //   areaName: _selectedArea?.name,
-      //   customerGroup: _customerGroupController.text.trim(),
-      //   price: double.tryParse(_priceController.text) ?? 0.0,
-      //   createdAt: DateTime.now(),
-      // );
+      final customerData = CustomerModel(
+        id: 0,
+        name: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
+        address: _addressController.text.trim(),
+        provinceCode: _selectedProvince?.code,
+        wardCode: _selectedWard?.code,
+        customerGroupCode: _customerGroupController.text.trim(),
+        areaSaleCode: _selectedArea?.code,
+        routeSaleCode: _selectedRoute?.code,
+        price: double.tryParse(_priceController.text) ?? 0.0,
+        saleUserCode: ctx.read<AppBloc>().state.userCode
+      );
 
-      // context.read<CustomerBloc>().add(AddCustomerEvent(customerData));
+      ctx.read<CustomerBloc>().add(AddCustomerEvent(customerData));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final provinces = context.provinces;
+    final allAreas = context.areas;
     return BlocProvider(
       create: (context) => CustomerBloc(),
       child: BlocListener<CustomerBloc, CustomerState>(
@@ -229,7 +133,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                   subtitle: 'Nhập thông tin khách hàng mới',
                   onBackPressed: () => Navigator.of(context).pop(),
                 ),
-                
+
                 // Form
                 Expanded(
                   child: SingleChildScrollView(
@@ -252,9 +156,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                               return null;
                             },
                           ),
-                          
                           const SizedBox(height: 20),
-                          
+
                           // Phone Number
                           _buildTextField(
                             controller: _phoneController,
@@ -262,13 +165,62 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                             hint: 'Nhập số điện thoại',
                             icon: Icons.phone_outlined,
                             keyboardType: TextInputType.phone,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
+                            
                           ),
-                          
+
                           const SizedBox(height: 20),
-                          
+                          // Province Selection
+                          _buildDropdownField<Province>(
+                            label: 'Tỉnh/Thành phố',
+                            hint: 'Chọn tỉnh/thành phố',
+                            icon: Icons.location_on_outlined,
+                            value: _selectedProvince,
+                            items: provinces,
+                            isLoading: false,
+                            onChanged: (Province? province) async {
+                              setState(() {
+                                _selectedProvince = province;
+                                _selectedWard = null;
+                                _selectedArea = null;
+                                _wards = [];
+                                _areas = [];
+                                _isLoadingWards = true;
+                              });
+                              if (province?.code != null) {
+                                try {
+                                  final wards = await DomainManager()
+                                      .metaData
+                                      .getWardsByProvinceCode(
+                                          provinceCode: province!.code!);
+                                  setState(() {
+                                    _wards = wards;
+                                    _isLoadingWards = false;
+                                  });
+                                } catch (e) {
+                                  setState(() {
+                                    _isLoadingWards = false;
+                                  });
+                                  _showErrorSnackBar(
+                                    'Không thể tải danh sách phường/xã',
+                                  );
+                                }
+                              } else {
+                                setState(() {
+                                  _isLoadingWards = false;
+                                });
+                              }
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Vui lòng chọn tỉnh/thành phố';
+                              }
+                              return null;
+                            },
+                            itemBuilder: (Province province) =>
+                                province.name ?? '',
+                          ),
+                          const SizedBox(height: 20),
+
                           // Ward Selection
                           _buildDropdownField<Ward>(
                             label: 'Phường xã',
@@ -283,9 +235,6 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                                 _selectedGroup = null;
                                 _selectedArea = null;
                               });
-                              if (ward != null) {
-                                _loadGroups(ward.id);
-                              }
                             },
                             validator: (value) {
                               if (value == null) {
@@ -295,9 +244,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                             },
                             itemBuilder: (Ward ward) => ward.name,
                           ),
-                          
+
                           const SizedBox(height: 20),
-                          
+
                           // Address
                           _buildTextField(
                             controller: _addressController,
@@ -306,49 +255,41 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                             icon: Icons.home_outlined,
                             maxLines: 3,
                           ),
-                          
+
                           const SizedBox(height: 20),
-                          
-                          // Group Selection
-                          _buildDropdownField<Group>(
-                            label: 'Tổ',
-                            hint: 'Chọn tổ',
-                            icon: Icons.group_outlined,
-                            value: _selectedGroup,
-                            items: _groups,
-                            isLoading: _isLoadingGroups,
-                            onChanged: (Group? group) {
-                              setState(() {
-                                _selectedGroup = group;
-                                _selectedArea = null;
-                              });
-                              if (group != null) {
-                                _loadAreas(group.id);
-                              }
-                            },
-                            validator: (value) {
-                              if (value == null) {
-                                return 'Vui lòng chọn tổ';
-                              }
-                              return null;
-                            },
-                            itemBuilder: (Group group) => group.name,
-                          ),
-                          
-                          const SizedBox(height: 20),
-                          
                           // Area Selection
                           _buildDropdownField<Area>(
                             label: 'Khu',
                             hint: 'Chọn khu',
                             icon: Icons.map_outlined,
                             value: _selectedArea,
-                            items: _areas,
-                            isLoading: _isLoadingAreas,
-                            onChanged: (Area? area) {
+                            items: _selectedGroup != null
+                                ? allAreas
+                                    .where((area) =>
+                                        area.groupId == _selectedGroup!.id)
+                                    .toList()
+                                : allAreas,
+                            isLoading: false,
+                            onChanged: (Area? area) async {
                               setState(() {
                                 _selectedArea = area;
+                                _selectedRoute = null;
+                                _routes = [];
                               });
+                              if (area?.code != null) {
+                                try {
+                                  final routes = await DomainManager()
+                                      .metaData
+                                      .getAllRouteSaleByAreaSale(
+                                          areaSaleCode: area!.code!);
+                                  setState(() {
+                                    _routes = routes;
+                                  });
+                                } catch (e) {
+                                  _showErrorSnackBar(
+                                      'Không thể tải danh sách tuyến');
+                                }
+                              }
                             },
                             validator: (value) {
                               if (value == null) {
@@ -358,9 +299,33 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                             },
                             itemBuilder: (Area area) => area.name,
                           ),
-                          
+
                           const SizedBox(height: 20),
-                          
+
+                          // Route Selection
+                          _buildDropdownField<MetaRoute.Route>(
+                            label: 'Tuyến',
+                            hint: 'Chọn tuyến',
+                            icon: Icons.alt_route_outlined,
+                            value: _selectedRoute,
+                            items: _routes,
+                            isLoading: false,
+                            onChanged: (MetaRoute.Route? route) {
+                              setState(() {
+                                _selectedRoute = route;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null) {
+                                return 'Vui lòng chọn tuyến';
+                              }
+                              return null;
+                            },
+                            itemBuilder: (MetaRoute.Route route) =>
+                                route.name ?? '',
+                          ),
+                          const SizedBox(height: 20),
+
                           // Customer Group
                           _buildTextField(
                             controller: _customerGroupController,
@@ -374,9 +339,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                               return null;
                             },
                           ),
-                          
+
                           const SizedBox(height: 20),
-                          
+
                           // Price
                           _buildTextField(
                             controller: _priceController,
@@ -385,7 +350,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                             icon: Icons.attach_money_outlined,
                             keyboardType: TextInputType.number,
                             inputFormatters: [
-                              FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                              FilteringTextInputFormatter.allow(
+                                  RegExp(r'^\d+\.?\d{0,2}')),
                             ],
                             validator: (value) {
                               if (value == null || value.trim().isEmpty) {
@@ -398,42 +364,46 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                               return null;
                             },
                           ),
-                          
+
                           const SizedBox(height: 40),
-                          
+
                           // Save Button
-                          SizedBox(
-                            width: double.infinity,
-                            height: 56,
-                            child: ElevatedButton(
-                              onPressed: _submitForm,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF059669),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(
-                                    Icons.save_outlined,
-                                    size: 24,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'Lưu Khách Hàng',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      fontFamily: FontFamily.productSans,
+                          Builder(
+                            builder: (buttonContext) {
+                              return SizedBox(
+                                width: double.infinity,
+                                height: 56,
+                                child: ElevatedButton(
+                                  onPressed: () => _submitForm(buttonContext),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF059669),
+                                    foregroundColor: Colors.white,
+                                    elevation: 0,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.save_outlined,
+                                        size: 24,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'Lưu Khách Hàng',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                          fontFamily: FontFamily.productSans,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
                           ),
                         ],
                       ),
@@ -519,7 +489,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
             ),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           ),
           style: TextStyle(
             fontSize: 16,
@@ -600,7 +571,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
             ),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           ),
           items: isLoading
               ? []
@@ -635,4 +607,4 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       ],
     );
   }
-} 
+}

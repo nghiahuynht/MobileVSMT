@@ -39,16 +39,27 @@ class ApiConfig {
 
   static const String customerEndpoint = '/Customer';
   static const String getCustomerPaging = '$customerEndpoint/GetCustomerPaging';
+  static const String insertOrUpdateCustomer = '$customerEndpoint/InsertOrUpdateCustomer';
 
   static const String metaData = '/MetaData';
   static const String unitsEndpoint = '$metaData/GetAllCompany';
   static const String productsEndpoint = '$metaData/GetAllProduct';
-  static const String customersEndpoint = '/customers';
+  static const String getAllProvinces = '$metaData/GetAllProvinces';
+  static const String getAllCustomerGroup = '$metaData/GetAllCustomerGroup';
+  static const String getWardsByProvinceCode = '$metaData/GetWardsByProvinceCode';
+  static const String getAllMetaData = '$metaData/GetAllMetaData';
+
+  static const String areaSale = '/AreaSale';
+  static const String listAreaSaleBySaleUser = '$areaSale/GetListAreaSaleBySaleUser';
+  static const String routeSale = '/RouteSale';
+  static const String getAllRouteSaleByAreaSale = '$routeSale/GetAllRouteSaleByAreaSale';
+
+
   static const String ordersEndpoint = '/orders';
   static const String transactionsEndpoint = '/transactions';
   static const String reportsEndpoint = '/reports';
   static const String paymentsEndpoint = '/payments';
-  
+
   // Timeouts
   static const Duration connectTimeout = Duration(seconds: 30);
   static const Duration receiveTimeout = Duration(seconds: 30);

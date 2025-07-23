@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../constants/font_family.dart';
 import '../../domain/entities/unit/unit.dart';
+import '../app/logics/app_bloc.dart';
+import '../app/logics/app_events.dart';
 import '../flash/logics/auth_bloc.dart';
 import '../flash/logics/auth_events.dart';
 import 'logics/sign_in_bloc.dart';
@@ -108,12 +110,16 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               // Trigger AuthBloc để check lại auth status và lấy user info
               if (mounted) {
                 context.read<AuthBloc>().add(CheckAuthStatus());
+                // Load areas sau khi đăng nhập thành công
+                context.read<AppBloc>().add(LoadAreasAfterLogin());
               }
               context.replace('/home');
             } else if (state is SignInSuccessWithUser) {
               // User info already retrieved, trigger AuthBloc and navigate
               if (mounted) {
                 context.read<AuthBloc>().add(CheckAuthStatus());
+                // Load areas sau khi đăng nhập thành công
+                context.read<AppBloc>().add(LoadAreasAfterLogin());
               }
               context.replace('/home');
             } else if (state is UnitsLoaded) {

@@ -7,7 +7,9 @@ abstract class CustomerRepository {
   Future<ApiResultModel<PaginationWrapperResponsive<CustomerModel>>> getCustomerPaging({
     required int pageIndex,
     required int pageSize,
-    String searchString = '',
+    String searchString,
+    String? areaSaleCode,
+    String? routeSaleCode,
   });
 
   /// Get single customer by ID
@@ -22,4 +24,3 @@ abstract class CustomerRepository {
   /// Delete customer
   Future<ApiResultModel<bool>> deleteCustomer(int id);
 }
-

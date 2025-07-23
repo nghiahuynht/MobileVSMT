@@ -1,7 +1,11 @@
+import 'package:flutter/src/widgets/basic.dart';
+import 'package:trash_pay/presentation/app/logics/app_bloc.dart';
+import 'package:trash_pay/presentation/app/logics/app_state.dart';
+import 'package:trash_pay/presentation/create_order/create_order_screen.dart';
+import 'package:trash_pay/presentation/create_order/logics/create_order_bloc.dart';
 import 'package:trash_pay/presentation/home/home_screen.dart';
 import 'package:trash_pay/presentation/flash/flash_screen.dart';
 import 'package:trash_pay/presentation/sign_in/sign_in_screen.dart';
-import 'package:trash_pay/presentation/order/order_screen.dart';
 import 'package:trash_pay/presentation/checkout/checkout_screen.dart';
 import 'package:trash_pay/presentation/transaction/transaction_history_screen.dart';
 import 'package:trash_pay/presentation/profile/profile_screen.dart';
@@ -35,10 +39,14 @@ final router = GoRouter(
     GoRoute(
       path: '/order',
       builder: (context, state) {
-        final customer = state.extra as CustomerModel?;
-        return BlocProvider(
-          create: (context) => OrderBloc(),
-          child: OrderScreen(customer: customer),
+        final customer = state.extra as CustomerModel;
+        return BlocBuilder<AppBloc, AppState>(
+          builder: (context, state) {
+            return BlocProvider(
+              create: (context) => CreateOrderBloc(),
+              child: ProductList(customer: customer, products: state.products),
+            );
+          }
         );
       },
     ),

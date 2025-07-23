@@ -2,8 +2,8 @@
 import 'dart:convert';
 
 class OrderItemModel {
-  final int id;
-  final int saleOrderId;
+  final int? id;
+  final int? saleOrderId;
   final String? productCode;
   final String? productName;
   final String? unitCode;
@@ -15,8 +15,8 @@ class OrderItemModel {
   final num? total;
   final bool? isPromotion;
   OrderItemModel({
-    required this.id,
-    required this.saleOrderId,
+    this.id,
+    this.saleOrderId,
     this.productCode,
     this.productName,
     this.unitCode,

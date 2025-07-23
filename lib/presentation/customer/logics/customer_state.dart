@@ -1,6 +1,6 @@
 import 'package:trash_pay/domain/entities/customer/customer.dart';
 import 'package:trash_pay/domain/entities/location/group.dart';
-import 'package:trash_pay/domain/entities/location/area.dart';
+import 'package:trash_pay/domain/entities/meta_data/area.dart';
 
 abstract class CustomerState {}
 

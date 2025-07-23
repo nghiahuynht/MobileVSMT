@@ -32,10 +32,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
       if (result is Success<SignInResponse>) {
         final data = result.data;
-        _userPrefs.setToken(data.toJson());
-
+        
         _userPrefs.setLoginName(loginName);
+        _userPrefs.setPassword(password);
         _userPrefs.setCompany(companyCode);
+
+        // IMPORTANT: Save token to TokenManager để authorization header được cập nhật ngay
+        await TokenManager.instance.saveToken(data);
 
         return data;
       } else if (result is Failure<SignInResponse>) {
@@ -54,16 +57,9 @@ class AuthRepositoryImpl implements AuthRepository {
       if (token == null || token.isEmpty) return null;
 
       try {
-        final tokenMap = TokenManager.instance.currentToken;
-
+        // _AuthInterceptor sẽ tự động add authorization header
         final result = await _networkService.get<UserModel>(
           ApiConfig.profileEndpoint,
-          options: Options(
-            headers: {
-              'Authorization': tokenMap?.authorizationHeader,
-              'accept': '*/*'
-            },
-          ),
           fromJson: (data) {
             return UserModel.fromJson(data);
           },
@@ -86,9 +82,14 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> signOut() async {
+    // Clear UserPrefs
     _userPrefs.setToken(null);
     _userPrefs.setUser(null);
     _userPrefs.setLoginName(null);
+    _userPrefs.setPassword(null);
     _userPrefs.setCompany(null);
+    
+    // Clear TokenManager
+    await TokenManager.instance.clearToken();
   }
 }

@@ -42,8 +42,7 @@ class TokenManager {
   Future<void> saveToken(SignInResponse token) async {
     try {
       _currentToken = token;
-      final tokenJson = jsonEncode(token.toJson());
-      _userPrefs.setToken(tokenJson);
+      _userPrefs.setToken(token.toJson());
       log('Token saved to storage');
     } catch (e) {
       log('Error saving token: $e');

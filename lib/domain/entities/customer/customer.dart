@@ -58,7 +58,7 @@ class CustomerModel extends BaseModel {
     this.currentPrice,
     this.customerGroupCode,
     this.customerGroupName,
-    required this.isDeleted,
+    this.isDeleted = false,
     this.areaSaleCode,
     this.areaSaleName,
     this.routeSaleCode,
@@ -142,9 +142,11 @@ class CustomerModel extends BaseModel {
     );
   }
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap({
+    bool isCreate = false,
+  }) {
     return <String, dynamic>{
-      'id': id,
+      if (!isCreate) 'id': id,
       'code': code,
       'name': name,
       'provinceCode': provinceCode,
@@ -218,7 +220,7 @@ class CustomerModel extends BaseModel {
 
   String toJson() => json.encode(toMap());
 
-  factory CustomerModel.fromJson(String source) => CustomerModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory CustomerModel.fromJson(String source) => CustomerModel.fromMap(json.decode(source)['data'] as Map<String, dynamic>);
 
   @override
   String toString() {

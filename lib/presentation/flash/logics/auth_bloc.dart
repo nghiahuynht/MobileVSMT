@@ -3,6 +3,7 @@ import 'package:trash_pay/domain/domain_manager.dart';
 import 'package:trash_pay/domain/repository/auth/auth_repository.dart';
 import 'package:trash_pay/presentation/flash/logics/auth_events.dart';
 import 'package:trash_pay/presentation/flash/logics/auth_state.dart';
+import 'package:trash_pay/services/token_manager.dart';
 import 'package:trash_pay/services/user_prefs.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
@@ -31,11 +32,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  void _onSignOut(SignOut event, Emitter<AuthState> emit) {
+  Future<void> _onSignOut(SignOut event, Emitter<AuthState> emit) async {
+    // Clear UserPrefs
     userPrefs.setToken(null);
     userPrefs.setCompany(null);
     userPrefs.setLoginName(null);
     userPrefs.setPassword(null);
+    
+    // Clear TokenManager
+    await TokenManager.instance.clearToken();
+    
     emit(Unauthenticated());
   }
 }

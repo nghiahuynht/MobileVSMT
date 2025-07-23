@@ -170,17 +170,6 @@ class ApiService {
     );
   }
   
-  // Customers endpoints
-  Future<ApiResultModel<T>> getCustomers<T>({
-    Map<String, dynamic>? queryParameters,
-    T Function(dynamic)? fromJson,
-  }) {
-    return get<T>(
-      ApiConfig.customersEndpoint,
-      queryParameters: queryParameters,
-      fromJson: fromJson,
-    );
-  }
   
   // Orders endpoints
   Future<ApiResultModel<T>> getOrders<T>({

@@ -3,8 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trash_pay/constants/strings.dart';
 import 'package:trash_pay/domain/entities/customer/customer.dart';
 import 'package:trash_pay/domain/entities/location/group.dart';
-import 'package:trash_pay/domain/entities/location/area.dart';
-import 'package:trash_pay/presentation/customer/add_customer_screen.dart';
+import 'package:trash_pay/domain/entities/meta_data/area.dart';
+import 'package:trash_pay/presentation/app/app_bloc_extension.dart';
+import 'package:trash_pay/presentation/add_customer_screen/add_customer_screen.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_bloc.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_events.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_state.dart';
@@ -33,7 +34,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     _customerBloc = CustomerBloc();
     _searchController.addListener(_onSearchChanged);
     _scrollController.addListener(_onScroll);
-    
+
     // Load initial customers
     _customerBloc.add(LoadCustomersEvent());
   }
@@ -50,7 +51,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   void _onScroll() {
     final state = _customerBloc.state;
     if (state is CustomersLoaded) {
-      if (_isBottom && !state.hasReachedMax && !state.isLoadingMore && !_isLoadingMore) {
+      if (_isBottom &&
+          !state.hasReachedMax &&
+          !state.isLoadingMore &&
+          !_isLoadingMore) {
         _isLoadingMore = true; // Set flag to prevent duplicate calls
         _customerBloc.add(LoadMoreCustomersEvent());
         // Reset flag after a short delay to allow for the next load more
@@ -71,21 +75,33 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   }
 
   void _onSearchChanged() {
-    _customerBloc.add(SearchCustomersEvent(_searchController.text));
+    _customerBloc.add(LoadCustomersEvent(
+      areaSaleCode: _selectedGroup?.code,
+      routeSaleCode: _selectedArea?.code,
+      search: _searchController.text,
+    ));
   }
 
   void _onGroupChanged(Group? group) {
     setState(() {
       _selectedGroup = group;
     });
-    _customerBloc.add(FilterCustomersByGroupEvent(group?.id));
+    _customerBloc.add(LoadCustomersEvent(
+      areaSaleCode: group?.code,
+      routeSaleCode: _selectedArea?.code,
+      search: _searchController.text,
+    ));
   }
 
   void _onAreaChanged(Area? area) {
     setState(() {
       _selectedArea = area;
     });
-    _customerBloc.add(FilterCustomersByAreaEvent(area?.id));
+    _customerBloc.add(LoadCustomersEvent(
+      routeSaleCode: _selectedGroup?.code,
+      areaSaleCode: area?.code,
+      search: _searchController.text,
+    ));
   }
 
   void _clearFilters() {
@@ -94,7 +110,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       _selectedArea = null;
       _searchController.clear();
     });
-    _customerBloc.add(ClearFiltersEvent());
+    _customerBloc.add(LoadCustomersEvent());
   }
 
   @override
@@ -189,7 +205,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                   items: state.groups,
                                   hintText: 'Chọn Tổ',
                                   onChanged: _onGroupChanged,
-                                  itemBuilder: (Group group) => group.name,
+                                  itemBuilder: (Group group) => group.name ?? '',
                                 );
                               }
                               return _buildFilterDropdown<Group>(
@@ -197,7 +213,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                 items: [],
                                 hintText: 'Chọn Tổ',
                                 onChanged: _onGroupChanged,
-                                itemBuilder: (Group group) => group.name,
+                                itemBuilder: (Group group) => group.name ?? '',
                               );
                             },
                           ),
@@ -207,33 +223,32 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
 
                         // Area Filter
                         Expanded(
-                          child: BlocBuilder<CustomerBloc, CustomerState>(
-                            builder: (context, state) {
-                              if (state is CustomersLoaded) {
-                                // Filter areas based on selected group
-                                final availableAreas = _selectedGroup != null
-                                    ? state.areas
-                                        .where((area) =>
-                                            area.groupId == _selectedGroup!.id)
-                                        .toList()
-                                    : state.areas;
+                          child: AreasBuilder(
+                            builder: (context, areas) {
+                              // Filter areas based on selected group
+                              final availableAreas = _selectedGroup != null
+                                  ? areas
+                                      .where((area) =>
+                                          area.groupId == _selectedGroup!.id)
+                                      .toList()
+                                  : areas;
 
-                                return _buildFilterDropdown<Area>(
-                                  value: _selectedArea,
-                                  items: availableAreas,
-                                  hintText: 'Chọn Khu',
-                                  onChanged: _onAreaChanged,
-                                  itemBuilder: (Area area) => area.name,
-                                );
-                              }
                               return _buildFilterDropdown<Area>(
-                                value: null,
-                                items: [],
+                                value: _selectedArea,
+                                items: availableAreas,
                                 hintText: 'Chọn Khu',
                                 onChanged: _onAreaChanged,
                                 itemBuilder: (Area area) => area.name,
                               );
                             },
+                            loadingBuilder: (context) =>
+                                _buildFilterDropdown<Area>(
+                              value: null,
+                              items: [],
+                              hintText: 'Chọn Khu',
+                              onChanged: _onAreaChanged,
+                              itemBuilder: (Area area) => area.name,
+                            ),
                           ),
                         ),
 
@@ -268,11 +283,6 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                       builder: (context, state) {
                         if (state is CustomersLoaded) {
                           final totalCustomers = state.totalCustomers;
-                          final filteredCustomers =
-                              state.filteredCustomers.length;
-                          final hasFilters = _selectedGroup != null ||
-                              _selectedArea != null ||
-                              _searchController.text.isNotEmpty;
 
                           return Container(
                             padding: const EdgeInsets.symmetric(
@@ -295,9 +305,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    hasFilters
-                                        ? 'Hiển thị $filteredCustomers/$totalCustomers khách hàng'
-                                        : 'Tổng cộng $totalCustomers khách hàng',
+                                    'Tổng cộng $totalCustomers khách hàng',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
@@ -305,24 +313,6 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                     ),
                                   ),
                                 ),
-                                if (hasFilters) ...[
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFF0FDF4),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: const Text(
-                                      'Đã lọc',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF059669),
-                                      ),
-                                    ),
-                                  ),
-                                ],
                               ],
                             ),
                           );
@@ -438,7 +428,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               );
             },
           ),
-          
+
           // Loading more indicator
           if (state.isLoadingMore)
             Container(
@@ -449,7 +439,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 ),
               ),
             ),
-          
+
           // End of list indicator
           if (state.hasReachedMax && customers.isNotEmpty)
             Container(

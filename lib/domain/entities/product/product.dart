@@ -98,4 +98,4 @@ class ProductModel {
   String toString() {
     return 'ProductModel{id: $id, code: $code, name: $name, priceSale: $priceSale}';
   }
-} 
+}

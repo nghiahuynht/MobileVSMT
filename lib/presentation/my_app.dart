@@ -4,9 +4,8 @@ import 'package:get_it/get_it.dart';
 import 'package:trash_pay/domain/repository/auth/auth_repository.dart';
 import 'package:trash_pay/l10n/app_localizations.dart';
 import 'package:trash_pay/presentation/app/logics/app_bloc.dart';
+import 'package:trash_pay/presentation/app/logics/app_events.dart';
 import 'package:trash_pay/presentation/flash/logics/auth_bloc.dart';
-import 'package:trash_pay/presentation/widgets/app/app_loading_overlay.dart';
-import 'package:trash_pay/presentation/widgets/app/app_message_listener.dart';
 import 'package:trash_pay/router/routes.dart';
 
 class MyApp extends StatelessWidget {
@@ -20,8 +19,15 @@ class MyApp extends StatelessWidget {
         BlocProvider(
             create: (context) =>
                 AuthBloc(authRepository: GetIt.I<AuthRepository>())),
+        BlocProvider(
+            create: (context) {
+              print('📱 MyApp: Creating AppBloc provider');
+              final appBloc = GetIt.I<AppBloc>();
+              print('📱 MyApp: Adding AppInitialized event');
+              appBloc.add(AppInitialized());
+              return appBloc;
+            }),
       ],
-      // child: AppMessageListener(
       child: MaterialApp.router(
         title: 'Flutter Demo',
         theme: ThemeData(
@@ -31,11 +37,7 @@ class MyApp extends StatelessWidget {
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router,
-        // builder: (context, child) {
-        //   return AppLoadingOverlay(child: child ?? const SizedBox());
-        // },
-        ),
-      // ),
+      ),
     );
   }
 }

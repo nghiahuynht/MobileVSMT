@@ -1,231 +1,110 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:trash_pay/domain/entities/unit/unit.dart';
-import 'package:trash_pay/domain/entities/product/product.dart';
-import 'package:trash_pay/domain/entities/customer/customer.dart';
+import 'package:get_it/get_it.dart';
 import 'package:trash_pay/domain/entities/location/group.dart';
-import 'package:trash_pay/domain/entities/location/area.dart';
-import 'package:trash_pay/domain/entities/location/ward.dart';
-import 'package:trash_pay/domain/entities/language/language.dart';
-import 'logics/app_bloc.dart';
-import 'logics/app_events.dart';
-import 'logics/app_state.dart';
-import 'master_data_manager.dart';
+import 'package:trash_pay/domain/entities/meta_data/area.dart';
+import 'package:trash_pay/domain/entities/meta_data/province.dart';
+import 'package:trash_pay/domain/entities/product/product.dart';
+import 'package:trash_pay/presentation/app/logics/app_bloc.dart';
+import 'package:trash_pay/presentation/app/logics/app_events.dart';
+import 'package:trash_pay/presentation/app/logics/app_state.dart';
 
 /// Extension để dễ dàng truy cập AppBloc từ BuildContext
 extension AppBlocExtension on BuildContext {
+  /// Lấy AppBloc instance
   AppBloc get appBloc => read<AppBloc>();
 
-  /// Hiển thị loading toàn app
-  void showAppLoading([String? message]) {
-    appBloc.showLoading(message);
-  }
+  /// Lấy AppState hiện tại
+  AppState get appState => read<AppBloc>().state;
 
-  /// Ẩn loading toàn app
-  void hideAppLoading() {
-    appBloc.hideLoading();
-  }
+  /// Lấy danh sách areas
+  List<Area> get areas => appState.areas;
 
-  /// Hiển thị thông báo thành công
-  void showAppSuccess(String message, {Duration? duration}) {
-    appBloc.showSuccess(message, duration: duration);
-  }
+  /// Lấy danh sách products
+  List<ProductModel> get products => appState.products;
 
-  /// Hiển thị thông báo lỗi
-  void showAppError(String message, {Duration? duration}) {
-    appBloc.showError(message, duration: duration);
-  }
+  /// Lấy danh sách groups
+  List<Group> get groups => appState.groups;
 
-  /// Hiển thị thông báo cảnh báo
-  void showAppWarning(String message, {Duration? duration}) {
-    appBloc.showWarning(message, duration: duration);
-  }
+  /// Lấy danh sách provinces
+  List<Province> get provinces => appState.provinces;
 
-  /// Hiển thị thông báo thông tin
-  void showAppInfo(String message, {Duration? duration}) {
-    appBloc.showInfo(message, duration: duration);
-  }
+  /// Kiểm tra app đã khởi tạo xong chưa
+  bool get isAppInitialized => appState.isInitialized;
 
-  /// Toggle theme
-  void toggleAppTheme() {
-    appBloc.toggleTheme();
-  }
-
-  /// Thay đổi ngôn ngữ
-  void changeAppLanguage(String languageCode) {
-    appBloc.setLanguage(languageCode);
-  }
-
-  /// Cập nhật network status
-  void updateNetworkStatus(bool isConnected) {
-    appBloc.setNetworkStatus(isConnected);
-  }
-
-  /// Cập nhật app config
-  void updateAppConfig(String key, dynamic value) {
-    appBloc.updateConfig(key, value);
-  }
-
-  /// Load all master data
-  void loadAllMasterData({bool forceRefresh = false}) {
-    appBloc.loadAllMasterData(forceRefresh: forceRefresh);
-  }
-
-  /// Load specific master data type
-  void loadMasterDataType(MasterDataType type, {bool forceRefresh = false}) {
-    appBloc.loadMasterDataType(type, forceRefresh: forceRefresh);
-  }
-
-  /// Clear master data cache
-  void clearMasterData([MasterDataType? type]) {
-    appBloc.clearMasterData(type);
+  /// Gọi reload areas
+  void reloadAreas() {
+    appBloc.add(LoadAreasAfterLogin());
   }
 }
 
-/// Extension để truy cập master data từ AppBloc state
-extension AppBlocMasterDataExtension on BuildContext {
-  /// Get master data cache
-  MasterDataCache get masterDataCache => 
-      read<AppBloc>().state.masterDataCache;
+/// Extension để truy cập AppBloc từ bất kỳ đâu (không cần BuildContext)
+class AppBlocHelper {
+  /// Lấy AppBloc instance từ GetIt
+  static AppBloc get instance => GetIt.I<AppBloc>();
 
-  /// Get Units
-  List<Unit> get units => masterDataCache.units;
+  /// Lấy AppState hiện tại
+  static AppState get state => instance.state;
 
-  /// Get Products  
-  List<ProductModel> get products => masterDataCache.products;
+  /// Lấy danh sách areas
+  static List<Area> get areas => state.areas;
 
-  /// Get Customers
-  List<CustomerModel> get customers => masterDataCache.customers;
+  /// Kiểm tra app đã khởi tạo xong chưa
+  static bool get isAppInitialized => state.isInitialized;
 
-  /// Get Groups
-  List<Group> get groups => masterDataCache.groups;
-
-  /// Get Areas
-  List<Area> get areas => masterDataCache.areas;
-
-  /// Get Wards
-  List<Ward> get wards => masterDataCache.wards;
-
-  /// Get Languages
-  List<Language> get languages => masterDataCache.languages;
-
-  /// Check if master data is loaded
-  bool isMasterDataLoaded(MasterDataType type) =>
-      masterDataCache.isDataLoaded(type);
-
-  /// Check if master data is loading
-  bool isMasterDataLoading(MasterDataType type) =>
-      masterDataCache.isLoading(type);
-
-  /// Check if master data needs refresh
-  bool needsMasterDataRefresh(MasterDataType type) =>
-      masterDataCache.needsRefresh(type);
-
-  /// Utility methods với master data manager
-  
-  /// Lọc Groups theo Ward ID
-  List<Group> getGroupsByWardId(int wardId) {
-    final manager = MasterDataManager();
-    return manager.getGroupsByWardId(groups, wardId);
-  }
-
-  /// Lọc Areas theo Group ID
-  List<Area> getAreasByGroupId(int groupId) {
-    final manager = MasterDataManager();
-    return manager.getAreasByGroupId(areas, groupId);
-  }
-
-  /// Lọc Customers theo Group Code
-  List<CustomerModel> getCustomersByGroupCode(String groupCode) {
-    final manager = MasterDataManager();
-    return manager.getCustomersByGroupCode(customers, groupCode);
-  }
-
-  /// Lọc Products active
-  List<ProductModel> getActiveProducts() {
-    final manager = MasterDataManager();
-    return manager.getActiveProducts(products);
-  }
-
-  /// Tìm Unit theo code
-  Unit? findUnitByCode(String code) {
-    final manager = MasterDataManager();
-    return manager.findUnitByCode(units, code);
-  }
-
-  /// Tìm Product theo code
-  ProductModel? findProductByCode(String code) {
-    final manager = MasterDataManager();
-    return manager.findProductByCode(products, code);
-  }
-
-  /// Tìm Customer theo code
-  CustomerModel? findCustomerByCode(String code) {
-    final manager = MasterDataManager();
-    return manager.findCustomerByCode(customers, code);
-  }
-
-  /// Tìm Group theo code
-  Group? findGroupByCode(String code) {
-    final manager = MasterDataManager();
-    return manager.findGroupByCode(groups, code);
-  }
-
-  /// Tìm Area theo code
-  Area? findAreaByCode(String code) {
-    final manager = MasterDataManager();
-    return manager.findAreaByCode(areas, code);
-  }
-
-  /// Tìm Ward theo code
-  Ward? findWardByCode(String code) {
-    final manager = MasterDataManager();
-    return manager.findWardByCode(wards, code);
+  /// Gọi reload areas
+  static void reloadAreas() {
+    instance.add(LoadAreasAfterLogin());
   }
 }
 
-/// Extension cho thực hiện các tác vụ async với loading
-extension AppBlocAsyncExtension on BuildContext {
-  /// Thực hiện async task với loading
-  Future<T?> runWithLoading<T>(
-    Future<T> Function() task, {
-    String? loadingMessage,
-    String? successMessage,
-    String? errorMessage,
-    bool showSuccess = false,
-  }) async {
-    try {
-      showAppLoading(loadingMessage);
-      final result = await task();
-      hideAppLoading();
-      
-      if (showSuccess && successMessage != null) {
-        showAppSuccess(successMessage);
-      }
-      
-      return result;
-    } catch (e) {
-      hideAppLoading();
-      showAppError(errorMessage ?? 'Có lỗi xảy ra: $e');
-      return null;
-    }
-  }
+/// Widget helper để listen changes của areas
+class AreasBuilder extends StatelessWidget {
+  final Widget Function(BuildContext context, List<Area> areas) builder;
+  final Widget Function(BuildContext context)? loadingBuilder;
 
-  /// Thực hiện async task với error handling
-  Future<T?> runSafely<T>(
-    Future<T> Function() task, {
-    String? errorMessage,
-    void Function(dynamic error)? onError,
-  }) async {
-    try {
-      return await task();
-    } catch (e) {
-      if (onError != null) {
-        onError(e);
-      } else {
-        showAppError(errorMessage ?? 'Có lỗi xảy ra: $e');
-      }
-      return null;
-    }
+  const AreasBuilder({
+    super.key,
+    required this.builder,
+    this.loadingBuilder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AppBloc, AppState>(
+      builder: (context, state) {
+        if (!state.isInitialized && loadingBuilder != null) {
+          return loadingBuilder!(context);
+        }
+
+        return builder(context, state.areas);
+      },
+    );
   }
-} 
+}
+
+/// Widget để hiển thị loading khi app chưa khởi tạo xong
+class AppInitializationBuilder extends StatelessWidget {
+  final Widget Function(BuildContext context) builder;
+  final Widget Function(BuildContext context)? loadingBuilder;
+
+  const AppInitializationBuilder({
+    super.key,
+    required this.builder,
+    this.loadingBuilder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AppBloc, AppState>(
+      builder: (context, state) {
+        if (!state.isInitialized) {
+          return loadingBuilder?.call(context) ??
+              const Center(child: CircularProgressIndicator());
+        }
+
+        return builder(context);
+      },
+    );
+  }
+}

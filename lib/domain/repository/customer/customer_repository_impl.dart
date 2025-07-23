@@ -14,12 +14,18 @@ class CustomerRepositoryImpl implements CustomerRepository {
     required int pageIndex,
     required int pageSize,
     String searchString = '',
+    String? areaSaleCode,
+    String? routeSaleCode,
+    String? saleUserCode,
   }) async {
     try {
       final requestBody = {
         'pageIndex': pageIndex,
         'pageSize': pageSize,
         'searchString': searchString,
+        if (areaSaleCode != null) 'areaSaleCode': areaSaleCode,
+        if (routeSaleCode != null) 'routeSaleCode': routeSaleCode,
+        if (saleUserCode != null) 'saleUserCode': saleUserCode,
       };
 
       final result = await _apiService.post<PaginationWrapperResponsive<CustomerModel>>(
@@ -65,9 +71,9 @@ class CustomerRepositoryImpl implements CustomerRepository {
   Future<ApiResultModel<CustomerModel>> addCustomer(CustomerModel customer) async {
     try {
       final result = await _apiService.post<CustomerModel>(
-        ApiConfig.customerEndpoint,
-        data: customer.toMap(),
-        fromJson: (json) => CustomerModel.fromMap(json),
+        ApiConfig.insertOrUpdateCustomer,
+        data: customer.toMap(isCreate: true),
+        fromJson: (json) => CustomerModel.fromJson(json),
       );
 
       return result;

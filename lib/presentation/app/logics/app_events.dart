@@ -10,6 +10,9 @@ abstract class AppEvent extends Equatable {
 /// Event để khởi tạo app
 class AppInitialized extends AppEvent {}
 
+/// Event để load lại areas sau khi đăng nhập
+class LoadAreasAfterLogin extends AppEvent {}
+
 /// Event để hiển thị loading cho toàn app
 class ShowGlobalLoading extends AppEvent {
   final String? message;
