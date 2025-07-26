@@ -38,8 +38,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
         listener: (context, state) {
           if (state is ProductError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
+              const SnackBar(
+                content: const Text('Đã có lỗi xảy ra'),
                 backgroundColor: Colors.red,
               ),
             );

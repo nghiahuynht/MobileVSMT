@@ -1,12 +1,7 @@
 class ApiConfig {
   // Demo mode - set to false when using real API
   static const bool isDemoMode = false;
-  
-  // Base URLs for different environments
-  static const String _baseUrlProduction = 'https://api.trashpay.com/api/v1';
-  static const String _baseUrlStaging = 'https://staging-api.trashpay.com/api/v1';
-  static const String _baseUrlDevelopment = 'https://dev-api.trashpay.com/api/v1';
-  static const String _baseUrlLocal = 'http://localhost:3000/api/v1';
+
   
   // Current environment
   static const Environment environment = Environment.development;
@@ -36,6 +31,7 @@ class ApiConfig {
   static const String saleOrderEndpoint = '/SaleOrder';
   static const String getSaleOrderPaging = '$saleOrderEndpoint/GetSaleOrderPaging';
   static const String getSaleOrderById = '$saleOrderEndpoint/GetSaleOrderById';
+  static const String insertSaleOrder = '$saleOrderEndpoint/InsertSaleOrder';
 
   static const String customerEndpoint = '/Customer';
   static const String getCustomerPaging = '$customerEndpoint/GetCustomerPaging';

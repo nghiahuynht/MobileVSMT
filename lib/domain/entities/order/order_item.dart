@@ -76,6 +76,18 @@ class OrderItemModel {
     };
   }
 
+  Map<String, dynamic> toCreateRequest() {
+    return <String, dynamic>{
+      'productCode': productCode,
+      'unitCode': unitCode,
+      'quantity': quantity,
+      'priceNoVAT': priceNoVAT,
+      'vat': vat,
+      'priceWithVAT': priceWithVAT,
+      'total': total,
+    };
+  }
+
   factory OrderItemModel.fromMap(Map<String, dynamic> map) {
     return OrderItemModel(
       id: map['id'] as int,

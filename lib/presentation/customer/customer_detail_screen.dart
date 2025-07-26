@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trash_pay/constants/strings.dart';
 import 'package:trash_pay/domain/entities/customer/customer.dart';
+import 'package:trash_pay/presentation/add_customer_screen/add_customer_screen.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_bloc.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_state.dart';
 import 'package:trash_pay/presentation/widgets/common/professional_header.dart';
@@ -39,7 +40,7 @@ class CustomerDetailScreen extends StatelessWidget {
               ProfessionalHeaders.detail(
                 title: 'Chi Tiết Khách Hàng',
                 actionWidget: InkWell(
-                  onTap: () => _handleMenuAction(context, 'edit'),
+                  onTap: () => _handleMenuAction(context),
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
                     padding: const EdgeInsets.all(8),
@@ -77,9 +78,9 @@ class CustomerDetailScreen extends StatelessWidget {
                       }
                     } else if (state is CustomerError) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(state.message),
-                          backgroundColor: const Color(0xFFDC2626),
+                        const SnackBar(
+                          content: Text('Đã có lỗi xảy ra'),
+                          backgroundColor: Color(0xFFDC2626),
                         ),
                       );
                     }
@@ -573,15 +574,20 @@ class CustomerDetailScreen extends StatelessWidget {
   // }
 
   Widget _buildActionButtons(BuildContext context) {
+
+    bool hasPhone = customer.phone != null;
+
     return Column(
       children: [
         // Contact Customer Button
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: () {
-              _showContactOptions(context);
-            },
+            onPressed: hasPhone
+                ? () {
+                    _showContactOptions(context);
+                  }
+                : null,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF059669),
               foregroundColor: Colors.white,
@@ -662,15 +668,17 @@ class CustomerDetailScreen extends StatelessWidget {
     }
   }
 
-  void _handleMenuAction(BuildContext context, String action) {
-    switch (action) {
-      case 'edit':
-        // TODO: Navigate to edit customer screen
-        break;
-    }
+  void _handleMenuAction(BuildContext context) async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => AddCustomerScreen(
+          customer: customer,
+        ),
+      ),
+    );
   }
 
-  void _showContactOptions(BuildContext context) {
+  void _showContactOptions(BuildContext context) { 
     showModalBottomSheet(
       context: context,
       builder: (context) => Container(
@@ -678,13 +686,18 @@ class CustomerDetailScreen extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Liên hệ khách hàng',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1E293B),
-              ),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Liên hệ khách hàng',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF1E293B),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             if (customer.phone != null)

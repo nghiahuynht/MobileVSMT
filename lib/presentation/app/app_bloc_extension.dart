@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:trash_pay/domain/entities/location/group.dart';
+import 'package:trash_pay/domain/entities/meta_data/ward.dart';
 import 'package:trash_pay/domain/entities/meta_data/area.dart';
 import 'package:trash_pay/domain/entities/meta_data/province.dart';
 import 'package:trash_pay/domain/entities/product/product.dart';
@@ -29,8 +30,17 @@ extension AppBlocExtension on BuildContext {
   /// Lấy danh sách provinces
   List<Province> get provinces => appState.provinces;
 
+  /// Lấy danh sách wards
+  List<Ward> get wards => appState.wards;
+
+  /// Lấy danh sách groups
+  List<Group> get routes => appState.groups;
+
   /// Kiểm tra app đã khởi tạo xong chưa
   bool get isAppInitialized => appState.isInitialized;
+
+  /// Lấy user code
+  String? get userCode => appState.userCode;
 
   /// Gọi reload areas
   void reloadAreas() {

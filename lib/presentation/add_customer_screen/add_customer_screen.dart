@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trash_pay/domain/entities/customer/customer.dart';
-import 'package:trash_pay/domain/entities/location/ward.dart';
 import 'package:trash_pay/domain/entities/location/group.dart';
 import 'package:trash_pay/domain/entities/meta_data/area.dart';
+import 'package:trash_pay/domain/entities/meta_data/ward.dart';
 import 'package:trash_pay/presentation/app/logics/app_bloc.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_bloc.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_events.dart';
@@ -17,36 +17,57 @@ import 'package:trash_pay/domain/domain_manager.dart';
 import 'package:trash_pay/domain/entities/meta_data/route.dart' as MetaRoute;
 
 class AddCustomerScreen extends StatefulWidget {
-  const AddCustomerScreen({super.key});
+  final CustomerModel? customer;
+  const AddCustomerScreen({super.key, this.customer});
 
   @override
   State<AddCustomerScreen> createState() => _AddCustomerScreenState();
 }
 
 class _AddCustomerScreenState extends State<AddCustomerScreen> {
+  late bool isEdit;
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   final _priceController = TextEditingController();
-  final _customerGroupController = TextEditingController();
 
-  List<Ward> _wards = [];
-  List<Group> _groups = [];
-  List<Area> _areas = [];
   List<MetaRoute.Route> _routes = [];
-  MetaRoute.Route? _selectedRoute;
 
+  MetaRoute.Route? _selectedRoute;
   Ward? _selectedWard;
   Group? _selectedGroup;
   Area? _selectedArea;
   bool _isLoadingWards = false;
-  bool _isLoadingGroups = false;
-  bool _isLoadingAreas = false;
   Province? _selectedProvince;
 
   @override
   void initState() {
+    isEdit = widget.customer != null;
+
+    if (widget.customer != null) {
+      _nameController.text = widget.customer!.name ?? '';
+      _phoneController.text = widget.customer!.phone ?? '';
+      _addressController.text = widget.customer!.address ?? '';
+      _priceController.text = widget.customer!.currentPrice?.toInt().toString() ?? '';
+      _selectedProvince = context.provinces
+          .where((province) => province.code == widget.customer!.provinceCode)
+          .firstOrNull;
+      _selectedWard = context.wards
+          .where((ward) => ward.code == widget.customer!.wardCode)
+          .firstOrNull;
+      _selectedArea = context.areas
+          .where((area) => area.code == widget.customer!.areaSaleCode)
+          .firstOrNull;
+      _selectedGroup = context.groups
+          .where((group) => group.code == widget.customer!.customerGroupCode)
+          .firstOrNull;
+
+      getRoute(_selectedArea?.code ?? '',
+          selectData: widget.customer!.routeSaleCode);
+    }
+
     super.initState();
   }
 
@@ -71,20 +92,23 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   void _submitForm(BuildContext ctx) {
     if (_formKey.currentState!.validate()) {
       final customerData = CustomerModel(
-        id: 0,
-        name: _nameController.text.trim(),
-        phone: _phoneController.text.trim(),
-        address: _addressController.text.trim(),
-        provinceCode: _selectedProvince?.code,
-        wardCode: _selectedWard?.code,
-        customerGroupCode: _customerGroupController.text.trim(),
-        areaSaleCode: _selectedArea?.code,
-        routeSaleCode: _selectedRoute?.code,
-        price: double.tryParse(_priceController.text) ?? 0.0,
-        saleUserCode: ctx.read<AppBloc>().state.userCode
-      );
+          id: widget.customer?.id ?? 0,
+          code: widget.customer?.code ?? '',
+          name: _nameController.text.trim(),
+          phone: _phoneController.text.trim(),
+          address: _addressController.text.trim(),
+          provinceCode: _selectedProvince?.code,
+          wardCode: _selectedWard?.code,
+          customerGroupCode: _selectedGroup?.code,
+          customerGroupName: _selectedGroup?.name,
+          areaSaleCode: _selectedArea?.code,
+          areaSaleName: _selectedArea?.name,
+          routeSaleCode: _selectedRoute?.code,
+          routeSaleName: _selectedRoute?.name,
+          price: double.tryParse(_priceController.text) ?? 0.0,
+          saleUserCode: ctx.read<AppBloc>().state.userCode);
 
-      ctx.read<CustomerBloc>().add(AddCustomerEvent(customerData));
+      ctx.read<CustomerBloc>().add(AddCustomerEvent(customerData, isEdit: isEdit));
     }
   }
 
@@ -106,9 +130,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
             Navigator.of(context).pop(true); // Return true to indicate success
           } else if (state is CustomerError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: const Color(0xFFDC2626),
+              const SnackBar(
+                content: Text("Đã có lỗi xảy ra"),
+                backgroundColor: Color(0xFFDC2626),
               ),
             );
           }
@@ -165,7 +189,9 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                             hint: 'Nhập số điện thoại',
                             icon: Icons.phone_outlined,
                             keyboardType: TextInputType.phone,
-                            
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                           ),
 
                           const SizedBox(height: 20),
@@ -182,33 +208,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                                 _selectedProvince = province;
                                 _selectedWard = null;
                                 _selectedArea = null;
-                                _wards = [];
-                                _areas = [];
-                                _isLoadingWards = true;
                               });
-                              if (province?.code != null) {
-                                try {
-                                  final wards = await DomainManager()
-                                      .metaData
-                                      .getWardsByProvinceCode(
-                                          provinceCode: province!.code!);
-                                  setState(() {
-                                    _wards = wards;
-                                    _isLoadingWards = false;
-                                  });
-                                } catch (e) {
-                                  setState(() {
-                                    _isLoadingWards = false;
-                                  });
-                                  _showErrorSnackBar(
-                                    'Không thể tải danh sách phường/xã',
-                                  );
-                                }
-                              } else {
-                                setState(() {
-                                  _isLoadingWards = false;
-                                });
-                              }
                             },
                             validator: (value) {
                               if (value == null) {
@@ -227,7 +227,15 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                             hint: 'Chọn phường xã',
                             icon: Icons.location_city_outlined,
                             value: _selectedWard,
-                            items: _wards,
+                            items: _selectedProvince != null
+                                ? context.appState.wards
+                                    .where(
+                                      (ward) =>
+                                          ward.parentCode ==
+                                          _selectedProvince!.code,
+                                    )
+                                    .toList()
+                                : [],
                             isLoading: _isLoadingWards,
                             onChanged: (Ward? ward) {
                               setState(() {
@@ -242,7 +250,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                               }
                               return null;
                             },
-                            itemBuilder: (Ward ward) => ward.name,
+                            itemBuilder: (Ward ward) => ward.name ?? '',
                           ),
 
                           const SizedBox(height: 20),
@@ -263,12 +271,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                             hint: 'Chọn khu',
                             icon: Icons.map_outlined,
                             value: _selectedArea,
-                            items: _selectedGroup != null
-                                ? allAreas
-                                    .where((area) =>
-                                        area.groupId == _selectedGroup!.id)
-                                    .toList()
-                                : allAreas,
+                            items: allAreas,
                             isLoading: false,
                             onChanged: (Area? area) async {
                               setState(() {
@@ -277,18 +280,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                                 _routes = [];
                               });
                               if (area?.code != null) {
-                                try {
-                                  final routes = await DomainManager()
-                                      .metaData
-                                      .getAllRouteSaleByAreaSale(
-                                          areaSaleCode: area!.code!);
-                                  setState(() {
-                                    _routes = routes;
-                                  });
-                                } catch (e) {
-                                  _showErrorSnackBar(
-                                      'Không thể tải danh sách tuyến');
-                                }
+                                getRoute(area!.code);
                               }
                             },
                             validator: (value) {
@@ -326,18 +318,19 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                           ),
                           const SizedBox(height: 20),
 
-                          // Customer Group
-                          _buildTextField(
-                            controller: _customerGroupController,
-                            label: 'Nhóm khách hàng',
-                            hint: 'Nhập nhóm khách hàng',
-                            icon: Icons.category_outlined,
-                            validator: (value) {
-                              if (value == null || value.trim().isEmpty) {
-                                return 'Vui lòng nhập nhóm khách hàng';
-                              }
-                              return null;
+                          _buildDropdownField<Group>(
+                            label: 'Loại hình kinh doanh',
+                            hint: 'Chọn loại hình kinh doanh',
+                            icon: Icons.map_outlined,
+                            value: _selectedGroup,
+                            items: context.appState.groups,
+                            isLoading: false,
+                            onChanged: (Group? value) async {
+                              setState(() {
+                                _selectedGroup = value;
+                              });
                             },
+                            itemBuilder: (Group area) => area.label ?? '',
                           ),
 
                           const SizedBox(height: 20),
@@ -368,43 +361,41 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                           const SizedBox(height: 40),
 
                           // Save Button
-                          Builder(
-                            builder: (buttonContext) {
-                              return SizedBox(
-                                width: double.infinity,
-                                height: 56,
-                                child: ElevatedButton(
-                                  onPressed: () => _submitForm(buttonContext),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF059669),
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(
-                                        Icons.save_outlined,
-                                        size: 24,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text(
-                                        'Lưu Khách Hàng',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.w600,
-                                          fontFamily: FontFamily.productSans,
-                                        ),
-                                      ),
-                                    ],
+                          Builder(builder: (buttonContext) {
+                            return SizedBox(
+                              width: double.infinity,
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed: () => _submitForm(buttonContext),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF059669),
+                                  foregroundColor: Colors.white,
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                              );
-                            }
-                          ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.save_outlined,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Lưu Khách Hàng',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: FontFamily.productSans,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
                         ],
                       ),
                     ),
@@ -416,6 +407,24 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
         ),
       ),
     );
+  }
+
+  void getRoute(String areaSaleCode, {String? selectData}) async {
+    try {
+      final routes = await DomainManager()
+          .metaData
+          .getAllRouteSaleByAreaSale(areaSaleCode: areaSaleCode);
+      setState(() {
+        _routes = routes;
+      });
+
+      if (selectData != null) {
+        _selectedRoute =
+            _routes.where((route) => route.code == selectData).firstOrNull;
+      }
+    } catch (e) {
+      _showErrorSnackBar('Không thể tải danh sách tuyến');
+    }
   }
 
   Widget _buildTextField({

@@ -10,26 +10,27 @@ import '../../../domain/entities/order/order_item.dart';
 import '../../../domain/entities/customer/customer.dart';
 
 class OrderBloc extends Bloc<OrderEvent, OrderState> {
-  List<ProductModel> _allProducts = [];
-  List<OrderItemModel> _cartItems = [];
+  final List<ProductModel> _allProducts = [];
+  final List<OrderItemModel> _cartItems = [];
   CustomerModel? _selectedCustomer;
-  List<OrderModel> _allOrders = [];
-  
+
+  String? _searchQuery = '';
+  String? _areaSaleCode;
+  String? _routeSaleCode;
+  DateTime? _fromDate;
+  DateTime? _toDate;
+  int? _dateType;
+
   // Debounce timer for search
   Timer? _searchDebounceTimer;
-  String _currentSearchQuery = '';
 
   final DomainManager _domainManager = DomainManager();
 
   OrderBloc() : super(OrderInitial()) {
     on<SelectCustomerEvent>(_onSelectCustomer);
-    on<CreateOrderEvent>(_onCreateOrder);
     on<InitOrderEvent>(_onInitOrders);
     on<SearchOrdersEvent>(_onSearchOrders);
-    on<FilterOrdersByStatusEvent>(_onFilterOrdersByStatus);
-    on<ClearOrderFiltersEvent>(_onClearOrderFilters);
     on<LoadMoreOrdersEvent>(_onLoadMoreOrders);
-    on<RefreshOrdersEvent>(_onRefreshOrders);
     on<FilterOrdersByMultipleCriteriaEvent>(_onFilterOrdersByMultipleCriteria);
   }
 
@@ -39,44 +40,9 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     return super.close();
   }
 
-
   void _onSelectCustomer(SelectCustomerEvent event, Emitter<OrderState> emit) {
     _selectedCustomer = event.customer;
     _emitOrderScreenState(emit);
-  }
-
-  void _onCreateOrder(CreateOrderEvent event, Emitter<OrderState> emit) {
-    // if (_cartItems.isEmpty) {
-    //   emit(OrderError('Giỏ hàng trống. Vui lòng thêm sản phẩm.'));
-    //   return;
-    // }
-
-    // try {
-    //   emit(OrderLoading());
-
-    //   final orderNumber = 'DH${DateTime.now().millisecondsSinceEpoch}';
-    //   final order = OrderModel.createNew(
-    //     id: 'order_${DateTime.now().millisecondsSinceEpoch}',
-    //     orderNumber: orderNumber,
-    //     customer: _selectedCustomer,
-    //     items: List.from(_cartItems),
-    //     notes: event.notes,
-    //     createdBy: 'current_user', // Thay bằng user hiện tại
-    //   );
-
-    //   // Sau khi tạo đơn thành công, xóa giỏ hàng
-    //   _cartItems.clear();
-    //   _selectedCustomer = null;
-
-    //   emit(OrderCreated(order));
-    //   emit(OrderOperationSuccess('Đơn hàng $orderNumber đã được tạo thành công!'));
-
-    //   // Về lại trạng thái bình thường
-    //   _emitOrderScreenState(emit);
-    // } catch (e) {
-    //   emit(OrderError('Có lỗi xảy ra khi tạo đơn hàng: $e'));
-    //   _emitOrderScreenState(emit);
-    // }
   }
 
   Future<void> _onInitOrders(
@@ -88,11 +54,9 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
           await _domainManager.order.getSaleOrders();
 
       // Initialize _allOrders with first page data
-      _allOrders = result.data;
 
       emit(OrderListState(
           orders: result.data,
-          filteredOrders: result.data,
           isLoading: false,
           currentPage: result.pageIndex,
           pageSize: result.pageSize,
@@ -105,46 +69,48 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
   void _onSearchOrders(SearchOrdersEvent event, Emitter<OrderState> emit) {
     final currentState = state;
+    if (_searchQuery == event.query) {
+      return;
+    }
+
     if (currentState is OrderListState) {
-      // Cancel previous timer
       _searchDebounceTimer?.cancel();
-      
-      // Update search query immediately in UI
+
+      _searchQuery = event.query;
+
       emit(currentState.copyWith(
         searchQuery: event.query,
-        isLoading: event.query != _currentSearchQuery && event.query.isNotEmpty,
+        isLoading: true,
       ));
-      
+
       // Set debounce timer
       _searchDebounceTimer = Timer(const Duration(milliseconds: 500), () {
-        _performSearch(event.query, emit, currentState);
+        _performSearch(emit, currentState);
       });
     }
   }
 
-  Future<void> _performSearch(String query, Emitter<OrderState> emit, OrderListState currentState) async {
+  Future<void> _performSearch(
+      Emitter<OrderState> emit, OrderListState currentState) async {
     try {
-      _currentSearchQuery = query;
-      
       // Call API with search query
       final PaginationWrapperResponsive<OrderModel> result =
           await _domainManager.order.getSaleOrders(
         pageIndex: 1,
         pageSize: currentState.pageSize,
-        searchString: query,
+        searchString: _searchQuery ?? '',
+        dateType: _dateType ?? 1,
+        areaSaleCode: _areaSaleCode,
+        routeSaleCode: _routeSaleCode,
+        fromDate: _fromDate,
+        toDate: _toDate,
       );
 
       // Update orders with search results
-      _allOrders = result.data;
-      
-      // Apply status filter if selected
-      List<OrderModel> filteredOrders = result.data;
-
 
       emit(currentState.copyWith(
         orders: result.data,
-        filteredOrders: filteredOrders,
-        searchQuery: query,
+        searchQuery: _searchQuery ?? '',
         isLoading: false,
         currentPage: 1, // Reset to first page
         hasReachedMax: result.hasReachedMax,
@@ -153,56 +119,6 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     } catch (e) {
       emit(currentState.copyWith(isLoading: false));
       emit(OrderError('Lỗi khi tìm kiếm: $e'));
-    }
-  }
-
-  void _onFilterOrdersByStatus(
-      FilterOrdersByStatusEvent event, Emitter<OrderState> emit) {
-    final currentState = state;
-    if (currentState is OrderListState) {
-      List<OrderModel> filteredOrders = _allOrders;
-
-      // Lọc theo trạng thái
-      if (event.status != null) {
-        filteredOrders = filteredOrders
-            .where((order) => order.orderStatus == event.status)
-            .toList();
-      }
-
-      // Sau đó lọc theo từ khóa tìm kiếm
-      if (currentState.searchQuery.isNotEmpty) {
-        filteredOrders = filteredOrders.where((order) {
-          return (order.code
-                      ?.toLowerCase()
-                      .contains(currentState.searchQuery) ??
-                  false) ||
-              (order.customerName
-                      ?.toLowerCase()
-                      .contains(currentState.searchQuery) ??
-                  false) ||
-              (order.customerGroupName
-                      ?.toLowerCase()
-                      .contains(currentState.searchQuery) ??
-                  false);
-        }).toList();
-      }
-
-      emit(currentState.copyWith(
-        filteredOrders: filteredOrders,
-        selectedStatus: event.status,
-      ));
-    }
-  }
-
-  void _onClearOrderFilters(
-      ClearOrderFiltersEvent event, Emitter<OrderState> emit) {
-    final currentState = state;
-    if (currentState is OrderListState) {
-      emit(currentState.copyWith(
-        filteredOrders: _allOrders,
-        selectedStatus: null,
-        searchQuery: '',
-      ));
     }
   }
 
@@ -218,34 +134,27 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
       try {
         final nextPage = currentState.currentPage + 1;
-        
+
         // Call API with next page and current search query
         final PaginationWrapperResponsive<OrderModel> result =
             await _domainManager.order.getSaleOrders(
           pageIndex: nextPage,
           pageSize: currentState.pageSize,
-          searchString: currentState.searchQuery, // Include search query in load more
+          searchString: currentState.searchQuery,
+          dateType: _dateType ?? 1,
+          areaSaleCode: _areaSaleCode,
+          routeSaleCode: _routeSaleCode,
+          fromDate: _fromDate,
+          toDate: _toDate,
         );
 
         // Merge new orders with existing ones
         final updatedOrders = [...currentState.orders, ...result.data];
-        
-        // Apply current filters to the updated list
-        List<OrderModel> filteredOrders = updatedOrders;
-        
-        // Apply status filter
-        if (currentState.selectedStatus != null) {
-          filteredOrders = filteredOrders
-              .where((order) => order.orderStatus == currentState.selectedStatus)
-              .toList();
-        }
-        
+
         // Update _allOrders for future filtering
-        _allOrders = updatedOrders;
 
         emit(currentState.copyWith(
           orders: updatedOrders,
-          filteredOrders: filteredOrders,
           currentPage: nextPage,
           isLoadingMore: false,
           hasReachedMax: result.hasReachedMax,
@@ -258,34 +167,19 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     }
   }
 
-  void _onRefreshOrders(
-      RefreshOrdersEvent event, Emitter<OrderState> emit) async {
-    final currentState = state;
-    if (currentState is OrderListState) {
-      emit(currentState.copyWith(isLoading: true));
-
-      // Simulate refresh
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      final displayedOrders =
-          currentState.filteredOrders.take(currentState.pageSize).toList();
-
-      emit(currentState.copyWith(
-        currentPage: 1,
-        isLoading: false,
-        isLoadingMore: false,
-        hasReachedMax:
-            currentState.filteredOrders.length <= currentState.pageSize,
-      ));
-    }
-  }
-
   void _onFilterOrdersByMultipleCriteria(
-      FilterOrdersByMultipleCriteriaEvent event, Emitter<OrderState> emit) async {
+      FilterOrdersByMultipleCriteriaEvent event,
+      Emitter<OrderState> emit) async {
     final currentState = state;
     if (currentState is OrderListState) {
       emit(currentState.copyWith(isLoading: true));
-      
+
+      _dateType = event.dateType;
+      _areaSaleCode = event.selectedArea?.code;
+      _routeSaleCode = event.selectedRoute?.code;
+      _fromDate = event.fromDate;
+      _toDate = event.toDate;
+
       try {
         // Call API with multiple filter criteria (removed status)
         final PaginationWrapperResponsive<OrderModel> result =
@@ -294,23 +188,27 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
           pageSize: currentState.pageSize,
           searchString: currentState.searchQuery,
           dateType: event.dateType ?? 1,
-          areaSaleCode: event.areaSaleCode,
-          routeSaleCode: event.routeSaleCode,
+          areaSaleCode: event.selectedArea?.code,
+          routeSaleCode: event.selectedRoute?.code,
           saleUserCode: event.saleUserCode,
           fromDate: event.fromDate,
           toDate: event.toDate,
         );
 
         // Update orders with filtered results (no status filtering)
-        _allOrders = result.data;
 
         emit(currentState.copyWith(
           orders: result.data,
-          filteredOrders: result.data, // No local status filtering
           isLoading: false,
           currentPage: 1,
           hasReachedMax: result.hasReachedMax,
           totalItem: result.totalItem,
+          selectedArea: event.selectedArea,
+          selectedRoute: event.selectedRoute,
+          dateType: event.dateType,
+          fromDate: event.fromDate,
+          toDate: event.toDate,
+          routes: event.routes,
         ));
       } catch (e) {
         emit(currentState.copyWith(isLoading: false));

@@ -17,7 +17,8 @@ class LoadMoreCustomersEvent extends CustomerEvents {}
 
 class AddCustomerEvent extends CustomerEvents {
   final CustomerModel customer;
-  AddCustomerEvent(this.customer);
+  final bool isEdit;
+  AddCustomerEvent(this.customer, {this.isEdit = false});
 }
 
 class UpdateCustomerEvent extends CustomerEvents {

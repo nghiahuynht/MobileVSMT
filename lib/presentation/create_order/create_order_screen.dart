@@ -60,8 +60,8 @@ class _ProductListState extends State<ProductList> {
         listener: (context, s) {
           if (s is state.CreateOrderError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(s.message),
+              const SnackBar(
+                content: Text('Đã có lỗi xảy ra'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -312,7 +312,7 @@ class _ProductListState extends State<ProductList> {
                 if (product.item.unitCode != null) ...[
                   const SizedBox(height: 2),
                   Text(
-                    '${(product.item.priceBox ?? 0).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')} đ/${product.item.unitCode}',
+                    '${(product.item.priceSale ?? 0).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')} đ/${product.item.unitCode}',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[500],
@@ -362,9 +362,9 @@ class _ProductListState extends State<ProductList> {
                 productCode: e.item.code,
                 productName: e.item.name,
                 unitCode: e.item.unitCode,
-                priceNoVAT: e.item.priceBox,
+                priceNoVAT: e.item.priceSale,
                 vat: e.item.vat,
-                priceWithVAT: e.item.priceBox,
+                priceWithVAT: (e.item.priceSale ?? 0) + (e.item.vat ?? 0),
               ))
           .toList();
 

@@ -18,43 +18,44 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with TickerProviderStateMixin {
   final _loginNameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  
+
   bool _isPasswordVisible = false;
   bool _rememberMe = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  
+
   List<Unit> _units = [];
   Unit? _selectedUnit;
   bool _isLoadingUnits = false;
-  
+
   late SignInBloc _signInBloc;
 
   @override
   void initState() {
     super.initState();
-    
+
     // Khởi tạo SignInBloc và gọi LoadUnitsEvent ngay
     _signInBloc = SignInBloc();
     _loadUnits();
-    
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
         curve: const Interval(0.3, 1.0, curve: Curves.easeInOut),
       ),
     );
-    
+
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
@@ -62,10 +63,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
       parent: _animationController,
       curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
     ));
-    
+
     _animationController.forward();
   }
-  
+
   void _loadUnits() {
     setState(() {
       _isLoadingUnits = true;
@@ -91,19 +92,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
           listener: (context, state) {
             if (state is SignInFailure) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Row(
-                    children: [
-                      const Icon(Icons.error_outline, color: Colors.white),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(state.message)),
-                    ],
-                  ),
-                  backgroundColor: const Color(0xFFDC2626),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                const SnackBar(
+                  content: Text('Đã có lỗi xảy ra'),
+                  backgroundColor: Colors.red,
                 ),
               );
             } else if (state is SignInSuccess) {
@@ -137,7 +128,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     children: [
                       const Icon(Icons.error_outline, color: Colors.white),
                       const SizedBox(width: 12),
-                      Expanded(child: Text('Lỗi tải danh sách đơn vị: ${state.message}')),
+                      Expanded(
+                          child: Text(
+                              'Lỗi tải danh sách đơn vị: ${state.message}')),
                     ],
                   ),
                   backgroundColor: const Color(0xFFDC2626),
@@ -161,22 +154,25 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                   ],
                 ),
               ),
-              child: CustomScrollView(
-                slivers: [
-                  // Header Section
-                  SliverToBoxAdapter(
-                    child: _buildHeader(),
-                  ),
-                  
-                  // Login Form Section
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: SlideTransition(
-                        position: _slideAnimation,
-                        child: _buildLoginForm(context, state),
-                      ),
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  Expanded(
+                    child: CustomScrollView(
+                      slivers: [
+                        
+                        // Login Form Section
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: FadeTransition(
+                            opacity: _fadeAnimation,
+                            child: SlideTransition(
+                              position: _slideAnimation,
+                              child: _buildLoginForm(context, state),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -228,10 +224,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               ),
             ),
           ),
-          
+
           // Content
-          Padding(
-            padding: const EdgeInsets.all(32.0),
+          Container(
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -256,9 +253,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     color: Colors.white,
                   ),
                 ),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // App Title
                 Text(
                   'TrashPay',
@@ -270,9 +267,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     letterSpacing: -0.5,
                   ),
                 ),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // Subtitle
                 Text(
                   'Waste Management System',
@@ -306,21 +303,21 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               fontFamily: FontFamily.productSans,
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
-                     Text(
-             'Đăng nhập để tiếp tục sử dụng ứng dụng',
-             style: TextStyle(
-               fontSize: 16,
-               fontWeight: FontWeight.w400,
-               color: const Color(0xFF6B7280),
-               fontFamily: FontFamily.productSans,
-             ),
-           ),
-          
+
+          Text(
+            'Đăng nhập để tiếp tục sử dụng ứng dụng',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              color: const Color(0xFF6B7280),
+              fontFamily: FontFamily.productSans,
+            ),
+          ),
+
           const SizedBox(height: 40),
-          
+
           // Login Form
           Form(
             key: _formKey,
@@ -328,34 +325,34 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
               children: [
                 // Unit Dropdown
                 _buildUnitDropdown(),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Login Name Field
                 _buildLoginNameField(),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Password Field
                 _buildPasswordField(),
-                
+
                 // const SizedBox(height: 16),
-                
+
                 // // Remember Me & Forgot Password
                 // _buildRememberMeRow(),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Login Button
                 _buildLoginButton(context, state),
-                
+
                 const SizedBox(height: 24),
               ],
             ),
           ),
-          
+
           const Spacer(),
-          
+
           // Footer
           _buildFooter(),
         ],
@@ -366,6 +363,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   Widget _buildUnitDropdown() {
     return DropdownButtonFormField<Unit>(
       value: _selectedUnit,
+      isExpanded: true,
       decoration: InputDecoration(
         hintText: _isLoadingUnits ? 'Đang tải...' : 'Chọn đơn vị',
         prefixIcon: Container(
@@ -403,35 +401,23 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       ),
       items: _isLoadingUnits
           ? []
           : _units.map((Unit unit) {
               return DropdownMenuItem<Unit>(
                 value: unit,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      unit.label ?? '',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: FontFamily.productSans,
-                      ),
-                    ),
-                    if (unit.description != null && unit.description!.isNotEmpty)
-                      Text(
-                        unit.description!,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: const Color(0xFF6B7280),
-                          fontFamily: FontFamily.productSans,
-                        ),
-                      ),
-                  ],
+                child: Text(
+                  unit.label ?? '',
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: FontFamily.productSans,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               );
             }).toList(),
@@ -454,19 +440,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         fontFamily: FontFamily.productSans,
       ),
       dropdownColor: Colors.white,
-      icon: _isLoadingUnits
-          ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
-              ),
-            )
-          : const Icon(
-              Icons.keyboard_arrow_down,
-              color: Color(0xFF6B7280),
-            ),
     );
   }
 
@@ -517,7 +490,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       ),
       validator: (val) {
         if (val == null || val.isEmpty) {
@@ -557,7 +531,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         ),
         suffixIcon: IconButton(
           icon: Icon(
-            _isPasswordVisible ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            _isPasswordVisible
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
             color: const Color(0xFF6B7280),
           ),
           onPressed: () => setState(() {
@@ -586,7 +562,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
       ),
       validator: (val) {
         if (val == null || val.isEmpty) {
@@ -631,9 +608,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             ),
           ],
         ),
-        
+
         const Spacer(),
-        
+
         // Forgot Password
         GestureDetector(
           onTap: () {
@@ -660,7 +637,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
   Widget _buildLoginButton(BuildContext context, SignInState state) {
     final isLoading = state is SignInLoading;
-    
+
     return SizedBox(
       width: double.infinity,
       height: 56,
@@ -700,7 +677,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   Widget _buildFooter() {
     return Column(
       children: [
-
         // Copyright
         Text(
           '© 2024 TrashPay. All rights reserved.',
@@ -725,7 +701,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         );
         return;
       }
-      
+
       _signInBloc.add(
         SignInWithLoginNameEvent(
           _loginNameController.text.trim(),

@@ -1,6 +1,7 @@
 import 'package:trash_pay/domain/entities/customer/customer.dart';
+import 'package:trash_pay/domain/entities/meta_data/area.dart';
+import 'package:trash_pay/domain/entities/meta_data/route.dart';
 import 'package:trash_pay/presentation/order/enum.dart';
-
 
 abstract class OrderEvent {}
 
@@ -45,17 +46,8 @@ class SearchOrdersEvent extends OrderEvent {
   SearchOrdersEvent(this.query);
 }
 
-class FilterOrdersByStatusEvent extends OrderEvent {
-  final OrderStatus? status;
-  FilterOrdersByStatusEvent(this.status);
-}
-
-class ClearOrderFiltersEvent extends OrderEvent {}
-
 // Pagination events
 class LoadMoreOrdersEvent extends OrderEvent {}
-
-class RefreshOrdersEvent extends OrderEvent {}
 
 class GetOrderDetailEvent extends OrderEvent {
   final String orderId;
@@ -63,19 +55,21 @@ class GetOrderDetailEvent extends OrderEvent {
 }
 
 class FilterOrdersByMultipleCriteriaEvent extends OrderEvent {
-  final String? areaSaleCode;
-  final String? routeSaleCode;
+  final Area? selectedArea;
+  final Route? selectedRoute;
   final String? saleUserCode;
   final int? dateType; // 1: Theo ngày tạo, 2: Theo ngày duyệt
   final DateTime? fromDate;
   final DateTime? toDate;
+  final List<Route> routes;
 
   FilterOrdersByMultipleCriteriaEvent({
-    this.areaSaleCode,
-    this.routeSaleCode,
+    this.selectedArea,
+    this.selectedRoute,
     this.saleUserCode,
     this.dateType,
     this.fromDate,
     this.toDate,
+    this.routes = const [],
   });
 }

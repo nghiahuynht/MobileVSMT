@@ -54,10 +54,11 @@ class AppState extends Equatable {
       arrears: arrears ?? this.arrears,
       wards: wards ?? this.wards,
       paymentTypes: paymentTypes ?? this.paymentTypes,
+      groups: groups ?? this.groups,
     );
   }
 
   @override
   List<Object?> get props =>
-      [areas, provinces, isInitialized, userCode, products, groups, arrears, wards];
+      [areas, provinces, isInitialized, userCode, products, groups, arrears, wards, paymentTypes];
 }

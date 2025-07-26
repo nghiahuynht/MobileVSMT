@@ -1,3 +1,5 @@
+import 'package:trash_pay/domain/entities/meta_data/area.dart';
+import 'package:trash_pay/domain/entities/meta_data/route.dart' as MetaRoute;
 import 'package:trash_pay/presentation/order/enum.dart';
 
 import '../../../domain/entities/product/product.dart';
@@ -11,62 +13,6 @@ class OrderInitial extends OrderState {}
 
 class OrderLoading extends OrderState {}
 
-// Product states
-class ProductsLoaded extends OrderState {
-  final List<ProductModel> products;
-  final List<ProductModel> filteredProducts;
-  final String searchQuery;
-
-  ProductsLoaded({
-    required this.products,
-    required this.filteredProducts,
-    this.searchQuery = '',
-  });
-
-  ProductsLoaded copyWith({
-    List<ProductModel>? products,
-    List<ProductModel>? filteredProducts,
-    String? searchQuery,
-  }) {
-    return ProductsLoaded(
-      products: products ?? this.products,
-      filteredProducts: filteredProducts ?? this.filteredProducts,
-      searchQuery: searchQuery ?? this.searchQuery,
-    );
-  }
-}
-
-// Cart states
-class CartUpdated extends OrderState {
-  final List<OrderItemModel> cartItems;
-  final double subtotal;
-  final double total;
-  final CustomerModel? selectedCustomer;
-
-  CartUpdated({
-    required this.cartItems,
-    required this.subtotal,
-    required this.total,
-    this.selectedCustomer,
-  });
-
-  CartUpdated copyWith({
-    List<OrderItemModel>? cartItems,
-    double? subtotal,
-    double? total,
-    CustomerModel? selectedCustomer,
-  }) {
-    return CartUpdated(
-      cartItems: cartItems ?? this.cartItems,
-      subtotal: subtotal ?? this.subtotal,
-      total: total ?? this.total,
-      selectedCustomer: selectedCustomer ?? this.selectedCustomer,
-    );
-  }
-
-  int get itemCount => cartItems.fold<int>(0, (sum, item) => sum + item.quantity);
-  bool get isEmpty => cartItems.isEmpty;
-}
 
 // Combined state for order screen
 class OrderScreenState extends OrderState {
@@ -112,67 +58,84 @@ class OrderScreenState extends OrderState {
     );
   }
 
-  int get cartItemCount => cartItems.fold<int>(0, (sum, item) => sum + item.quantity);
+  int get cartItemCount =>
+      cartItems.fold<int>(0, (sum, item) => sum + item.quantity);
   bool get isCartEmpty => cartItems.isEmpty;
 }
 
 // Order list state
 class OrderListState extends OrderState {
   final List<OrderModel> orders;
-  final List<OrderModel> filteredOrders;
   final String searchQuery;
-  final OrderStatus? selectedStatus;
   final bool isLoading;
   final bool isLoadingMore;
   final bool hasReachedMax;
   final int currentPage;
   final int pageSize;
   final int totalItem;
+  final String? saleUserCode;
+  final int dateType;
+  final DateTime? fromDate;
+  final DateTime? toDate;
+  final Area? selectedArea;
+  final MetaRoute.Route? selectedRoute;
+  final List<MetaRoute.Route> routes;
 
   OrderListState({
     required this.orders,
-    required this.filteredOrders,
     this.searchQuery = '',
-    this.selectedStatus,
     this.isLoading = false,
     this.isLoadingMore = false,
     this.hasReachedMax = false,
     this.currentPage = 1,
     this.pageSize = 10,
     this.totalItem = 0,
+    this.saleUserCode,
+    this.dateType = 1,
+    this.fromDate,
+    this.toDate,
+    this.selectedArea,
+    this.selectedRoute,
+    this.routes = const [],
   });
 
   OrderListState copyWith({
     List<OrderModel>? orders,
-    List<OrderModel>? filteredOrders,
     String? searchQuery,
-    OrderStatus? selectedStatus,
     bool? isLoading,
     bool? isLoadingMore,
     bool? hasReachedMax,
     int? currentPage,
     int? pageSize,
     int? totalItem,
+    String? areaSaleCode,
+    String? routeSaleCode,
+    String? saleUserCode,
+    int? dateType,
+    DateTime? fromDate,
+    DateTime? toDate,
+    Area? selectedArea,
+    MetaRoute.Route? selectedRoute,
+    List<MetaRoute.Route>? routes,
   }) {
     return OrderListState(
       orders: orders ?? this.orders,
-      filteredOrders: filteredOrders ?? this.filteredOrders,
       searchQuery: searchQuery ?? this.searchQuery,
-      selectedStatus: selectedStatus ?? this.selectedStatus,
       isLoading: isLoading ?? this.isLoading,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
       hasReachedMax: hasReachedMax ?? this.hasReachedMax,
       currentPage: currentPage ?? this.currentPage,
       pageSize: pageSize ?? this.pageSize,
       totalItem: totalItem ?? this.totalItem,
+      saleUserCode: saleUserCode ?? this.saleUserCode,
+      dateType: dateType ?? this.dateType,
+      fromDate: fromDate ?? this.fromDate,
+      toDate: toDate ?? this.toDate,
+      selectedArea: selectedArea ?? this.selectedArea,
+      selectedRoute: selectedRoute ?? this.selectedRoute,
+      routes: routes ?? this.routes,
     );
   }
-}
-
-// Order operation states
-class OrderCreated extends OrderState {
-  final OrderModel order;
-  OrderCreated(this.order);
 }
 
 class OrdersLoaded extends OrderState {
@@ -193,4 +156,4 @@ class OrderOperationSuccess extends OrderState {
 class OrderError extends OrderState {
   final String message;
   OrderError(this.message);
-} 
+}

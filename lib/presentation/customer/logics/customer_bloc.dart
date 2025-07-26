@@ -149,7 +149,7 @@ class CustomerBloc extends Bloc<CustomerEvents, CustomerState> {
   Future<void> _handleAddCustomer(
       AddCustomerEvent event, Emitter<CustomerState> emit) async {
     try {
-      final result = await domainManager.customer.addCustomer(event.customer);
+      final result = await domainManager.customer.addCustomer(event.customer, isEdit: event.isEdit);
       if (result is Success) {
         emit(CustomerOperationSuccess('Đã thêm khách hàng thành công'));
       } else if (result is Failure<CustomerModel>) {

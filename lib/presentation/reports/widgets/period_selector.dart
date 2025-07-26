@@ -73,51 +73,42 @@ class PeriodSelector extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _buildPeriodChip(ReportPeriod.today),
-              _buildPeriodChip(ReportPeriod.yesterday),
-              _buildPeriodChip(ReportPeriod.thisWeek),
-              _buildPeriodChip(ReportPeriod.lastWeek),
-              _buildPeriodChip(ReportPeriod.thisMonth),
-              _buildPeriodChip(ReportPeriod.lastMonth),
-              _buildPeriodChip(ReportPeriod.thisQuarter),
-              _buildPeriodChip(ReportPeriod.lastQuarter),
               _buildPeriodChip(ReportPeriod.thisYear),
               _buildPeriodChip(ReportPeriod.lastYear),
             ],
           ),
           
-          const SizedBox(height: 12),
-          
-          // Custom date range button
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () => _showCustomDatePicker(context),
-              icon: const Icon(
-                Icons.date_range_outlined,
-                size: 16,
-                color: Color(0xFF059669),
-              ),
-              label: Text(
-                selectedPeriod == ReportPeriod.custom 
-                    ? 'Khoảng thời gian tùy chọn'
-                    : 'Chọn khoảng thời gian',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF059669),
-                  fontFamily: FontFamily.productSans,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF059669), width: 1),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
-          ),
+          // Ẩn nút chọn khoảng thời gian tùy chọn
+          // const SizedBox(height: 12),
+          // SizedBox(
+          //   width: double.infinity,
+          //   child: OutlinedButton.icon(
+          //     onPressed: () => _showCustomDatePicker(context),
+          //     icon: const Icon(
+          //       Icons.date_range_outlined,
+          //       size: 16,
+          //       color: Color(0xFF059669),
+          //     ),
+          //     label: Text(
+          //       selectedPeriod == ReportPeriod.custom 
+          //           ? 'Khoảng thời gian tùy chọn'
+          //           : 'Chọn khoảng thời gian',
+          //       style: TextStyle(
+          //         fontSize: 14,
+          //         fontWeight: FontWeight.w500,
+          //         color: const Color(0xFF059669),
+          //         fontFamily: FontFamily.productSans,
+          //       ),
+          //     ),
+          //     style: OutlinedButton.styleFrom(
+          //       side: const BorderSide(color: Color(0xFF059669), width: 1),
+          //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          //       shape: RoundedRectangleBorder(
+          //         borderRadius: BorderRadius.circular(8),
+          //       ),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );

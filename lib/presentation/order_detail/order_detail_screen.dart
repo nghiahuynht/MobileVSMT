@@ -30,8 +30,8 @@ class OrderDetailScreen extends StatelessWidget {
           listener: (context, state) {
             if (state is OrderDetailError) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
+                const SnackBar(
+                  content: const Text('Đã có lỗi xảy ra'),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -72,115 +72,135 @@ class OrderDetailScreen extends StatelessWidget {
                       );
                     }
 
-                    return SingleChildScrollView(
+                    return Padding(
                       padding: const EdgeInsets.all(20),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Customer info
-                          Text(
-                            'Thông tin chi tiết',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: FontFamily.productSans,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          _buildInfoRow('Tên KH',
-                              state.order.customerName ?? Strings.defaultEmpty),
-                          _buildInfoRow('Mã KH',
-                              state.order.customerCode ?? Strings.defaultEmpty),
-                          _buildInfoRow('Địa chỉ',
-                              state.order.customerCode ?? Strings.defaultEmpty),
-                          _buildInfoRow('Hình thức thanh toán',
-                              state.order.paymentName ?? Strings.defaultEmpty),
-                          _buildInfoRow('Truy thu',
-                              state.order.arrearsName ?? Strings.defaultEmpty),
-                          const SizedBox(height: 20),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Customer info
+                                  Text(
+                                    'Thông tin chi tiết',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: FontFamily.productSans,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  _buildInfoRow(
+                                      'Tên KH',
+                                      state.order.customerName ??
+                                          Strings.defaultEmpty),
+                                  _buildInfoRow(
+                                      'Mã KH',
+                                      state.order.customerCode ??
+                                          Strings.defaultEmpty),
+                                  if (state.order.taxAddress != null)
+                                    _buildInfoRow(
+                                        'Địa chỉ',
+                                        state.order.taxAddress ??
+                                            Strings.defaultEmpty),
+                                  _buildInfoRow(
+                                      'Hình thức thanh toán',
+                                      state.order.paymentName ??
+                                          Strings.defaultEmpty),
+                                  _buildInfoRow(
+                                      'Truy thu',
+                                      state.order.arrearsName ??
+                                          Strings.defaultEmpty),
+                                  const SizedBox(height: 20),
 
-                          // Order items
-                          Text(
-                            'Sản phẩm (${state.order.itemCount})',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: FontFamily.productSans,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              children: state.order.lstSaleOrderItem
-                                  .map((item) => _buildOrderItemTile(item))
-                                  .toList(),
-                            ),
-                          ),
+                                  // Order items
+                                  Text(
+                                    'Sản phẩm (${state.order.itemCount})',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: FontFamily.productSans,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.05),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      children: state.order.lstSaleOrderItem
+                                          .map((item) =>
+                                              _buildOrderItemTile(item))
+                                          .toList(),
+                                    ),
+                                  ),
 
-                          const SizedBox(height: 20),
+                                  const SizedBox(height: 20),
 
-                          // Order summary
-                          Text(
-                            'Tổng kết',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: FontFamily.productSans,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _buildSummaryRow('Tổng tiền hàng',
-                              state.order.totalNoVAT?.toDouble() ?? 0),
-                          _buildSummaryRow(
-                              'Thuế', state.order.totalVAT?.toDouble() ?? 0),
-                          const Divider(),
-                          _buildSummaryRow('Tổng thanh toán',
-                              state.order.totalWithVAT?.toDouble() ?? 0,
-                              isTotal: true),
+                                  // Order summary
+                                  Text(
+                                    'Tổng kết',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      fontFamily: FontFamily.productSans,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildSummaryRow('Tổng tiền hàng',
+                                      state.order.totalNoVAT?.toDouble() ?? 0),
+                                  _buildSummaryRow('Thuế',
+                                      state.order.totalVAT?.toDouble() ?? 0),
+                                  const Divider(),
+                                  _buildSummaryRow('Tổng thanh toán',
+                                      state.order.totalWithVAT?.toDouble() ?? 0,
+                                      isTotal: true),
 
-                          if (state.order.note != null &&
-                              state.order.note!.isNotEmpty) ...[
-                            const SizedBox(height: 20),
-                            Text(
-                              'Ghi chú',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                fontFamily: FontFamily.productSans,
+                                  if (state.order.note != null &&
+                                      state.order.note!.isNotEmpty) ...[
+                                    const SizedBox(height: 20),
+                                    Text(
+                                      'Ghi chú',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        fontFamily: FontFamily.productSans,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[50],
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        state.order.note!,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[700],
+                                          fontFamily: FontFamily.productSans,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+
+                                  const SizedBox(
+                                    height: 12,
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[50],
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                state.order.note!,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[700],
-                                  fontFamily: FontFamily.productSans,
-                                ),
-                              ),
-                            ),
-                          ],
-
-                          const SizedBox(
-                            height: 12,
                           ),
                           _buildPrintButton(context, order),
                         ],
@@ -212,7 +232,7 @@ class OrderDetailScreen extends StatelessWidget {
       textColor = Colors.grey[700]!;
     }
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
       decoration: BoxDecoration(
         color: status.color,
         borderRadius: BorderRadius.circular(12),
@@ -222,14 +242,14 @@ class OrderDetailScreen extends StatelessWidget {
         children: [
           Icon(
             status.icon,
-            size: 14,
+            size: 12,
             color: textColor,
           ),
           const SizedBox(width: 4),
           Text(
             _getStatusDisplayName(status),
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 10,
               fontWeight: FontWeight.w500,
               color: textColor,
               fontFamily: FontFamily.productSans,

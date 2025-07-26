@@ -68,11 +68,11 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
-  Future<ApiResultModel<CustomerModel>> addCustomer(CustomerModel customer) async {
+  Future<ApiResultModel<CustomerModel>> addCustomer(CustomerModel customer, {bool isEdit = false}) async {
     try {
       final result = await _apiService.post<CustomerModel>(
         ApiConfig.insertOrUpdateCustomer,
-        data: customer.toMap(isCreate: true),
+        data: customer.toMap(isCreate: !isEdit),
         fromJson: (json) => CustomerModel.fromJson(json),
       );
 

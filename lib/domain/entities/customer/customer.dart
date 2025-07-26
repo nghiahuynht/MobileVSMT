@@ -16,13 +16,13 @@ class CustomerModel extends BaseModel {
   final String? bankName;
   final String? bankAccountName;
   final String? bankAccountNumber;
-  final double? price;
+  final num? price;
   final String? taxCode;
   final String? taxAddress;
   final String? payerName;
   final String? agencyName;
-  final double? oldPrice;
-  final double? currentPrice;
+  final num? oldPrice;
+  final num? currentPrice;
   final String? customerGroupCode;
   final String? customerGroupName;
   final bool isDeleted;
@@ -147,7 +147,7 @@ class CustomerModel extends BaseModel {
   }) {
     return <String, dynamic>{
       if (!isCreate) 'id': id,
-      'code': code,
+      if (!isCreate) 'code': code,
       'name': name,
       'provinceCode': provinceCode,
       'districtCode': districtCode,
@@ -195,13 +195,13 @@ class CustomerModel extends BaseModel {
       bankName: map['bankName'] != null ? map['bankName'] as String : null,
       bankAccountName: map['bankAccountName'] != null ? map['bankAccountName'] as String : null,
       bankAccountNumber: map['bankAccountNumber'] != null ? map['bankAccountNumber'] as String : null,
-      price: map['price'] != null ? map['price'] as double : null,
+      price: map['price'] != null ? map['price'] as num : null,
       taxCode: map['taxCode'] != null ? map['taxCode'] as String : null,
       taxAddress: map['taxAddress'] != null ? map['taxAddress'] as String : null,
       payerName: map['payerName'] != null ? map['payerName'] as String : null,
       agencyName: map['agencyName'] != null ? map['agencyName'] as String : null,
-      oldPrice: map['oldPrice'] != null ? map['oldPrice'] as double : null,
-      currentPrice: map['currentPrice'] != null ? map['currentPrice'] as double : null,
+      oldPrice: map['oldPrice'] != null ? map['oldPrice'] as num : null,
+      currentPrice: map['currentPrice'] != null ? map['currentPrice'] as num : null,
       customerGroupCode: map['customerGroupCode'] != null ? map['customerGroupCode'] as String : null,
       customerGroupName: map['customerGroupName'] != null ? map['customerGroupName'] as String : null,
       isDeleted: map['isDeleted'] as bool,

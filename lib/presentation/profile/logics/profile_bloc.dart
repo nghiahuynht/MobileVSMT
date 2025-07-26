@@ -36,8 +36,10 @@ class ProfileBloc extends Bloc<ProfileEvents, ProfileState> {
         if (authState is Authenticated && authState.user != null) {
           _currentProfile = authState.user!.toProfileModel();
           emit(ProfileLoaded(_currentProfile!));
-          return;
+        } else {
+          emit(ProfileError('Không thể tải thông tin hồ sơ'));
         }
+
       }
       
       // If AuthBloc doesn't have user info, try to get from domain manager

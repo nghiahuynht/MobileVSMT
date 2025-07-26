@@ -1,32 +1,16 @@
-import '../../../domain/entities/report/report_period.dart';
-
 abstract class ReportEvent {}
 
 // Load initial reports data
 class LoadReportsEvent extends ReportEvent {
-  final ReportPeriod? initialPeriod;
-  
-  LoadReportsEvent({this.initialPeriod});
-}
+  final int year;
 
-// Change the reporting period
-class ChangePeriodEvent extends ReportEvent {
-  final ReportPeriod period;
-  final DateRange? customRange;
-  
-  ChangePeriodEvent({
-    required this.period,
-    this.customRange,
-  });
+  LoadReportsEvent({required this.year});
 }
-
-// Refresh current reports data
-class RefreshReportsEvent extends ReportEvent {}
 
 // Load specific report type
 class LoadReportTypeEvent extends ReportEvent {
   final ReportType reportType;
-  
+
   LoadReportTypeEvent(this.reportType);
 }
 
@@ -34,7 +18,7 @@ class LoadReportTypeEvent extends ReportEvent {
 class FilterReportsByDateEvent extends ReportEvent {
   final DateTime startDate;
   final DateTime endDate;
-  
+
   FilterReportsByDateEvent({
     required this.startDate,
     required this.endDate,
@@ -45,7 +29,7 @@ class FilterReportsByDateEvent extends ReportEvent {
 class ExportReportEvent extends ReportEvent {
   final ReportType reportType;
   final String format; // 'pdf', 'excel', 'csv'
-  
+
   ExportReportEvent({
     required this.reportType,
     required this.format,
@@ -55,7 +39,7 @@ class ExportReportEvent extends ReportEvent {
 // Switch between report tabs
 class SwitchReportTabEvent extends ReportEvent {
   final int tabIndex;
-  
+
   SwitchReportTabEvent(this.tabIndex);
 }
 
@@ -64,4 +48,4 @@ enum ReportType {
   revenue,
   customers,
   products,
-} 
+}

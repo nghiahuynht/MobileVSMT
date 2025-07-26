@@ -337,9 +337,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                       );
                     } else if (state is CustomerError) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(state.message),
-                          backgroundColor: const Color(0xFFDC2626),
+                        const SnackBar(
+                          content: const Text('Đã có lỗi xảy ra'),
+                          backgroundColor: Color(0xFFDC2626),
                         ),
                       );
                     }

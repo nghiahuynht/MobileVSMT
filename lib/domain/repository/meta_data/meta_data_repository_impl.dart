@@ -4,7 +4,7 @@ import 'package:trash_pay/constants/api_config.dart';
 import 'package:trash_pay/domain/entities/based_api_result/api_result_model.dart';
 import 'package:trash_pay/domain/entities/location/group.dart';
 import 'package:trash_pay/domain/entities/meta_data/area.dart';
-import 'package:trash_pay/domain/entities/location/ward.dart';
+import 'package:trash_pay/domain/entities/meta_data/ward.dart';
 import 'package:trash_pay/domain/entities/meta_data/meta_data.dart';
 import 'package:trash_pay/domain/entities/meta_data/province.dart';
 import 'package:trash_pay/domain/entities/meta_data/route.dart';

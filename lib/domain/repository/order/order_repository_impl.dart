@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:trash_pay/constants/api_config.dart';
 import 'package:trash_pay/domain/entities/based_api_result/api_result_model.dart';
 import 'package:trash_pay/domain/entities/common/pagination_wrapper_responsive.dart';
@@ -83,53 +85,23 @@ class OrderRepositoryImpl implements OrderRepository {
     }
   }
 
-  // @override
-  // Future<ApiResultModel<OrderModel>> createOrder(Map<String, dynamic> orderData) async {
-  //   try {
-  //     final result = await _apiService.post<OrderModel>(
-  //       '/SaleOrder',
-  //       data: orderData,
-  //       fromJson: (json) => OrderModel.fromJson(json),
-  //     );
-  //     return result;
-  //   } catch (e) {
-  //     return ApiResultModel.error(
-  //       message: 'Failed to create order: $e',
-  //       data: OrderModel.empty(),
-  //     );
-  //   }
-  // }
-
-  // @override
-  // Future<ApiResultModel<OrderModel>> updateOrder(String id, Map<String, dynamic> orderData) async {
-  //   try {
-  //     final result = await _apiService.put<OrderModel>(
-  //       '/SaleOrder/$id',
-  //       data: orderData,
-  //       fromJson: (json) => OrderModel.fromJson(json),
-  //     );
-  //     return result;
-  //   } catch (e) {
-  //     return ApiResultModel.error(
-  //       message: 'Failed to update order: $e',
-  //       data: OrderModel.empty(),
-  //     );
-  //   }
-  // }
-
-  // @override
-  // Future<ApiResultModel<bool>> deleteOrder(String id) async {
-  //   try {
-  //     final result = await _apiService.delete<bool>(
-  //       '/SaleOrder/$id',
-  //       fromJson: (json) => true,
-  //     );
-  //     return result;
-  //   } catch (e) {
-  //     return ApiResultModel.error(
-  //       message: 'Failed to delete order: $e',
-  //       data: false,
-  //     );
-  //   }
-  // }
+  @override
+  Future<bool> createOrder(Map<String, dynamic> orderData) async {
+    try {
+      final result = await _apiService.post<bool>(
+        ApiConfig.insertSaleOrder,
+        data: orderData,
+        fromJson: (json) => jsonDecode(json)['isSuccess'],
+      );
+      if (result is Success<bool>) {
+        return result.data;
+      } else if (result is Failure<bool>) {
+        throw Exception(result.errorResultEntity.message);
+      } else {
+        throw Exception('Unexpected result type');
+      }
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
 }

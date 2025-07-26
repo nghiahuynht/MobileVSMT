@@ -37,25 +37,26 @@ class ProfileScreen extends StatelessWidget {
                 title: 'Hồ Sơ Cá Nhân',
                 subtitle: 'Thông tin tài khoản và cài đặt',
               ),
-              
+
               // Profile Content
               Expanded(
                 child: BlocConsumer<ProfileBloc, ProfileState>(
                   listener: (context, state) {
-                    if (state is ProfileUpdateSuccess || state is PasswordChangeSuccess) {
+                    if (state is ProfileUpdateSuccess ||
+                        state is PasswordChangeSuccess) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(state is ProfileUpdateSuccess 
-                              ? state.message 
+                          content: Text(state is ProfileUpdateSuccess
+                              ? state.message
                               : (state as PasswordChangeSuccess).message),
                           backgroundColor: const Color(0xFF059669),
                         ),
                       );
                     } else if (state is ProfileError) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(state.message),
-                          backgroundColor: const Color(0xFFDC2626),
+                        const SnackBar(
+                          content: Text('Đã có lỗi xảy ra'),
+                          backgroundColor: Color(0xFFDC2626),
                         ),
                       );
                     } else if (state is LogoutSuccess) {
@@ -70,12 +71,46 @@ class ProfileScreen extends StatelessWidget {
                         ),
                       );
                     }
-                    
+
                     if (state is ProfileLoaded) {
                       return _buildProfileContent(context, state.profile);
                     }
-                    
-                    return const SizedBox.shrink();
+
+                    return Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        children: [
+                          Spacer(),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                _showLogoutDialog(context);
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFFDC2626),
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                side: const BorderSide(
+                                  color: Color(0xFFDC2626),
+                                  width: 1,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text(
+                                'Đăng Xuất',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    );
                   },
                 ),
               ),
@@ -85,9 +120,9 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildProfileContent(BuildContext context, ProfileModel profile) {
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
@@ -131,7 +166,9 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   child: Center(
                     child: Text(
-                      profile.name.isNotEmpty ? profile.name[0].toUpperCase() : 'U',
+                      profile.name.isNotEmpty
+                          ? profile.name[0].toUpperCase()
+                          : 'U',
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -140,9 +177,9 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+      
                 const SizedBox(height: 16),
-                
+      
                 // Name and Role
                 Text(
                   profile.name,
@@ -154,7 +191,8 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: _getRoleColors(profile.role)[0].withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
@@ -179,9 +217,9 @@ class ProfileScreen extends StatelessWidget {
               ],
             ),
           ),
-          
+      
           const SizedBox(height: 20),
-          
+      
           // Contact Information
           _buildInfoSection(
             'Thông Tin Liên Hệ',
@@ -189,33 +227,32 @@ class ProfileScreen extends StatelessWidget {
               if (profile.email != null)
                 _buildInfoItem(Icons.email_outlined, 'Email', profile.email!),
               if (profile.phone != null)
-                _buildInfoItem(Icons.phone_outlined, 'Số điện thoại', profile.phone!),
-              if (profile.joinedAt != null)
                 _buildInfoItem(
-                  Icons.calendar_today_outlined, 
-                  'Ngày tham gia', 
-                  DateFormat('dd/MM/yyyy').format(profile.joinedAt!)
-                ),
+                    Icons.phone_outlined, 'Số điện thoại', profile.phone!),
+              if (profile.joinedAt != null)
+                _buildInfoItem(Icons.calendar_today_outlined, 'Ngày tham gia',
+                    DateFormat('dd/MM/yyyy').format(profile.joinedAt!)),
             ],
           ),
-          
+      
           const SizedBox(height: 20),
-          
+      
           // // Settings Section
           // _buildSettingsSection(context, profile),
-          
+      
           // const SizedBox(height: 20),
-          
-          
+      
+        const Spacer(),
+
           // Action Buttons
           _buildActionButtons(context),
-          
+      
           const SizedBox(height: 20),
         ],
       ),
     );
   }
-  
+
   Widget _buildInfoSection(String title, List<Widget> items) {
     return Container(
       width: double.infinity,
@@ -252,7 +289,7 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildInfoItem(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -298,10 +335,10 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildSettingsSection(BuildContext context, ProfileModel profile) {
     final preferences = profile.preferences ?? {};
-    
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -332,7 +369,6 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          
           _buildSettingItem(
             'Thông báo',
             'Nhận thông báo từ hệ thống',
@@ -343,7 +379,6 @@ class ProfileScreen extends StatelessWidget {
               context.read<ProfileBloc>().add(UpdatePreferencesEvent(newPrefs));
             },
           ),
-          
           _buildSettingItem(
             'Tự động đồng bộ',
             'Đồng bộ dữ liệu tự động',
@@ -358,8 +393,9 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-  
-  Widget _buildSettingItem(String title, String subtitle, bool value, Function(bool) onChanged) {
+
+  Widget _buildSettingItem(
+      String title, String subtitle, bool value, Function(bool) onChanged) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
@@ -395,7 +431,7 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   Widget _buildActionButtons(BuildContext context) {
     return Column(
       children: [
@@ -424,39 +460,39 @@ class ProfileScreen extends StatelessWidget {
         //     ),
         //   ),
         // ),
-        
+
         // const SizedBox(height: 12),
-        
+
         // Change Password Button
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: () {
-              _showChangePasswordDialog(context);
-            },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF0EA5E9),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              side: const BorderSide(
-                color: Color(0xFF0EA5E9),
-                width: 1.5,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text(
-              'Đổi Mật Khẩu',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ),
-        
+        // SizedBox(
+        //   width: double.infinity,
+        //   child: OutlinedButton(
+        //     onPressed: () {
+        //       _showChangePasswordDialog(context);
+        //     },
+        //     style: OutlinedButton.styleFrom(
+        //       foregroundColor: const Color(0xFF0EA5E9),
+        //       padding: const EdgeInsets.symmetric(vertical: 16),
+        //       side: const BorderSide(
+        //         color: Color(0xFF0EA5E9),
+        //         width: 1.5,
+        //       ),
+        //       shape: RoundedRectangleBorder(
+        //         borderRadius: BorderRadius.circular(8),
+        //       ),
+        //     ),
+        //     child: const Text(
+        //       'Đổi Mật Khẩu',
+        //       style: TextStyle(
+        //         fontSize: 16,
+        //         fontWeight: FontWeight.w600,
+        //       ),
+        //     ),
+        //   ),
+        // ),
+
         const SizedBox(height: 12),
-        
+
         // Logout Button
         SizedBox(
           width: double.infinity,
@@ -487,12 +523,12 @@ class ProfileScreen extends StatelessWidget {
       ],
     );
   }
-  
+
   void _showChangePasswordDialog(BuildContext context) {
     final currentPasswordController = TextEditingController();
     final newPasswordController = TextEditingController();
     final confirmPasswordController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -535,11 +571,12 @@ class ProfileScreen extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              if (newPasswordController.text == confirmPasswordController.text) {
+              if (newPasswordController.text ==
+                  confirmPasswordController.text) {
                 context.read<ProfileBloc>().add(ChangePasswordEvent(
-                  currentPasswordController.text,
-                  newPasswordController.text,
-                ));
+                      currentPasswordController.text,
+                      newPasswordController.text,
+                    ));
                 Navigator.of(dialogContext).pop();
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -559,7 +596,7 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -586,7 +623,7 @@ class ProfileScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   List<Color> _getRoleColors(String role) {
     switch (role) {
       case 'admin':
@@ -599,7 +636,7 @@ class ProfileScreen extends StatelessWidget {
         return [const Color(0xFF64748B), const Color(0xFF94A3B8)];
     }
   }
-  
+
   String _getRoleText(String role) {
     switch (role) {
       case 'admin':
@@ -612,4 +649,4 @@ class ProfileScreen extends StatelessWidget {
         return 'Người dùng';
     }
   }
-} 
+}
