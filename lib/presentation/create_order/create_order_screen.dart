@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
+import 'package:trash_pay/constants/colors.dart';
 import 'package:trash_pay/domain/entities/order/order_item.dart';
 import 'package:trash_pay/presentation/app/logics/app_bloc.dart';
 import 'package:trash_pay/presentation/app/logics/app_state.dart';
+import 'package:trash_pay/presentation/checkout/checkout_screen.dart';
 import 'package:trash_pay/presentation/create_order/logics/create_order_bloc.dart';
 import 'package:trash_pay/presentation/create_order/logics/create_order_events.dart'
     as events;
@@ -111,7 +112,7 @@ class _ProductListState extends State<ProductList> {
               TextSpan(
                   text: Utils.formatCurrency(createOrderState.total),
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold, color: Color(0xFF059669))),
+                      fontWeight: FontWeight.bold, color: AppColors.primary)),
             ],
           )),
         );
@@ -144,9 +145,10 @@ class _ProductListState extends State<ProductList> {
       ),
       child: TextField(
         controller: _searchController,
-        // onChanged: (value) {
-        //   context.read<CreateOrderBloc>().add(SearchProductsEvent(value));
-        // },
+        onChanged: (value) {
+          setState(() {
+          });
+        },
         decoration: InputDecoration(
           hintText: 'Tìm kiếm sản phẩm...',
           hintStyle: TextStyle(
@@ -171,13 +173,13 @@ class _ProductListState extends State<ProductList> {
           if (s is state.CreateOrderLoading) {
             return const Center(
               child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
             );
           }
 
           if (s is state.CreateOrderLoaded) {
-            final products = s.products;
+            final products = s.products.where((e) => e.item.name?.toLowerCase().contains(_searchController.text.toLowerCase()) ?? false).toList();
             if (products.isEmpty) {
               return Center(
                 child: Column(
@@ -334,7 +336,7 @@ class _ProductListState extends State<ProductList> {
         if (s is state.CreateOrderLoaded && s.isSelected) {
           return FloatingActionButton.extended(
             onPressed: () => _navigateToCheckout(context),
-            backgroundColor: const Color(0xFF059669),
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             label: Text(
               'Xem giỏ hàng',
@@ -375,7 +377,9 @@ class _ProductListState extends State<ProductList> {
         total: currentState.total,
       );
 
-      GoRouter.of(context).go('/checkout', extra: checkoutData);
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => CheckoutScreen(checkoutData: checkoutData),
+      ));
     }
   }
 

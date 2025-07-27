@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trash_pay/constants/colors.dart';
 import '../../../constants/font_family.dart';
 import '../../../services/bluetooth_printer_service.dart';
 
@@ -107,9 +108,9 @@ class _PrinterSelectionDialogState extends State<PrinterSelectionDialog> {
             // Header
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.print,
-                  color: const Color(0xFF059669),
+                  color: AppColors.primary,
                   size: 28,
                 ),
                 const SizedBox(width: 12),
@@ -174,7 +175,7 @@ class _PrinterSelectionDialogState extends State<PrinterSelectionDialog> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline, color: Colors.red, size: 20),
+                    const Icon(Icons.error_outline, color: Colors.red, size: 20),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -205,13 +206,13 @@ class _PrinterSelectionDialogState extends State<PrinterSelectionDialog> {
                     child: OutlinedButton.icon(
                       onPressed: _isScanning || _isConnecting ? null : _scanForDevices,
                       icon: _isScanning 
-                        ? SizedBox(
+                        ? const SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(
+                            child: const CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                const Color(0xFF059669),
+                                AppColors.primary,
                               ),
                             ),
                           )
@@ -224,8 +225,8 @@ class _PrinterSelectionDialogState extends State<PrinterSelectionDialog> {
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF059669),
-                        side: const BorderSide(color: Color(0xFF059669)),
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.primary),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -262,7 +263,7 @@ class _PrinterSelectionDialogState extends State<PrinterSelectionDialog> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF059669) : Colors.transparent,
+          color: isSelected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -339,7 +340,7 @@ class _PrinterSelectionDialogState extends State<PrinterSelectionDialog> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isConnected 
-            ? const Color(0xFF059669) 
+            ? AppColors.primary 
             : Colors.grey.withOpacity(0.3),
           width: isConnected ? 2 : 1,
         ),
@@ -357,7 +358,7 @@ class _PrinterSelectionDialogState extends State<PrinterSelectionDialog> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: (isConnected 
-              ? const Color(0xFF059669) 
+              ? AppColors.primary 
               : Colors.grey[600]
             )?.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
@@ -365,7 +366,7 @@ class _PrinterSelectionDialogState extends State<PrinterSelectionDialog> {
           child: Icon(
             isConnected ? Icons.print : Icons.print_outlined,
             color: isConnected 
-              ? const Color(0xFF059669) 
+              ? AppColors.primary 
               : Colors.grey[600],
             size: 24,
           ),
@@ -419,7 +420,7 @@ class _PrinterSelectionDialogState extends State<PrinterSelectionDialog> {
           ? Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: const Color(0xFF059669).withOpacity(0.1),
+                color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
@@ -427,7 +428,7 @@ class _PrinterSelectionDialogState extends State<PrinterSelectionDialog> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF059669),
+                  color: AppColors.primary,
                   fontFamily: FontFamily.productSans,
                 ),
               ),
@@ -438,13 +439,13 @@ class _PrinterSelectionDialogState extends State<PrinterSelectionDialog> {
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
               )
             : ElevatedButton(
                 onPressed: () => _connectToDevice(device),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF059669),
+                  backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   shape: RoundedRectangleBorder(
@@ -470,7 +471,7 @@ class _PrinterSelectionDialogState extends State<PrinterSelectionDialog> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
+            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
           ),
           const SizedBox(height: 16),
           Text(

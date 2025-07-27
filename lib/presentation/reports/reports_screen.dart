@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trash_pay/constants/colors.dart';
 import 'package:trash_pay/presentation/report_detail/report_detail_screen.dart';
 import 'package:trash_pay/presentation/reports/widgets/revenue_chart.dart';
 import 'package:trash_pay/presentation/reports/widgets/revenue_list.dart';
@@ -105,7 +106,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                         return const Center(
                           child: CircularProgressIndicator(
                             valueColor:
-                                AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
+                                AlwaysStoppedAnimation<Color>(AppColors.primary),
                           ),
                         );
                       } else if (state is ReportsLoaded) {
@@ -148,7 +149,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                                       ),
                                     ),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF059669),
+                                  backgroundColor: AppColors.primary,
                                   foregroundColor: Colors.white,
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 24, vertical: 12),

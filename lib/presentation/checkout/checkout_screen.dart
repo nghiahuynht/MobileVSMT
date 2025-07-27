@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
+import 'package:trash_pay/constants/colors.dart';
 import 'package:trash_pay/constants/font_family.dart';
 import 'package:trash_pay/domain/entities/checkout/checkout_request.dart';
 import 'package:trash_pay/domain/entities/meta_data/arrear.dart';
@@ -8,14 +8,11 @@ import 'package:trash_pay/domain/entities/meta_data/payment_type.dart';
 import 'package:trash_pay/domain/entities/order/order.dart';
 import 'package:trash_pay/domain/entities/order/order_item.dart';
 import 'package:trash_pay/presentation/app/app_bloc_extension.dart';
-import 'package:trash_pay/presentation/app/logics/app_bloc.dart';
-import 'package:trash_pay/presentation/app/logics/app_state.dart';
 import 'package:trash_pay/presentation/checkout/logics/checkout_cubit.dart';
+import 'package:trash_pay/presentation/home/home_screen.dart';
 import 'package:trash_pay/presentation/order/enum.dart';
 import 'package:trash_pay/utils/extension.dart';
 import '../../domain/entities/checkout/checkout_data.dart';
-import '../order/logics/order_bloc.dart';
-import '../order/logics/order_state.dart';
 import '../widgets/common/professional_header.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -45,46 +42,43 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: BlocProvider(
-        create: (context) => CheckoutCubit(),
+        create: (context) =>
+            CheckoutCubit()..selectArrear(context.arrears.first)..selectPaymentType(context.paymentTypes.first),
         child: BlocBuilder<CheckoutCubit, CheckoutState>(
             builder: (context, state) {
-          return BlocListener<CheckoutCubit, CheckoutState>(
-            listener: (context, state) {
-              if (state.isError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Đã có lỗi xảy ra'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              } else if (state.isSuccess) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Tạo đơn hàng thành công'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-                // Return to previous screen after successful order
-              }
-            },
-            child: Column(
-              children: [
-                // Professional Header
-                ProfessionalHeaders.detail(
-                  title: 'Thanh Toán',
-                  subtitle: widget.checkoutData.customer != null
-                      ? 'KH: ${widget.checkoutData.customer!.name}'
-                      : 'Đơn hàng lẻ',
-                ),
-
-                // Content
-                Expanded(
-                  child: widget.checkoutData.isEmpty
-                      ? _buildEmptyCart()
-                      : _buildCheckoutContent(),
-                ),
-              ],
-            ),
+          return Column(
+            children: [
+              // Professional Header
+              BlocBuilder<CheckoutCubit, CheckoutState>(
+                buildWhen: (previous, current) => previous.isSuccess != current.isSuccess,
+                builder: (context, state) {
+                  return ProfessionalHeaders.detail(
+                    title: 'Thanh Toán',
+                    onBackPressed: () {
+                      if (state.isSuccess) {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                              builder: (context) => const HomePage()),
+                          (route) => true,
+                        );
+                      } else {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    subtitle: widget.checkoutData.customer != null
+                        ? 'KH: ${widget.checkoutData.customer!.name}'
+                        : 'Đơn hàng lẻ',
+                  );
+                }
+              ),
+          
+              // Content
+              Expanded(
+                child: widget.checkoutData.isEmpty
+                    ? _buildEmptyCart()
+                    : _buildCheckoutContent(),
+              ),
+            ],
           );
         }),
       ),
@@ -122,9 +116,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: () => context.pop(),
+            onPressed: () => Navigator.of(context).pop(),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF059669),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(
@@ -145,53 +139,61 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildCheckoutContent() {
-    return Column(
-      children: [
-        // Cart Items Section
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionHeader(
-                    'Sản phẩm đã chọn', widget.checkoutData.itemCount),
-                const SizedBox(height: 16),
-                _buildCartItemsList(),
-
-                const SizedBox(height: 24),
-
-                // Customer Info Section
-                if (widget.checkoutData.customer != null) ...[
-                  _buildSectionHeader('Thông tin khách hàng', null),
-                  const SizedBox(height: 16),
-                  _buildCustomerInfo(),
-                  const SizedBox(height: 24),
-                ],
-
-                // Notes Section
-                _buildSectionHeader('Ghi chú đơn hàng', null),
-                const SizedBox(height: 16),
-                _buildNotesField(),
-
-                const SizedBox(height: 24),
-
-                _buildPaymentInfo(),
-
-                const SizedBox(height: 24),
-
-                // Payment Summary
-                _buildSectionHeader('Tổng thanh toán', null),
-                const SizedBox(height: 16),
-                _buildPaymentSummary(),
-              ],
+    return BlocBuilder<CheckoutCubit, CheckoutState>(
+      buildWhen: (previous, current) => previous.isLoading != current.isLoading,
+      builder: (context, state) {
+        return Column(
+          children: [
+            // Cart Items Section
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: IgnorePointer(
+                  ignoring: state.isSuccess,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildSectionHeader(
+                          'Sản phẩm đã chọn', widget.checkoutData.itemCount),
+                      const SizedBox(height: 16),
+                      _buildCartItemsList(),
+                          
+                      const SizedBox(height: 24),
+                          
+                      // Customer Info Section
+                      if (widget.checkoutData.customer != null) ...[
+                        _buildSectionHeader('Thông tin khách hàng', null),
+                        const SizedBox(height: 16),
+                        _buildCustomerInfo(),
+                        const SizedBox(height: 24),
+                      ],
+                          
+                      // Notes Section
+                      _buildSectionHeader('Ghi chú đơn hàng', null),
+                      const SizedBox(height: 16),
+                      _buildNotesField(),
+                          
+                      const SizedBox(height: 24),
+                          
+                      _buildPaymentInfo(),
+                          
+                      const SizedBox(height: 24),
+                          
+                      // Payment Summary
+                      _buildSectionHeader('Tổng thanh toán', null),
+                      const SizedBox(height: 16),
+                      _buildPaymentSummary(),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-
-        // Bottom Action Bar
-        _buildBottomActionBar(),
-      ],
+        
+            // Bottom Action Bar
+            _buildBottomActionBar(),
+          ],
+        );
+      }
     );
   }
 
@@ -212,7 +214,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF059669).withOpacity(0.1),
+              color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -220,7 +222,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: const Color(0xFF059669),
+                color: AppColors.primary,
                 fontFamily: FontFamily.productSans,
               ),
             ),
@@ -294,7 +296,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF059669),
+                        color: AppColors.primary,
                         fontFamily: FontFamily.productSans,
                       ),
                     ),
@@ -313,7 +315,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF059669),
+                  color: AppColors.primary,
                   fontFamily: FontFamily.productSans,
                 ),
               ),
@@ -495,67 +497,58 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildPaymentInfo() {
     return Form(
       key: _formKey,
-      child: BlocBuilder<AppBloc, AppState>(
-          buildWhen: (previous, current) => false,
-          builder: (context, appState) {
-            context.read<CheckoutCubit>().selectArrear(appState.arrears.first);
-            context
-                .read<CheckoutCubit>()
-                .selectPaymentType(appState.paymentTypes.first);
-
-            return Column(
-              children: [
-                BlocBuilder<CheckoutCubit, CheckoutState>(
-                    buildWhen: (previous, current) =>
-                        previous.arrearSelected != current.arrearSelected,
-                    builder: (context, s) {
-                      return _buildDropdownField<Arrear>(
-                        label: 'Loại thu',
-                        hint: 'Chọn loại thu',
-                        icon: Icons.account_balance_wallet_outlined,
-                        value: s.arrearSelected,
-                        items: appState.arrears,
-                        isLoading: false,
-                        onChanged: (value) async {
-                          if (value != null) {
-                            context.read<CheckoutCubit>().selectArrear(value);
-                          }
-                        },
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Vui lòng chọn loại thu';
-                          }
-                          return null;
-                        },
-                        itemBuilder: (item) => item.label ?? '',
-                      );
-                    }),
-                const SizedBox(height: 12),
-                BlocBuilder<CheckoutCubit, CheckoutState>(
-                    buildWhen: (previous, current) =>
-                        previous.paymentTypeSelected !=
-                        current.paymentTypeSelected,
-                    builder: (context, s) {
-                      return _buildDropdownField<PaymentType>(
-                        label: 'Phương thức thanh toán',
-                        hint: 'Chọn PT than toán',
-                        icon: Icons.payment,
-                        value: s.paymentTypeSelected,
-                        items: appState.paymentTypes,
-                        isLoading: false,
-                        onChanged: (value) async {},
-                        validator: (value) {
-                          if (value == null) {
-                            return 'Vui lòng chọn phương thức thanh toán';
-                          }
-                          return null;
-                        },
-                        itemBuilder: (item) => item.label ?? '',
-                      );
-                    }),
-              ],
-            );
-          }),
+      child: Column(
+        children: [
+          BlocBuilder<CheckoutCubit, CheckoutState>(
+              buildWhen: (previous, current) =>
+                  previous.arrearSelected != current.arrearSelected,
+              builder: (context, s) {
+                return _buildDropdownField<Arrear>(
+                  label: 'Loại thu',
+                  hint: 'Chọn loại thu',
+                  icon: Icons.account_balance_wallet_outlined,
+                  value: s.arrearSelected,
+                  items: context.arrears,
+                  isLoading: false,
+                  onChanged: (value) async {
+                    if (value != null) {
+                      context.read<CheckoutCubit>().selectArrear(value);
+                    }
+                  },
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Vui lòng chọn loại thu';
+                    }
+                    return null;
+                  },
+                  itemBuilder: (item) => item.label ?? '',
+                );
+              }),
+          const SizedBox(height: 12),
+          BlocBuilder<CheckoutCubit, CheckoutState>(
+              buildWhen: (previous, current) =>
+                  previous.paymentTypeSelected !=
+                  current.paymentTypeSelected,
+              builder: (context, s) {
+                return _buildDropdownField<PaymentType>(
+                  label: 'Phương thức thanh toán',
+                  hint: 'Chọn PT than toán',
+                  icon: Icons.payment,
+                  value: s.paymentTypeSelected,
+                  items: context.paymentTypes,
+                  isLoading: false,
+                  onChanged: (value) async {},
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Vui lòng chọn phương thức thanh toán';
+                    }
+                    return null;
+                  },
+                  itemBuilder: (item) => item.label ?? '',
+                );
+              }),
+        ],
+      ),
     );
   }
 
@@ -577,7 +570,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           style: TextStyle(
             fontSize: isTotal ? 20 : 16,
             fontWeight: FontWeight.bold,
-            color: isTotal ? const Color(0xFF059669) : const Color(0xFF1F2937),
+            color: isTotal ? AppColors.primary : const Color(0xFF1F2937),
             fontFamily: FontFamily.productSans,
           ),
         ),
@@ -609,7 +602,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Expanded(
                   flex: 2,
                   child: OutlinedButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () => Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (context) => const HomePage()),
+                      (route) => true,
+                    ),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       side: const BorderSide(color: Colors.grey, width: 1.5),
@@ -631,50 +627,55 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   flex: 3,
-                  child: BlocBuilder<OrderBloc, OrderState>(
-                    builder: (context, state) {
-                      final isLoading = state is OrderLoading;
-
-                      return ElevatedButton(
-                        onPressed: () {
-                          context.read<CheckoutCubit>().printReceipt(
-                                OrderModel(
-                                  id: 0,
-                                  orderStatus: OrderStatus.waiting,
-                                  isDeleted: false,
-                                  lstSaleOrderItem:
-                                      widget.checkoutData.cartItems,
-                                ),
-                              );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF059669),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
-                                ),
-                              )
-                            : Text(
-                                'In hoá đơn',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: FontFamily.productSans,
-                                ),
-                              ),
-                      );
+                  child: ElevatedButton(
+                    onPressed: () {
+                      context.read<CheckoutCubit>().printReceipt(
+                            OrderModel(
+                              id: 0,
+                              orderStatus: OrderStatus.waiting,
+                              isDeleted: false,
+                              customerCode: widget.checkoutData.customer?.code,
+                              customerName: widget.checkoutData.customer?.name,
+                              taxAddress: widget.checkoutData.customer?.taxAddress,
+                              paymentName: state.paymentTypeSelected?.label,
+                              totalWithVAT: widget.checkoutData.cartItems.fold<double>(0, (sum, item) => sum + (item.priceWithVAT ?? 0) * item.quantity),
+                              totalNoVAT: widget.checkoutData.cartItems.fold<double>(0, (sum, item) => sum + (item.priceNoVAT ?? 0) * item.quantity),
+                              totalVAT: widget.checkoutData.cartItems.fold<double>(0, (sum, item) => sum + (item.priceWithVAT ?? 0) * item.quantity - (item.priceNoVAT ?? 0) * item.quantity),
+                              orderDate: DateTime.now(),
+                              createdBy: context.userCode,
+                              note: _notesController.text.trim().isEmpty
+                                  ? null
+                                  : _notesController.text.trim(),
+                              lstSaleOrderItem: widget.checkoutData.cartItems,
+                            ),
+                          );
                     },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Text(
+                            'In hoá đơn',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: FontFamily.productSans,
+                            ),
+                          ),
                   ),
                 ),
               ],
@@ -684,7 +685,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           return ElevatedButton(
             onPressed: isLoading ? null : () => _handleCheckout(context, state),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF059669),
+              backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
@@ -754,12 +755,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               margin: const EdgeInsets.all(12),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF059669).withOpacity(0.1),
+                color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
-                color: const Color(0xFF059669),
+                color: AppColors.primary,
                 size: 20,
               ),
             ),
@@ -773,7 +774,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -838,7 +839,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               lstSaleOrderItem: widget.checkoutData.cartItems,
               orderDate: DateTime.now().getDateString(),
               createdBy: context.userCode,
-            ).toMap(),
+            ).toMap(), context
           );
     }
   }
@@ -857,12 +858,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   //           Container(
   //             padding: const EdgeInsets.all(16),
   //             decoration: BoxDecoration(
-  //               color: const Color(0xFF059669).withOpacity(0.1),
+  //               color: AppColors.primary.withOpacity(0.1),
   //               shape: BoxShape.circle,
   //             ),
   //             child: const Icon(
   //               Icons.check_circle_outline,
-  //               color: Color(0xFF059669),
+  //               color: AppColors.primary,
   //               size: 48,
   //             ),
   //           ),
@@ -901,7 +902,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   //                         height: 16,
   //                         child: CircularProgressIndicator(
   //                           strokeWidth: 2,
-  //                           valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
+  //                           valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
   //                         ),
   //                       )
   //                     : const Icon(Icons.print),
@@ -913,8 +914,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   //                     ),
   //                   ),
   //                   style: OutlinedButton.styleFrom(
-  //                     foregroundColor: const Color(0xFF059669),
-  //                     side: const BorderSide(color: Color(0xFF059669)),
+  //                     foregroundColor: AppColors.primary,
+  //                     side: const BorderSide(color: AppColors.primary),
   //                     padding: const EdgeInsets.symmetric(vertical: 12),
   //                     shape: RoundedRectangleBorder(
   //                       borderRadius: BorderRadius.circular(8),
@@ -930,7 +931,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   //                     context.pop(); // Return to order screen
   //                   },
   //                   style: ElevatedButton.styleFrom(
-  //                     backgroundColor: const Color(0xFF059669),
+  //                     backgroundColor: AppColors.primary,
   //                     foregroundColor: Colors.white,
   //                     padding: const EdgeInsets.symmetric(vertical: 12),
   //                     shape: RoundedRectangleBorder(

@@ -15,4 +15,6 @@ class AppColors {
     800: Color(0xFFDB7424),
     900: Color(0xFFD56217)
   };
+
+  static const Color primary = Color(0xFFF88000);
 }

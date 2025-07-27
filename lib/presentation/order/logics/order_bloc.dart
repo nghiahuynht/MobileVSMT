@@ -20,6 +20,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
   DateTime? _fromDate;
   DateTime? _toDate;
   int? _dateType;
+  String? _saleUserCode;
 
   // Debounce timer for search
   Timer? _searchDebounceTimer;
@@ -49,9 +50,13 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       InitOrderEvent event, Emitter<OrderState> emit) async {
     emit(OrderLoading());
 
+    _saleUserCode = event.saleUserCode;
+
     try {
       final PaginationWrapperResponsive<OrderModel> result =
-          await _domainManager.order.getSaleOrders();
+          await _domainManager.order.getSaleOrders(
+            saleUserCode: _saleUserCode,
+          );
 
       // Initialize _allOrders with first page data
 
@@ -104,6 +109,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
         routeSaleCode: _routeSaleCode,
         fromDate: _fromDate,
         toDate: _toDate,
+        saleUserCode: _saleUserCode,
       );
 
       // Update orders with search results
@@ -146,6 +152,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
           routeSaleCode: _routeSaleCode,
           fromDate: _fromDate,
           toDate: _toDate,
+          saleUserCode: _saleUserCode,
         );
 
         // Merge new orders with existing ones
@@ -190,7 +197,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
           dateType: event.dateType ?? 1,
           areaSaleCode: event.selectedArea?.code,
           routeSaleCode: event.selectedRoute?.code,
-          saleUserCode: event.saleUserCode,
+          saleUserCode: _saleUserCode,
           fromDate: event.fromDate,
           toDate: event.toDate,
         );

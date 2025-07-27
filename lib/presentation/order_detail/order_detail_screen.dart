@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trash_pay/constants/colors.dart';
 import 'package:trash_pay/constants/strings.dart';
 import 'package:trash_pay/presentation/order/enum.dart';
 import 'package:trash_pay/presentation/order_detail/logics/order_detail_bloc.dart';
 import 'package:trash_pay/presentation/order_detail/logics/order_detail_events.dart';
 import 'package:trash_pay/presentation/order_detail/logics/order_detail_state.dart';
+import 'package:trash_pay/presentation/widgets/common_circular_progess_indicator.dart';
 import 'package:trash_pay/services/receipt_printer_service.dart';
 import '../../constants/font_family.dart';
 import '../../domain/entities/order/order.dart';
@@ -55,10 +57,7 @@ class OrderDetailScreen extends StatelessWidget {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF059669)),
-                            ),
+                            XCircularProgressIndicator(),
                             SizedBox(height: 16),
                             Text(
                               'Đang tải thông tin đơn hàng...',
@@ -268,7 +267,7 @@ class OrderDetailScreen extends StatelessWidget {
           _printFullReceipt(context, order);
         },
         style: OutlinedButton.styleFrom(
-          backgroundColor: const Color(0xFF059669),
+          backgroundColor: AppColors.primary,
           // foregroundColor: const Color(0xFF0EA5E9),
           padding: const EdgeInsets.symmetric(vertical: 16),
           side: const BorderSide(
@@ -332,7 +331,7 @@ class OrderDetailScreen extends StatelessWidget {
         content: Row(
           children: [
             const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
             const SizedBox(width: 16),
             Text(
@@ -351,7 +350,7 @@ class OrderDetailScreen extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: const Color(0xFF059669),
+        backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -437,11 +436,11 @@ class OrderDetailScreen extends StatelessWidget {
             ),
           ),
           Text(
-            _formatCurrency(item.total?.toDouble() ?? 0),
+            _formatCurrency(((item.quantity) * (item.priceWithVAT ?? 0)).toDouble()),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFF059669),
+              color: AppColors.primary,
               fontFamily: FontFamily.productSans,
             ),
           ),
@@ -470,7 +469,7 @@ class OrderDetailScreen extends StatelessWidget {
             style: TextStyle(
               fontSize: isTotal ? 16 : 14,
               fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
-              color: isTotal ? const Color(0xFF059669) : Colors.grey[800],
+              color: isTotal ? AppColors.primary : Colors.grey[800],
               fontFamily: FontFamily.productSans,
             ),
           ),

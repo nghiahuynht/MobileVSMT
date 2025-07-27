@@ -39,8 +39,16 @@ class $AssetsImagesGen {
   AssetGenImage get imgNoJobs =>
       const AssetGenImage('assets/images/img_no_jobs.png');
 
+  /// File path: assets/images/logo.png
+  AssetGenImage get logo => const AssetGenImage('assets/images/logo.png');
+
   /// List of all assets
-  List<AssetGenImage> get values => [googleFlutterLogoSvg, imgLogin, imgNoJobs];
+  List<AssetGenImage> get values => [
+    googleFlutterLogoSvg,
+    imgLogin,
+    imgNoJobs,
+    logo,
+  ];
 }
 
 class Assets {

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:trash_pay/constants/colors.dart';
 
 class ProfessionalHeader extends StatelessWidget {
-  final String title;
+  final String? title;
+  final Widget? titleWidget;
   final String? subtitle;
   final Widget? leadingWidget;
   final Widget? trailingWidget;
@@ -12,7 +14,7 @@ class ProfessionalHeader extends StatelessWidget {
 
   const ProfessionalHeader({
     super.key,
-    required this.title,
+    this.title,
     this.subtitle,
     this.leadingWidget,
     this.trailingWidget,
@@ -20,6 +22,7 @@ class ProfessionalHeader extends StatelessWidget {
     this.onBackPressed,
     this.backgroundColor,
     this.gradientColors,
+    this.titleWidget,
   });
 
   @override
@@ -74,15 +77,19 @@ class ProfessionalHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: 0.3,
+                  if (titleWidget != null) ...[
+                    titleWidget!,
+                  ] else ...[
+                    Text(
+                      title ?? '',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        letterSpacing: 0.3,
+                      ),
                     ),
-                  ),
+                  ],
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
                     Text(
@@ -118,35 +125,18 @@ class ProfessionalHeaders {
     Widget? profileWidget,
   }) {
     return ProfessionalHeader(
-      title: 'TrashPay',
-      subtitle: 'Waste Management System',
+      titleWidget: Image.asset(
+        'assets/images/logo.png',
+        width: 100,
+        color: AppColors.primary,
+      ),
+      subtitle: 'Hệ thống quản lý dịch vụ công ích',
       gradientColors: const [
         Color(0xFF1E293B),
         Color(0xFF334155),
         Color(0xFF475569),
       ],
-      leadingWidget: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: const Color(0xFF059669),
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: const Center(
-          child: Icon(
-            Icons.recycling_rounded,
-            size: 22,
-            color: Colors.white,
-          ),
-        ),
-      ),
+      
       trailingWidget: profileWidget ?? Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
@@ -211,11 +201,11 @@ class ProfessionalHeaders {
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF059669),
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF059669).withOpacity(0.3),
+                      color: AppColors.primary.withOpacity(0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),

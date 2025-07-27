@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trash_pay/constants/colors.dart';
 import 'package:trash_pay/constants/strings.dart';
+import 'package:trash_pay/presentation/app/app_bloc_extension.dart';
 import 'package:trash_pay/presentation/order/enum.dart';
 import 'package:trash_pay/presentation/order/widgets/order_list_filter/order_list_filter_screen.dart';
 import '../../constants/font_family.dart';
@@ -25,7 +27,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<OrderBloc>().add(InitOrderEvent());
+    context.read<OrderBloc>().add(InitOrderEvent(saleUserCode: context.userCode));
     _scrollController.addListener(_onScroll);
   }
 
@@ -205,7 +207,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
         if (state is OrderLoading) {
           return const Center(
             child: CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF059669)),
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
             ),
           );
         }
@@ -221,10 +223,10 @@ class _OrderListScreenState extends State<OrderListScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF059669).withOpacity(0.1),
+                    color: AppColors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: const Color(0xFF059669).withOpacity(0.2),
+                      color: AppColors.primary.withOpacity(0.2),
                       width: 1,
                     ),
                   ),
@@ -233,7 +235,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                       const Icon(
                         Icons.receipt_long,
                         size: 20,
-                        color: Color(0xFF059669),
+                        color: AppColors.primary,
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -241,7 +243,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
-                          color: const Color(0xFF059669),
+                          color: AppColors.primary,
                           fontFamily: FontFamily.productSans,
                         ),
                       ),
@@ -295,7 +297,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                           child: const Center(
                             child: CircularProgressIndicator(
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF059669)),
+                                  AppColors.primary),
                             ),
                           ),
                         ),
@@ -402,10 +404,10 @@ class _OrderListScreenState extends State<OrderListScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF059669).withOpacity(0.1),
+                      color: AppColors.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: const Color(0xFF059669).withOpacity(0.2),
+                        color: AppColors.primary.withOpacity(0.2),
                         width: 1,
                       ),
                     ),
@@ -414,7 +416,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                         const Icon(
                           Icons.person,
                           size: 18,
-                          color: Color(0xFF059669),
+                          color: AppColors.primary,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -425,7 +427,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                                 'Khách hàng',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  color: const Color(0xFF059669),
+                                  color: AppColors.primary,
                                   fontWeight: FontWeight.w500,
                                   fontFamily: FontFamily.productSans,
                                 ),
@@ -457,7 +459,7 @@ class _OrderListScreenState extends State<OrderListScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF059669),
+                        color: AppColors.primary,
                         fontFamily: FontFamily.productSans,
                       ),
                     ),

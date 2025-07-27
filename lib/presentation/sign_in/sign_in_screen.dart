@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:trash_pay/constants/colors.dart';
 import '../../constants/font_family.dart';
 import '../../domain/entities/unit/unit.dart';
 import '../app/logics/app_bloc.dart';
@@ -186,7 +187,10 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildHeader() {
     return Container(
-      height: 280,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top < 30 ? 30 : MediaQuery.of(context).padding.top + 12,
+        bottom: MediaQuery.of(context).padding.top < 30 ? 30 : MediaQuery.of(context).padding.top
+      ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -198,81 +202,87 @@ class _LoginScreenState extends State<LoginScreen>
           ],
         ),
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
         ),
       ),
       child: Stack(
         children: [
           // Background pattern
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
-                ),
-                backgroundBlendMode: BlendMode.overlay,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withOpacity(0.1),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
+          // Positioned.fill(
+          //   child: Container(
+          //     decoration: BoxDecoration(
+          //       borderRadius: const BorderRadius.only(
+          //         bottomLeft: Radius.circular(32),
+          //         bottomRight: Radius.circular(32),
+          //       ),
+          //       backgroundBlendMode: BlendMode.overlay,
+          //       gradient: LinearGradient(
+          //         begin: Alignment.topLeft,
+          //         end: Alignment.bottomRight,
+          //         colors: [
+          //           Colors.white.withOpacity(0.1),
+          //           Colors.transparent,
+          //         ],
+          //       ),
+          //     ),
+          //   ),
+          // ),
 
           // Content
           Container(
             alignment: Alignment.centerLeft,
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // App Icon
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF059669),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF059669).withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.recycling_rounded,
-                    size: 40,
-                    color: Colors.white,
-                  ),
-                ),
+                // Container(
+                //   width: 80,
+                //   height: 80,
+                //   decoration: BoxDecoration(
+                //     color: AppColors.primary,
+                //     borderRadius: BorderRadius.circular(20),
+                //     boxShadow: [
+                //       BoxShadow(
+                //         color: AppColors.primary.withOpacity(0.3),
+                //         blurRadius: 20,
+                //         offset: const Offset(0, 8),
+                //       ),
+                //     ],
+                //   ),
+                //   child: const Icon(
+                //     Icons.recycling_rounded,
+                //     size: 40,
+                //     color: Colors.white,
+                //   ),
+                // ),
 
-                const SizedBox(height: 24),
+                // const SizedBox(height: 24),
 
                 // App Title
-                Text(
-                  'TrashPay',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    fontFamily: FontFamily.productSans,
-                    letterSpacing: -0.5,
-                  ),
+                // Text(
+                //   'TrashPay',
+                //   style: TextStyle(
+                //     fontSize: 32,
+                //     fontWeight: FontWeight.w700,
+                //     color: Colors.white,
+                //     fontFamily: FontFamily.productSans,
+                //     letterSpacing: -0.5,
+                //   ),
+                // ),
+                Image.asset(
+                  'assets/images/logo.png',
+                  width: 200,
+                  color: AppColors.primary,
                 ),
+
 
                 const SizedBox(height: 8),
 
                 // Subtitle
                 Text(
-                  'Waste Management System',
+                  'Hệ thống quản lý dịch vụ công ích',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w400,
@@ -290,8 +300,9 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildLoginForm(BuildContext context, SignInState state) {
     return Container(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.only(top: 32, left: 32, right: 32),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Welcome Text
           Text(
@@ -370,12 +381,12 @@ class _LoginScreenState extends State<LoginScreen>
           margin: const EdgeInsets.all(12),
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF059669).withOpacity(0.1),
+            color: AppColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: const Icon(
             Icons.business_outlined,
-            color: Color(0xFF059669),
+            color: AppColors.primary,
             size: 20,
           ),
         ),
@@ -389,7 +400,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -459,12 +470,12 @@ class _LoginScreenState extends State<LoginScreen>
           margin: const EdgeInsets.all(12),
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF059669).withOpacity(0.1),
+            color: AppColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: const Icon(
             Icons.person_outline,
-            color: Color(0xFF059669),
+            color: AppColors.primary,
             size: 20,
           ),
         ),
@@ -478,7 +489,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -520,12 +531,12 @@ class _LoginScreenState extends State<LoginScreen>
           margin: const EdgeInsets.all(12),
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: const Color(0xFF059669).withOpacity(0.1),
+            color: AppColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: const Icon(
             Icons.lock_outline,
-            color: Color(0xFF059669),
+            color: AppColors.primary,
             size: 20,
           ),
         ),
@@ -550,7 +561,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -591,7 +602,7 @@ class _LoginScreenState extends State<LoginScreen>
                 onChanged: (value) => setState(() {
                   _rememberMe = value ?? false;
                 }),
-                activeColor: const Color(0xFF059669),
+                activeColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -625,7 +636,7 @@ class _LoginScreenState extends State<LoginScreen>
             'Quên mật khẩu?',
             style: TextStyle(
               fontSize: 14,
-              color: const Color(0xFF059669),
+              color: AppColors.primary,
               fontWeight: FontWeight.w600,
               fontFamily: FontFamily.productSans,
             ),
@@ -644,11 +655,11 @@ class _LoginScreenState extends State<LoginScreen>
       child: ElevatedButton(
         onPressed: isLoading ? null : () => _handleLogin(context),
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF059669),
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           disabledBackgroundColor: const Color(0xFF9CA3AF),
           elevation: 0,
-          shadowColor: const Color(0xFF059669).withOpacity(0.3),
+          shadowColor: AppColors.primary.withOpacity(0.3),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -675,18 +686,21 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildFooter() {
-    return Column(
-      children: [
-        // Copyright
-        Text(
-          '© 2024 TrashPay. All rights reserved.',
-          style: TextStyle(
-            fontSize: 12,
-            color: const Color(0xFF9CA3AF),
-            fontFamily: FontFamily.productSans,
+    return Padding(
+      padding: const EdgeInsets.only(left: 32, right: 32, bottom: 32),
+      child: Column(
+        children: [
+          // Copyright
+          Text(
+            'Bản quyền thuộc về DVCI TEAM © 2025',
+            style: TextStyle(
+              fontSize: 12,
+              color: const Color(0xFF9CA3AF),
+              fontFamily: FontFamily.productSans,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

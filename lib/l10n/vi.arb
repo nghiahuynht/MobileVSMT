@@ -1,5 +1,10 @@
 {
   "@@locale": "vi",
   "helloWorld": "Xin chào thế giới!",
-  "switchLanguage": "English"
+  "switchLanguage": "English",
+
+  "common_something_went_err": "Đã có lỗi xảy ra",
+
+
+  "feature_screen_text": "Chức năng - màn hình - chữ"
 }

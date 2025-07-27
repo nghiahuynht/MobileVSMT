@@ -5,6 +5,7 @@ import 'package:trash_pay/domain/repository/auth/auth_repository.dart';
 import 'package:trash_pay/l10n/app_localizations.dart';
 import 'package:trash_pay/presentation/app/logics/app_bloc.dart';
 import 'package:trash_pay/presentation/app/logics/app_events.dart';
+import 'package:trash_pay/presentation/app/logics/app_state.dart';
 import 'package:trash_pay/presentation/flash/logics/auth_bloc.dart';
 import 'package:trash_pay/router/routes.dart';
 
@@ -19,25 +20,20 @@ class MyApp extends StatelessWidget {
         BlocProvider(
             create: (context) =>
                 AuthBloc(authRepository: GetIt.I<AuthRepository>())),
-        BlocProvider(
-            create: (context) {
-              print('📱 MyApp: Creating AppBloc provider');
-              final appBloc = GetIt.I<AppBloc>();
-              print('📱 MyApp: Adding AppInitialized event');
-              appBloc.add(AppInitialized());
-              return appBloc;
-            }),
+        BlocProvider(create: (context) => AppBloc()..add(AppInitialized())),
       ],
-      child: MaterialApp.router(
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: router,
-      ),
+      child: BlocBuilder<AppBloc, AppState>(builder: (context, state) {
+        return MaterialApp.router(
+          title: 'Flutter Demo',
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+            useMaterial3: true,
+          ),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: router,
+        );
+      }),
     );
   }
 }

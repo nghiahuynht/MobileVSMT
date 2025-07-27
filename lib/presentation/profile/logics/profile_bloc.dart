@@ -110,23 +110,5 @@ class ProfileBloc extends Bloc<ProfileEvents, ProfileState> {
     }
   }
 
-  // Mock data generator - fallback when no user data available
-  ProfileModel _generateMockProfile() {
-    return ProfileModel(
-      id: 'user_001',
-      name: 'Nguyễn Văn Admin',
-      email: 'admin@trashpay.com',
-      phone: '0901234567',
-      role: 'admin',
-      department: 'Waste Management',
-      joinedAt: DateTime.now().subtract(const Duration(days: 365)),
-      isActive: true,
-      preferences: {
-        'notifications': true,
-        'darkMode': false,
-        'language': 'vi',
-        'autoSync': true,
-      },
-    );
-  }
+
 } 

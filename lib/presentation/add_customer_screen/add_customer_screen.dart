@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trash_pay/constants/colors.dart';
 import 'package:trash_pay/domain/entities/customer/customer.dart';
 import 'package:trash_pay/domain/entities/location/group.dart';
 import 'package:trash_pay/domain/entities/meta_data/area.dart';
@@ -39,7 +40,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   Ward? _selectedWard;
   Group? _selectedGroup;
   Area? _selectedArea;
-  bool _isLoadingWards = false;
+  final bool _isLoadingWards = false;
   Province? _selectedProvince;
 
   @override
@@ -105,7 +106,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
           areaSaleName: _selectedArea?.name,
           routeSaleCode: _selectedRoute?.code,
           routeSaleName: _selectedRoute?.name,
-          price: double.tryParse(_priceController.text) ?? 0.0,
+          currentPrice: double.tryParse(_priceController.text) ?? 0.0,
           saleUserCode: ctx.read<AppBloc>().state.userCode);
 
       ctx.read<CustomerBloc>().add(AddCustomerEvent(customerData, isEdit: isEdit));
@@ -124,10 +125,29 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: const Color(0xFF059669),
+                backgroundColor: AppColors.primary,
               ),
             );
-            Navigator.of(context).pop(true); // Return true to indicate success
+
+
+            final customerData = CustomerModel(
+          id: widget.customer?.id ?? 0,
+          code: widget.customer?.code ?? '',
+          name: _nameController.text.trim(),
+          phone: _phoneController.text.trim(),
+          address: _addressController.text.trim(),
+          provinceCode: _selectedProvince?.code,
+          wardCode: _selectedWard?.code,
+          customerGroupCode: _selectedGroup?.code,
+          customerGroupName: _selectedGroup?.name,
+          areaSaleCode: _selectedArea?.code,
+          areaSaleName: _selectedArea?.name,
+          routeSaleCode: _selectedRoute?.code,
+          routeSaleName: _selectedRoute?.name,
+          currentPrice: double.tryParse(_priceController.text) ?? 0.0,
+          saleUserCode: context.read<AppBloc>().state.userCode);
+
+            Navigator.of(context).pop(customerData);
           } else if (state is CustomerError) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -153,8 +173,8 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
               children: [
                 // Professional Header
                 ProfessionalHeaders.detail(
-                  title: 'Thêm Khách Hàng',
-                  subtitle: 'Nhập thông tin khách hàng mới',
+                  title: isEdit ? "Chỉnh sửa khách hàng" : 'Thêm Khách Hàng',
+                  subtitle: isEdit ? "Cập nhật thông tin khách hàng" : 'Nhập thông tin khách hàng mới',
                   onBackPressed: () => Navigator.of(context).pop(),
                 ),
 
@@ -368,7 +388,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                               child: ElevatedButton(
                                 onPressed: () => _submitForm(buttonContext),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF059669),
+                                  backgroundColor: AppColors.primary,
                                   foregroundColor: Colors.white,
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
@@ -467,12 +487,12 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
               margin: const EdgeInsets.all(12),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF059669).withOpacity(0.1),
+                color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
-                color: const Color(0xFF059669),
+                color: AppColors.primary,
                 size: 20,
               ),
             ),
@@ -486,7 +506,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -549,12 +569,12 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
               margin: const EdgeInsets.all(12),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF059669).withOpacity(0.1),
+                color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 icon,
-                color: const Color(0xFF059669),
+                color: AppColors.primary,
                 size: 20,
               ),
             ),
@@ -568,7 +588,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFF059669), width: 2),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

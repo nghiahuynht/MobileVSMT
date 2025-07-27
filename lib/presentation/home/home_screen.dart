@@ -154,7 +154,7 @@ class HomePage extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Version 1.0.1.3 • © 2024 TrashPay',
+                              'Bản quyền thuộc về DVCI TEAM © 2025',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade600,

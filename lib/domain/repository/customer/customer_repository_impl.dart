@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:trash_pay/constants/api_config.dart';
 import 'package:trash_pay/domain/entities/based_api_result/api_result_model.dart';
 import 'package:trash_pay/domain/entities/based_api_result/error_result_model.dart';
@@ -68,12 +70,12 @@ class CustomerRepositoryImpl implements CustomerRepository {
   }
 
   @override
-  Future<ApiResultModel<CustomerModel>> addCustomer(CustomerModel customer, {bool isEdit = false}) async {
+  Future<ApiResultModel<bool>> addCustomer(CustomerModel customer, {bool isEdit = false}) async {
     try {
-      final result = await _apiService.post<CustomerModel>(
+      final result = await _apiService.post<bool>(
         ApiConfig.insertOrUpdateCustomer,
         data: customer.toMap(isCreate: !isEdit),
-        fromJson: (json) => CustomerModel.fromJson(json),
+        fromJson: (json) => jsonDecode(json)['isSuccess'],
       );
 
       return result;
@@ -100,24 +102,6 @@ class CustomerRepositoryImpl implements CustomerRepository {
       return ApiResultModel.failure(
         errorResultEntity: ErrorResultModel(
           message: 'Failed to update customer: ${e.toString()}',
-        ),
-      );
-    }
-  }
-
-  @override
-  Future<ApiResultModel<bool>> deleteCustomer(int id) async {
-    try {
-      final result = await _apiService.delete<bool>(
-        '${ApiConfig.customerEndpoint}/$id',
-        fromJson: (json) => json as bool,
-      );
-
-      return result;
-    } catch (e) {
-      return ApiResultModel.failure(
-        errorResultEntity: ErrorResultModel(
-          message: 'Failed to delete customer: ${e.toString()}',
         ),
       );
     }

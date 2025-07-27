@@ -4,7 +4,8 @@ import 'package:trash_pay/domain/entities/customer/customer.dart';
 
 abstract class CustomerRepository {
   /// Get paginated list of customers with search capability
-  Future<ApiResultModel<PaginationWrapperResponsive<CustomerModel>>> getCustomerPaging({
+  Future<ApiResultModel<PaginationWrapperResponsive<CustomerModel>>>
+      getCustomerPaging({
     required int pageIndex,
     required int pageSize,
     String searchString,
@@ -16,11 +17,8 @@ abstract class CustomerRepository {
   Future<ApiResultModel<CustomerModel>> getCustomerById(int id);
 
   /// Add new customer
-  Future<ApiResultModel<CustomerModel>> addCustomer(CustomerModel customer);
+  Future<ApiResultModel<bool>> addCustomer(CustomerModel customer);
 
   /// Update existing customer
   Future<ApiResultModel<CustomerModel>> updateCustomer(CustomerModel customer);
-
-  /// Delete customer
-  Future<ApiResultModel<bool>> deleteCustomer(int id);
 }

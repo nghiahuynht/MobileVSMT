@@ -40,5 +40,4 @@ void _locator() {
   GetIt.I.registerLazySingleton<UnitRepository>(() => UnitRepositoryImpl());
   GetIt.I.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
   GetIt.I.registerLazySingleton(() => DomainManager());
-  GetIt.I.registerLazySingleton(() => AppBloc());
 }

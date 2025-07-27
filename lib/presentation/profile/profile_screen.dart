@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:trash_pay/constants/colors.dart';
 import 'package:trash_pay/domain/entities/profile/profile.dart';
 import 'package:trash_pay/presentation/flash/logics/auth_bloc.dart';
 import 'package:trash_pay/presentation/profile/logics/profile_bloc.dart';
@@ -67,7 +68,7 @@ class ProfileScreen extends StatelessWidget {
                     if (state is ProfileLoading) {
                       return const Center(
                         child: CircularProgressIndicator(
-                          color: Color(0xFF059669),
+                          color: AppColors.primary,
                         ),
                       );
                     }
@@ -89,7 +90,8 @@ class ProfileScreen extends StatelessWidget {
                               },
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: const Color(0xFFDC2626),
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
                                 side: const BorderSide(
                                   color: Color(0xFFDC2626),
                                   width: 1,
@@ -153,12 +155,12 @@ class ProfileScreen extends StatelessWidget {
                   height: 80,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: _getRoleColors(profile.role),
+                      colors: _getRoleColors(),
                     ),
                     borderRadius: BorderRadius.circular(40),
                     boxShadow: [
                       BoxShadow(
-                        color: _getRoleColors(profile.role)[0].withOpacity(0.3),
+                        color: _getRoleColors()[0].withOpacity(0.3),
                         blurRadius: 12,
                         offset: const Offset(0, 4),
                       ),
@@ -177,9 +179,9 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-      
+
                 const SizedBox(height: 16),
-      
+
                 // Name and Role
                 Text(
                   profile.name,
@@ -189,37 +191,12 @@ class ProfileScreen extends StatelessWidget {
                     color: Color(0xFF1E293B),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getRoleColors(profile.role)[0].withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    _getRoleText(profile.role),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _getRoleColors(profile.role)[0],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  profile.department,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
               ],
             ),
           ),
-      
+
           const SizedBox(height: 20),
-      
+
           // Contact Information
           _buildInfoSection(
             'Thông Tin Liên Hệ',
@@ -234,19 +211,19 @@ class ProfileScreen extends StatelessWidget {
                     DateFormat('dd/MM/yyyy').format(profile.joinedAt!)),
             ],
           ),
-      
+
           const SizedBox(height: 20),
-      
+
           // // Settings Section
           // _buildSettingsSection(context, profile),
-      
+
           // const SizedBox(height: 20),
-      
-        const Spacer(),
+
+          const Spacer(),
 
           // Action Buttons
           _buildActionButtons(context),
-      
+
           const SizedBox(height: 20),
         ],
       ),
@@ -624,29 +601,7 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  List<Color> _getRoleColors(String role) {
-    switch (role) {
-      case 'admin':
-        return [const Color(0xFFDC2626), const Color(0xFFEF4444)];
-      case 'manager':
-        return [const Color(0xFF7C3AED), const Color(0xFF8B5CF6)];
-      case 'employee':
-        return [const Color(0xFF059669), const Color(0xFF10B981)];
-      default:
-        return [const Color(0xFF64748B), const Color(0xFF94A3B8)];
-    }
-  }
-
-  String _getRoleText(String role) {
-    switch (role) {
-      case 'admin':
-        return 'Quản trị viên';
-      case 'manager':
-        return 'Quản lý';
-      case 'employee':
-        return 'Nhân viên';
-      default:
-        return 'Người dùng';
-    }
+  List<Color> _getRoleColors() {
+    return [const Color(0xFF059669), const Color(0xFF10B981)];
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:trash_pay/constants/colors.dart';
 import 'package:trash_pay/presentation/flash/logics/auth_bloc.dart';
 import 'package:trash_pay/presentation/flash/logics/auth_events.dart';
 import 'package:trash_pay/presentation/flash/logics/auth_state.dart';
@@ -23,6 +24,7 @@ class _FlashPageState extends State<FlashPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.primary,
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is Authenticated) {
@@ -35,35 +37,14 @@ class _FlashPageState extends State<FlashPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF059669),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF059669).withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.recycling_rounded,
-                  size: 40,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                "TrashPay",
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              Image.asset(
+                'assets/images/logo.png',
+                width: 200,
               ),
               const SizedBox(height: 8),
               const Text(
-                "Waste Management Solution",
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                "Hệ thống quản lý dịch vụ công ích",
+                style: TextStyle(fontSize: 16),
               ),
             ],
           ),

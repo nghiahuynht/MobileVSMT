@@ -14,20 +14,18 @@ class CustomerBloc extends Bloc<CustomerEvents, CustomerState> {
     on<LoadCustomersEvent>(_handleLoadCustomers);
     on<LoadMoreCustomersEvent>(_handleLoadMoreCustomers);
     on<AddCustomerEvent>(_handleAddCustomer);
-    on<UpdateCustomerEvent>(_handleUpdateCustomer);
-    on<DeleteCustomerEvent>(_handleDeleteCustomer);
   }
 
   final DomainManager domainManager = GetIt.I<DomainManager>();
   List<CustomerModel> _allCustomers = [];
-  List<Group> _allGroups = [];
-  List<Area> _allAreas = [];
+  final List<Group> _allGroups = [];
+  final List<Area> _allAreas = [];
   String _currentSearchQuery = '';
   int? _currentGroupId;
   int? _currentAreaId;
   String? _currentAreaSaleCode;
   String? _currentRouteSaleCode;
-  
+
   // Debounce timer for search
   Timer? _searchDebounceTimer;
 
@@ -41,12 +39,17 @@ class CustomerBloc extends Bloc<CustomerEvents, CustomerState> {
       LoadCustomersEvent event, Emitter<CustomerState> emit) async {
     emit(CustomerLoading());
     try {
+      _currentAreaSaleCode = event.areaSaleCode;
+      _currentRouteSaleCode = event.routeSaleCode;
+      _currentSearchQuery = event.search ?? '';
+
       final result = await domainManager.customer.getCustomerPaging(
         pageIndex: event.pageIndex ?? 1,
         pageSize: event.pageSize ?? 10,
         searchString: event.search ?? '',
-        areaSaleCode: event.routeSaleCode,
-        routeSaleCode: event.areaSaleCode,
+        areaSaleCode: event.areaSaleCode,
+        routeSaleCode: event.routeSaleCode,
+        saleUserCode: event.saleUserCode,
       );
 
       if (result is Success) {
@@ -67,10 +70,12 @@ class CustomerBloc extends Bloc<CustomerEvents, CustomerState> {
         ));
       } else if (result is Failure) {
         final failureResult = result as Failure;
-        emit(CustomerError('Không thể tải danh sách khách hàng: ${failureResult.errorResultEntity.message ?? 'Unknown error'}'));
+        emit(CustomerError(
+            'Không thể tải danh sách khách hàng: ${failureResult.errorResultEntity.message ?? 'Unknown error'}'));
       }
     } catch (e) {
-      emit(CustomerError('Không thể tải danh sách khách hàng: ${e.toString()}'));
+      emit(
+          CustomerError('Không thể tải danh sách khách hàng: ${e.toString()}'));
     }
   }
 
@@ -92,11 +97,13 @@ class CustomerBloc extends Bloc<CustomerEvents, CustomerState> {
           searchString: _currentSearchQuery,
           areaSaleCode: _currentAreaSaleCode,
           routeSaleCode: _currentRouteSaleCode,
+          saleUserCode: event.saleUserCode,
         );
 
         if (result is Success) {
           final successResult = result as Success;
-          final newCustomers = List<CustomerModel>.from(successResult.data.data);
+          final newCustomers =
+              List<CustomerModel>.from(successResult.data.data);
           final updatedCustomers = [...currentState.customers, ...newCustomers];
           _allCustomers = updatedCustomers;
 
@@ -111,7 +118,8 @@ class CustomerBloc extends Bloc<CustomerEvents, CustomerState> {
         } else if (result is Failure) {
           final failureResult = result as Failure;
           emit(currentState.copyWith(isLoadingMore: false));
-          emit(CustomerError('Lỗi khi tải thêm khách hàng: ${failureResult.errorResultEntity.message ?? 'Unknown error'}'));
+          emit(CustomerError(
+              'Lỗi khi tải thêm khách hàng: ${failureResult.errorResultEntity.message ?? 'Unknown error'}'));
         }
       } catch (e) {
         emit(currentState.copyWith(isLoadingMore: false));
@@ -120,39 +128,14 @@ class CustomerBloc extends Bloc<CustomerEvents, CustomerState> {
     }
   }
 
-  List<CustomerModel> _applyFiltersToList(List<CustomerModel> customers) {
-    List<CustomerModel> filtered = customers;
-
-    // Apply group filter - find matching group code
-    if (_currentGroupId != null) {
-      final selectedGroup = _allGroups.firstWhere((group) => group.id == _currentGroupId, orElse: () => Group(id: 0, code: '', name: ''));
-      if (selectedGroup.code?.isNotEmpty ?? false) {
-        filtered = filtered.where((customer) => customer.customerGroupCode == selectedGroup.code).toList();
-      }
-    }
-
-    // Apply area filter - find matching area code
-    if (_currentAreaId != null) {
-      final selectedArea = _allAreas.firstWhere((area) => area.id == _currentAreaId, orElse: () => Area(id: 0, code: '', name: ''));
-      if (selectedArea.code.isNotEmpty) {
-        filtered = filtered.where((customer) => customer.areaSaleCode == selectedArea.code).toList();
-      }
-    }
-
-    return filtered;
-  }
-
-  List<CustomerModel> _applyFilters() {
-    return _applyFiltersToList(_allCustomers);
-  }
-
   Future<void> _handleAddCustomer(
       AddCustomerEvent event, Emitter<CustomerState> emit) async {
     try {
-      final result = await domainManager.customer.addCustomer(event.customer, isEdit: event.isEdit);
+      final result = await domainManager.customer
+          .addCustomer(event.customer, isEdit: event.isEdit);
       if (result is Success) {
-        emit(CustomerOperationSuccess('Đã thêm khách hàng thành công'));
-      } else if (result is Failure<CustomerModel>) {
+        emit(CustomerOperationSuccess(event.isEdit ? 'Đã cập nhật khách hàng thành công' : 'Đã thêm khách hàng thành công'));
+      } else if (result is Failure<bool>) {
         emit(CustomerError(
             'Không thể thêm khách hàng: ${result.errorResultEntity.message ?? 'Unknown error'}'));
       }
@@ -160,45 +143,4 @@ class CustomerBloc extends Bloc<CustomerEvents, CustomerState> {
       emit(CustomerError('Không thể thêm khách hàng: ${e.toString()}'));
     }
   }
-
-  Future<void> _handleUpdateCustomer(
-      UpdateCustomerEvent event, Emitter<CustomerState> emit) async {
-    try {
-      // Simulated update - replace with actual repository call
-      final index = _allCustomers.indexWhere((c) => c.id == event.customer.id);
-      if (index != -1) {
-        _allCustomers[index] = event.customer;
-        emit(CustomerOperationSuccess('Đã cập nhật khách hàng thành công'));
-        
-        final currentState = state;
-        if (currentState is CustomersLoaded) {
-          emit(currentState.copyWith(
-            customers: _allCustomers,
-            filteredCustomers: _applyFilters(),
-          ));
-        }
-      }
-    } catch (e) {
-      emit(CustomerError('Không thể cập nhật khách hàng: ${e.toString()}'));
-    }
-  }
-
-  Future<void> _handleDeleteCustomer(
-      DeleteCustomerEvent event, Emitter<CustomerState> emit) async {
-    try {
-      // Simulated delete - replace with actual repository call
-      _allCustomers.removeWhere((c) => c.id == event.customerId);
-      emit(CustomerOperationSuccess('Đã xóa khách hàng thành công'));
-      
-      final currentState = state;
-      if (currentState is CustomersLoaded) {
-        emit(currentState.copyWith(
-          customers: _allCustomers,
-          filteredCustomers: _applyFilters(),
-        ));
-      }
-    } catch (e) {
-      emit(CustomerError('Không thể xóa khách hàng: ${e.toString()}'));
-    }
-  }
-} 
+}

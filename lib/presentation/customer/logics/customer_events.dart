@@ -10,23 +10,26 @@ class LoadCustomersEvent extends CustomerEvents {
   final String? search;
   final String? areaSaleCode;
   final String? routeSaleCode;
-  LoadCustomersEvent({this.pageIndex, this.pageSize, this.groupId, this.areaId, this.search, this.areaSaleCode, this.routeSaleCode});
+  final String? saleUserCode;
+  LoadCustomersEvent({
+    this.pageIndex,
+    this.pageSize,
+    this.groupId,
+    this.areaId,
+    this.search,
+    this.areaSaleCode,
+    this.routeSaleCode,
+    this.saleUserCode,
+  });
 }
 
-class LoadMoreCustomersEvent extends CustomerEvents {}
+class LoadMoreCustomersEvent extends CustomerEvents {
+  final String? saleUserCode;
+  LoadMoreCustomersEvent({this.saleUserCode});
+}
 
 class AddCustomerEvent extends CustomerEvents {
   final CustomerModel customer;
   final bool isEdit;
   AddCustomerEvent(this.customer, {this.isEdit = false});
 }
-
-class UpdateCustomerEvent extends CustomerEvents {
-  final CustomerModel customer;
-  UpdateCustomerEvent(this.customer);
-}
-
-class DeleteCustomerEvent extends CustomerEvents {
-  final int customerId;
-  DeleteCustomerEvent(this.customerId);
-} 

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trash_pay/constants/colors.dart';
 import 'package:trash_pay/constants/strings.dart';
+import 'package:trash_pay/domain/domain_manager.dart';
 import 'package:trash_pay/domain/entities/customer/customer.dart';
-import 'package:trash_pay/domain/entities/location/group.dart';
 import 'package:trash_pay/domain/entities/meta_data/area.dart';
+import 'package:trash_pay/domain/entities/meta_data/route.dart' as MetaRoute;
 import 'package:trash_pay/presentation/app/app_bloc_extension.dart';
 import 'package:trash_pay/presentation/add_customer_screen/add_customer_screen.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_bloc.dart';
@@ -23,10 +25,12 @@ class CustomerListScreen extends StatefulWidget {
 class _CustomerListScreenState extends State<CustomerListScreen> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  Group? _selectedGroup;
+  MetaRoute.Route? _selectedRoute;
   Area? _selectedArea;
   late CustomerBloc _customerBloc;
   bool _isLoadingMore = false; // Add flag to prevent duplicate calls
+
+  List<MetaRoute.Route> _routes = [];
 
   @override
   void initState() {
@@ -36,7 +40,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     _scrollController.addListener(_onScroll);
 
     // Load initial customers
-    _customerBloc.add(LoadCustomersEvent());
+    _customerBloc.add(LoadCustomersEvent(saleUserCode: context.userCode));
   }
 
   @override
@@ -56,7 +60,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
           !state.isLoadingMore &&
           !_isLoadingMore) {
         _isLoadingMore = true; // Set flag to prevent duplicate calls
-        _customerBloc.add(LoadMoreCustomersEvent());
+        _customerBloc
+            .add(LoadMoreCustomersEvent(saleUserCode: context.userCode));
         // Reset flag after a short delay to allow for the next load more
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
@@ -76,41 +81,50 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
 
   void _onSearchChanged() {
     _customerBloc.add(LoadCustomersEvent(
-      areaSaleCode: _selectedGroup?.code,
-      routeSaleCode: _selectedArea?.code,
+      areaSaleCode: _selectedArea?.code,
+      routeSaleCode: _selectedRoute?.code,
       search: _searchController.text,
+      saleUserCode: context.userCode,
     ));
   }
 
-  void _onGroupChanged(Group? group) {
+  void _onRouteChanged(MetaRoute.Route? route) {
     setState(() {
-      _selectedGroup = group;
+      _selectedRoute = route;
     });
-    _customerBloc.add(LoadCustomersEvent(
-      areaSaleCode: group?.code,
-      routeSaleCode: _selectedArea?.code,
-      search: _searchController.text,
-    ));
+    _customerBloc.add(
+      LoadCustomersEvent(
+        areaSaleCode: _selectedArea?.code,
+        routeSaleCode: _selectedRoute?.code,
+        search: _searchController.text,
+        saleUserCode: context.userCode,
+      ),
+    );
   }
 
-  void _onAreaChanged(Area? area) {
+  void _onAreaChanged(Area? area) async {
     setState(() {
       _selectedArea = area;
+      _selectedRoute = null;
     });
+
+    await getRoute(area?.code ?? '');
+
     _customerBloc.add(LoadCustomersEvent(
-      routeSaleCode: _selectedGroup?.code,
+      routeSaleCode: null,
       areaSaleCode: area?.code,
       search: _searchController.text,
+      saleUserCode: context.userCode,
     ));
   }
 
   void _clearFilters() {
     setState(() {
-      _selectedGroup = null;
+      _selectedRoute = null;
       _selectedArea = null;
       _searchController.clear();
     });
-    _customerBloc.add(LoadCustomersEvent());
+    _customerBloc.add(LoadCustomersEvent(saleUserCode: context.userCode));
   }
 
   @override
@@ -141,9 +155,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                       builder: (context) => const AddCustomerScreen(),
                     ),
                   );
-                  if (result == true) {
+                  if (result != null && result is CustomerModel) {
                     // Refresh customer list if customer was added successfully
-                    _customerBloc.add(LoadCustomersEvent());
+                    _customerBloc.add(
+                        LoadCustomersEvent(saleUserCode: context.userCode));
                   }
                 },
               ),
@@ -195,48 +210,16 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     // Filter Row
                     Row(
                       children: [
-                        // Group Filter
-                        Expanded(
-                          child: BlocBuilder<CustomerBloc, CustomerState>(
-                            builder: (context, state) {
-                              if (state is CustomersLoaded) {
-                                return _buildFilterDropdown<Group>(
-                                  value: _selectedGroup,
-                                  items: state.groups,
-                                  hintText: 'Chọn Tổ',
-                                  onChanged: _onGroupChanged,
-                                  itemBuilder: (Group group) => group.name ?? '',
-                                );
-                              }
-                              return _buildFilterDropdown<Group>(
-                                value: null,
-                                items: [],
-                                hintText: 'Chọn Tổ',
-                                onChanged: _onGroupChanged,
-                                itemBuilder: (Group group) => group.name ?? '',
-                              );
-                            },
-                          ),
-                        ),
-
-                        const SizedBox(width: 12),
-
                         // Area Filter
                         Expanded(
                           child: AreasBuilder(
                             builder: (context, areas) {
                               // Filter areas based on selected group
-                              final availableAreas = _selectedGroup != null
-                                  ? areas
-                                      .where((area) =>
-                                          area.groupId == _selectedGroup!.id)
-                                      .toList()
-                                  : areas;
 
                               return _buildFilterDropdown<Area>(
                                 value: _selectedArea,
-                                items: availableAreas,
-                                hintText: 'Chọn Khu',
+                                items: context.areas,
+                                hintText: 'Chọn Tổ',
                                 onChanged: _onAreaChanged,
                                 itemBuilder: (Area area) => area.name,
                               );
@@ -245,10 +228,27 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                 _buildFilterDropdown<Area>(
                               value: null,
                               items: [],
-                              hintText: 'Chọn Khu',
+                              hintText: 'Chọn Tổ',
                               onChanged: _onAreaChanged,
                               itemBuilder: (Area area) => area.name,
                             ),
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+                        // Group Filter
+                        Expanded(
+                          child: BlocBuilder<CustomerBloc, CustomerState>(
+                            builder: (context, state) {
+                              return _buildFilterDropdown<MetaRoute.Route>(
+                                value: _selectedRoute,
+                                items: _routes,
+                                hintText: 'Chọn Tuyến',
+                                onChanged: _onRouteChanged,
+                                itemBuilder: (MetaRoute.Route route) =>
+                                    route.name ?? '',
+                              );
+                            },
                           ),
                         ),
 
@@ -332,7 +332,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(state.message),
-                          backgroundColor: const Color(0xFF059669),
+                          backgroundColor: AppColors.primary,
                         ),
                       );
                     } else if (state is CustomerError) {
@@ -348,7 +348,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     if (state is CustomerLoading) {
                       return const Center(
                         child: CircularProgressIndicator(
-                          color: Color(0xFF059669),
+                          color: AppColors.primary,
                         ),
                       );
                     }
@@ -435,7 +435,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               padding: const EdgeInsets.all(20),
               child: const Center(
                 child: CircularProgressIndicator(
-                  color: Color(0xFF059669),
+                  color: AppColors.primary,
                 ),
               ),
             ),
@@ -698,7 +698,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF0FDF4),
+                    color: AppColors.primary.withAlpha(35),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -706,7 +706,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF059669),
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -719,16 +719,29 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     );
   }
 
-  List<Color> _getAvatarColors(String? status) {
-    switch (status) {
-      case 'active':
-        return [const Color(0xFF059669), const Color(0xFF10B981)];
-      case 'inactive':
-        return [const Color(0xFFDC2626), const Color(0xFFEF4444)];
-      case 'pending':
-        return [const Color(0xFFD97706), const Color(0xFFF59E0B)];
-      default:
-        return [const Color(0xFF64748B), const Color(0xFF94A3B8)];
+  Future<void> getRoute(String areaSaleCode, {String? selectData}) async {
+    try {
+      final routes = await DomainManager()
+          .metaData
+          .getAllRouteSaleByAreaSale(areaSaleCode: areaSaleCode);
+      setState(() {
+        _routes = routes;
+      });
+    } catch (e) {
+      _showErrorSnackBar('Không thể tải danh sách tuyến');
     }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFFDC2626),
+      ),
+    );
+  }
+
+  List<Color> _getAvatarColors(String? status) {
+    return [const Color(0xFFD97706), const Color(0xFFF59E0B)];
   }
 }

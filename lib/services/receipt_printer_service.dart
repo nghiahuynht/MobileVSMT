@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+import 'package:number_to_vietnamese_words/number_to_vietnamese_words.dart';
 import 'package:sunmi_printer_plus/core/enums/enums.dart';
 import 'package:sunmi_printer_plus/core/sunmi/sunmi_printer.dart';
 
@@ -35,50 +37,29 @@ class ReceiptPrinterService {
     }
   }
 
-  /// In hóa đơn
   Future<bool> printReceipt(OrderModel order) async {
     try {
-      if (!_isConnected) {
-        final initialized = await initializePrinter();
-        if (!initialized) {
-          throw Exception('Không thể kết nối máy in');
-        }
-      }
+      final now = DateTime.now();
+      final total = order.totalWithVAT?.toInt() ?? 0;
+      final totalFormatted = NumberFormat("#,###").format(total);
 
       await SunmiPrinter.initPrinter();
-      await SunmiPrinter.setAlignment(SunmiPrintAlign.CENTER);
-      await SunmiPrinter.setFontSize(SunmiFontSize.LG);
-      await SunmiPrinter.printText('TRASHPAY');
-      await SunmiPrinter.lineWrap(1);
+      await SunmiPrinter.startTransactionPrint(true);
 
-      await SunmiPrinter.setFontSize(SunmiFontSize.MD);
-      await SunmiPrinter.printText('HÓA ĐƠN BÁN HÀNG');
-      await SunmiPrinter.lineWrap(1);
+      await SunmiPrinter.setAlignment(SunmiPrintAlign.CENTER);
+      await SunmiPrinter.printText('BAN QUẢN LÝ VÀ CTCC HUYỆN ĐỨC TRỌNG\n');
+      await SunmiPrinter.printText('BIÊN NHẬN THANH TOÁN\n');
+      await SunmiPrinter.printText('DV thu gom, VC rác SH\n');
+      await SunmiPrinter.printText(
+          'Ngày: ${DateFormat('dd/MM/yyyy HH:mm:ss').format(now)}\n');
 
       await SunmiPrinter.setAlignment(SunmiPrintAlign.LEFT);
-      await SunmiPrinter.setFontSize(SunmiFontSize.SM);
-
-      // Thông tin đơn hàng
-      await SunmiPrinter.printText('Mã: ${order.code}');
+      await SunmiPrinter.printText('Mã KH: ${order.customerCode ?? ''}\n');
+      await SunmiPrinter.printText('Tên KH: ${order.customerName ?? ''}\n');
+      await SunmiPrinter.printText('Địa chỉ: ${order.taxAddress ?? ''}\n');
       await SunmiPrinter.printText(
-          'Ngày: ${_formatDate(order.orderDate ?? DateTime.now())}');
-      await SunmiPrinter.printText(
-          'Giờ: ${_formatTime(order.orderDate ?? DateTime.now())}');
-      await SunmiPrinter.lineWrap(1);
-
-      // Thông tin khách hàng
-      if (order.customerName != null) {
-        await SunmiPrinter.printText('Khách hàng: ${order.customerName}');
-        if (order.customerCode != null) {
-          await SunmiPrinter.printText('Mã KH: ${order.customerCode}');
-        }
-        if (order.customerGroupName != null) {
-          await SunmiPrinter.printText('Nhóm KH: ${order.customerGroupName}');
-        }
-        await SunmiPrinter.lineWrap(1);
-      }
-
-      // Đường kẻ
+          'Hình thức TT: ${order.paymentName ?? ''}\n');
+// Các mặt hàng
       await SunmiPrinter.printText('${'─' * 32}');
       await SunmiPrinter.lineWrap(1);
 
@@ -101,110 +82,31 @@ class ReceiptPrinterService {
             '${productName?.padRight(20) ?? 0} $quantity $price');
       }
 
+      await SunmiPrinter.line();
+      await SunmiPrinter.printText('Tổng tiền: $totalFormatted đ\n');
+
+      await SunmiPrinter.printText(
+          'Số tiền bằng chữ: ${_convertNumberToWords(total)} đồng\n');
+
+
+      await SunmiPrinter.printText(
+          'Ghi chú: ${order.note}\n\n');
+
+
+      await SunmiPrinter.printText('Nhân viên: ${order.saleUserFullName}\n');
+
       await SunmiPrinter.setAlignment(SunmiPrintAlign.CENTER);
-      await SunmiPrinter.printText('Cảm ơn quý khách!');
-      await SunmiPrinter.printText('Hẹn gặp lại!');
-      await SunmiPrinter.lineWrap(3);
+      await SunmiPrinter.printQRCode("https://mily.vn/ductrong");
+      await SunmiPrinter.printText('Mã KH: ${order.customerCode}\n');
+      await SunmiPrinter.printText('Loại thu: ${order.arrears}\n');
+      await SunmiPrinter.printText('Quý khách quét mã QR hoặc tuy cứu: https://mily.vn/ductrong để tra cứu hoá đơn điện tử\n');
+
+      await SunmiPrinter.line();
+      await SunmiPrinter.cut();
 
       return true;
     } catch (e) {
       print('Lỗi in hóa đơn: $e');
-      return false;
-    }
-  }
-
-  /// In hóa đơn đơn giản (cho đơn hàng nhỏ)
-  Future<bool> printSimpleReceipt(OrderModel order) async {
-    try {
-      if (!_isConnected) {
-        final initialized = await initializePrinter();
-        if (!initialized) {
-          throw Exception('Không thể kết nối máy in');
-        }
-      }
-
-      await SunmiPrinter.initPrinter();
-      await SunmiPrinter.setAlignment(SunmiPrintAlign.CENTER);
-      await SunmiPrinter.setFontSize(SunmiFontSize.MD);
-      await SunmiPrinter.printText('TRASHPAY');
-      await SunmiPrinter.lineWrap(1);
-
-      await SunmiPrinter.setFontSize(SunmiFontSize.SM);
-      await SunmiPrinter.printText('Đơn hàng: ${order.code}');
-      await SunmiPrinter.printText(
-          'Ngày: ${_formatDate(order.orderDate ?? DateTime.now())}');
-
-      if (order.customerName != null) {
-        await SunmiPrinter.printText('KH: ${order.customerName}');
-      }
-
-      await SunmiPrinter.printText(
-          'Tổng: ${_formatCurrency(order.totalWithVAT?.toDouble() ?? 0)}');
-      await SunmiPrinter.lineWrap(2);
-
-      return true;
-    } catch (e) {
-      print('Lỗi in hóa đơn đơn giản: $e');
-      return false;
-    }
-  }
-
-  /// In báo cáo doanh thu
-  Future<bool> printRevenueReport({
-    required DateTime fromDate,
-    required DateTime toDate,
-    required double totalRevenue,
-    required int totalOrders,
-    required List<OrderModel> orders,
-  }) async {
-    try {
-      if (!_isConnected) {
-        final initialized = await initializePrinter();
-        if (!initialized) {
-          throw Exception('Không thể kết nối máy in');
-        }
-      }
-
-      await SunmiPrinter.initPrinter();
-      await SunmiPrinter.setAlignment(SunmiPrintAlign.CENTER);
-      await SunmiPrinter.setFontSize(SunmiFontSize.LG);
-      await SunmiPrinter.printText('TRASHPAY');
-      await SunmiPrinter.lineWrap(1);
-
-      await SunmiPrinter.setFontSize(SunmiFontSize.MD);
-      await SunmiPrinter.printText('BÁO CÁO DOANH THU');
-      await SunmiPrinter.lineWrap(1);
-
-      await SunmiPrinter.setAlignment(SunmiPrintAlign.LEFT);
-      await SunmiPrinter.setFontSize(SunmiFontSize.SM);
-
-      await SunmiPrinter.printText('Từ ngày: ${_formatDate(fromDate)}');
-      await SunmiPrinter.printText('Đến ngày: ${_formatDate(toDate)}');
-      await SunmiPrinter.lineWrap(1);
-
-      await SunmiPrinter.printText('${'─' * 32}');
-      await SunmiPrinter.printText('Tổng đơn hàng: $totalOrders');
-      await SunmiPrinter.printText(
-          'Tổng doanh thu: ${_formatCurrency(totalRevenue)}');
-      await SunmiPrinter.lineWrap(1);
-
-      // Danh sách đơn hàng
-      for (OrderModel order in orders.take(10)) {
-        // Chỉ in 10 đơn đầu
-        await SunmiPrinter.printText(
-            '${order.code}: ${_formatCurrency(order.totalWithVAT?.toDouble() ?? 0)}');
-      }
-
-      if (orders.length > 10) {
-        await SunmiPrinter.printText(
-            '... và ${orders.length - 10} đơn hàng khác');
-      }
-
-      await SunmiPrinter.lineWrap(2);
-
-      return true;
-    } catch (e) {
-      print('Lỗi in báo cáo: $e');
       return false;
     }
   }
@@ -222,5 +124,9 @@ class ReceiptPrinterService {
   /// Format tiền tệ
   String _formatCurrency(double amount) {
     return '${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ';
+  }
+
+  String _convertNumberToWords(int number) {
+    return number.toVietnameseWords();
   }
 }
