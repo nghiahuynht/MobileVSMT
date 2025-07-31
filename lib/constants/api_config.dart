@@ -50,10 +50,13 @@ class ApiConfig {
   static const String routeSale = '/RouteSale';
   static const String getAllRouteSaleByAreaSale = '$routeSale/GetAllRouteSaleByAreaSale';
 
+  static const String reportsEndpoint = '/Report';
+  static const String getMonthlyRevenue = '$reportsEndpoint/EmployeeRevenueReport';
+  static const String getMonthlyRevenueDetail = '$reportsEndpoint/EmployeeRevenueDetailReport';
+
 
   static const String ordersEndpoint = '/orders';
   static const String transactionsEndpoint = '/transactions';
-  static const String reportsEndpoint = '/reports';
   static const String paymentsEndpoint = '/payments';
 
   // Timeouts

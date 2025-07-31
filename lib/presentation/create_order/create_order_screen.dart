@@ -280,33 +280,32 @@ class _ProductListState extends State<ProductList> {
               children: [
                 Row(
                   children: [
-                    _iconBtn(
-                        icon: Icons.remove,
-                        isDisabled: !product.isSelected,
-                        onTap: () {
-                          context
-                              .read<CreateOrderBloc>()
-                              .add(events.RemoveProductFromCart(index));
-                        }),
                     SizedBox(
-                      width: 40,
                       child: Center(
                         child: Text(
-                          product.quantity.toString(),
+                          product.isSelected ? 'Đã chọn' : 'Chưa chọn',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                             fontFamily: FontFamily.productSans,
+                            color: product.isSelected ? AppColors.primary : Colors.grey[600],
                           ),
                         ),
                       ),
                     ),
-                    _iconBtn(
-                      icon: Icons.add,
+                    const SizedBox(width: 5),
+                    _toggleButton(
+                      isSelected: product.isSelected,
                       onTap: () {
-                        context
-                            .read<CreateOrderBloc>()
-                            .add(events.AddProductToCart(index));
+                        if (product.isSelected) {
+                          context
+                              .read<CreateOrderBloc>()
+                              .add(events.RemoveProductFromCart(index));
+                        } else {
+                          context
+                              .read<CreateOrderBloc>()
+                              .add(events.AddProductToCart(index));
+                        }
                       },
                     )
                   ],
@@ -383,27 +382,29 @@ class _ProductListState extends State<ProductList> {
     }
   }
 
-  Widget _iconBtn({
+  Widget _toggleButton({
     required VoidCallback onTap,
-    required IconData icon,
-    bool isDisabled = false,
+    required bool isSelected,
   }) {
     return Container(
-      width: 20,
-      height: 20,
+      width: 24,
+      height: 24,
       decoration: BoxDecoration(
-        color: isDisabled ? Colors.grey : const Color(0xFF0EA5E9),
-        borderRadius: BorderRadius.circular(22),
-        
+        color: isSelected ? AppColors.primary : Colors.grey[300],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected ? AppColors.primary : Colors.grey[400]!,
+          width: 1,
+        ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(12),
           child: Icon(
-            icon,
-            color: Colors.white,
+            isSelected ? Icons.check : Icons.add,
+            color: isSelected ? Colors.white : Colors.grey[600],
             size: 16,
           ),
         ),

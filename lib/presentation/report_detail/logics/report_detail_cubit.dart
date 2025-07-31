@@ -1,35 +1,34 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trash_pay/domain/domain_manager.dart';
 import 'package:trash_pay/domain/entities/report/monthly_revenue.dart';
-import 'package:trash_pay/utils/utils.dart';
 
 part 'report_detail_state.dart';
 
 class ReportDetailCubit extends Cubit<ReportDetailState> {
-  ReportDetailCubit(month, year)
-      : super(ReportDetailState(month: month, year: year)) {
+  ReportDetailCubit(month, year, saleUserCode)
+      : super(ReportDetailState(month: month, year: year, saleUserCode: saleUserCode)) {
     loadData();
   }
 
-  void loadData() {
+  final DomainManager _domainManager = DomainManager();
+
+  void loadData() async {
     emit(state.copyWith(isLoading: true));
 
-    final daysInMonth = Utils.getDaysInMonth(state.year, state.month);
-
-    final data = <MonthlyRevenue>[];
-
-    for (var i = 1; i <= daysInMonth; i++) {
-      final label = i.toString();
-      final revenue = 10000.toDouble();
-      const totalCustomer = 100;
-      final monthlyRevenue = MonthlyRevenue(
-        label: label,
-        revenue: revenue,
-        totalCustomer: totalCustomer,
+  try {
+      final revenueList =
+          await _domainManager.report.getMonthlyRevenueDetail(
+        year: state.year,
+        saleUserCode: state.saleUserCode,
+        month: state.month,
       );
-      data.add(monthlyRevenue);
+
+      emit(state.copyWith(data: revenueList, isLoading: false));
+
+    } catch (e) {
+      emit(state.copyWith(isLoading: false));
     }
 
-    emit(state.copyWith(data: data, isLoading: false));
   }
 }

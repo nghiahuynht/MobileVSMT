@@ -30,6 +30,11 @@ class TokenManager {
       if (tokenJson != null && tokenJson.isNotEmpty) {
         final tokenMap = jsonDecode(tokenJson);
         _currentToken = SignInResponse.fromMap(tokenMap);
+
+        if (_currentToken!.isExpired) {
+          await _refreshToken();
+        }
+
         log('Token loaded from storage: ${_currentToken?.toString()}');
       }
     } catch (e) {
@@ -91,16 +96,18 @@ class TokenManager {
     log('Refreshing token...');
 
     try {
-      // Gọi API refresh token (cần implement endpoint refresh token)
 
       final loginName = _userPrefs.getLoginName();
       final password = _userPrefs.getPassword();
       final companyCode = _userPrefs.getCompany();
+      final companyName = _userPrefs.getCompanyName();
 
       final response = await _domainManager.auth.signInWithLoginName(
           loginName: loginName!,
           password: password!,
-          companyCode: companyCode!);
+          companyCode: companyCode!,
+          companyName: companyName!,
+      );
 
       if (response?.accessToken.isNotEmpty ?? false) {
         await saveToken(response!);

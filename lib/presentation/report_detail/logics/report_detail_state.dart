@@ -6,12 +6,14 @@ class ReportDetailState extends Equatable {
   final int year;
   final List<MonthlyRevenue> data;
   final bool isLoading;
+  final String saleUserCode;
 
   const ReportDetailState({
     required this.month,
     required this.year,
     this.data = const [],
     this.isLoading = false,
+    required this.saleUserCode,
   });
 
   @override
@@ -22,12 +24,13 @@ class ReportDetailState extends Equatable {
     int? year,
     List<MonthlyRevenue>? data,
     bool? isLoading,
+    String? saleUserCode,
   }) {
     return ReportDetailState(
       month: month ?? this.month,
       year: year ?? this.year,
       data: data ?? this.data,
-      isLoading: isLoading ?? this.isLoading,
+      isLoading: isLoading ?? this.isLoading, saleUserCode: saleUserCode ?? this.saleUserCode,
     );
   }
 }

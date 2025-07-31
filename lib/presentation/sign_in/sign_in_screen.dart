@@ -721,6 +721,7 @@ class _LoginScreenState extends State<LoginScreen>
           _loginNameController.text.trim(),
           _passwordController.text,
           _selectedUnit!.code!,
+          _selectedUnit!.label!,
         ),
       );
     }

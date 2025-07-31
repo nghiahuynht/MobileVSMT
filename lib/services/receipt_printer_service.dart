@@ -1,7 +1,10 @@
 import 'package:intl/intl.dart';
 import 'package:number_to_vietnamese_words/number_to_vietnamese_words.dart';
 import 'package:sunmi_printer_plus/core/enums/enums.dart';
+import 'package:sunmi_printer_plus/core/styles/sunmi_qrcode_style.dart';
+import 'package:sunmi_printer_plus/core/styles/sunmi_text_style.dart';
 import 'package:sunmi_printer_plus/core/sunmi/sunmi_printer.dart';
+import 'package:trash_pay/services/user_prefs.dart';
 
 import '../domain/entities/order/order.dart';
 import '../domain/entities/order/order_item.dart';
@@ -18,7 +21,7 @@ class ReceiptPrinterService {
   factory ReceiptPrinterService() => _instance;
   ReceiptPrinterService._internal();
 
-  bool _isConnected = false;
+  final UserPrefs _prefs = UserPrefs.I;
 
   /// Khởi tạo kết nối với máy in
   Future<bool> initializePrinter() async {
@@ -28,11 +31,9 @@ class ReceiptPrinterService {
       await SunmiPrinter.setAlignment(SunmiPrintAlign.CENTER);
       await SunmiPrinter.setFontSize(SunmiFontSize.MD);
 
-      _isConnected = true;
       return true;
     } catch (e) {
       print('Lỗi khởi tạo máy in: $e');
-      _isConnected = false;
       return false;
     }
   }
@@ -43,15 +44,27 @@ class ReceiptPrinterService {
       final total = order.totalWithVAT?.toInt() ?? 0;
       final totalFormatted = NumberFormat("#,###").format(total);
 
-      await SunmiPrinter.initPrinter();
-      await SunmiPrinter.startTransactionPrint(true);
+      final companyName = _prefs.getCompanyName();
 
-      await SunmiPrinter.setAlignment(SunmiPrintAlign.CENTER);
-      await SunmiPrinter.printText('BAN QUẢN LÝ VÀ CTCC HUYỆN ĐỨC TRỌNG\n');
-      await SunmiPrinter.printText('BIÊN NHẬN THANH TOÁN\n');
-      await SunmiPrinter.printText('DV thu gom, VC rác SH\n');
+      final normalCenter = SunmiTextStyle(
+            align: SunmiPrintAlign.CENTER,
+          );
+
+      final boldCenter = SunmiTextStyle(
+            align: SunmiPrintAlign.CENTER,
+            bold: true,
+          );
+
+      await SunmiPrinter.printText('${companyName ?? ''}\n',
+        style: normalCenter,
+      );
+      await SunmiPrinter.printText('BIÊN NHẬN THANH TOÁN\n', style: boldCenter);
+      await SunmiPrinter.printText('DV thu gom, VC rác SH\n', style: boldCenter);
       await SunmiPrinter.printText(
-          'Ngày: ${DateFormat('dd/MM/yyyy HH:mm:ss').format(now)}\n');
+          'Ngày: ${DateFormat('dd/MM/yyyy HH:mm:ss').format(now)}\n', style: normalCenter);
+
+      await SunmiPrinter.line();
+      await SunmiPrinter.line();
 
       await SunmiPrinter.setAlignment(SunmiPrintAlign.LEFT);
       await SunmiPrinter.printText('Mã KH: ${order.customerCode ?? ''}\n');
@@ -59,13 +72,15 @@ class ReceiptPrinterService {
       await SunmiPrinter.printText('Địa chỉ: ${order.taxAddress ?? ''}\n');
       await SunmiPrinter.printText(
           'Hình thức TT: ${order.paymentName ?? ''}\n');
+      await SunmiPrinter.printText('Loại thu: ${order.arrears}\n');
+      
 // Các mặt hàng
       await SunmiPrinter.printText('${'─' * 32}');
       await SunmiPrinter.lineWrap(1);
 
       // Header bảng sản phẩm
       await SunmiPrinter.printText(
-          '${'Tên sản phẩm'.padRight(20)} ${'SL'.padLeft(4)} ${'Giá'.padLeft(8)}');
+          '${'Tên sản phẩm'.padRight(24)} ${'Giá'.padLeft(6)}');
       await SunmiPrinter.printText('${'─' * 32}');
 
       // Danh sách sản phẩm
@@ -74,12 +89,23 @@ class ReceiptPrinterService {
             ? '${item.productName?.substring(0, 15)}...'
             : item.productName;
 
-        final quantity = item.quantity.toString().padLeft(4);
+        // final quantity = "${item.quantity} x ${item.priceNoVAT}";
+
+        // final vat = '(VAT: ${item.vat ?? 0}%)';
+
         final price =
-            _formatCurrency(item.priceWithVAT?.toDouble() ?? 0).padLeft(8);
+            _formatCurrency( (item.priceWithVAT ?? 0).toDouble() * (item.quantity));
 
         await SunmiPrinter.printText(
-            '${productName?.padRight(20) ?? 0} $quantity $price');
+            '${productName?.padRight(24 - productName.length) ?? 0} ${price.padLeft(14)}');
+
+        // await SunmiPrinter.printText(
+        //     '${quantity.padRight(24 - quantity.length)} ${vat.padLeft(14)}');
+
+
+        await SunmiPrinter.printText('${'─' * 32}');
+        await SunmiPrinter.lineWrap(1);
+
       }
 
       await SunmiPrinter.line();
@@ -90,19 +116,20 @@ class ReceiptPrinterService {
 
 
       await SunmiPrinter.printText(
-          'Ghi chú: ${order.note}\n\n');
+          'Ghi chú: ${order.note ?? ''}\n\n');
 
 
       await SunmiPrinter.printText('Nhân viên: ${order.saleUserFullName}\n');
-
-      await SunmiPrinter.setAlignment(SunmiPrintAlign.CENTER);
-      await SunmiPrinter.printQRCode("https://mily.vn/ductrong");
-      await SunmiPrinter.printText('Mã KH: ${order.customerCode}\n');
-      await SunmiPrinter.printText('Loại thu: ${order.arrears}\n');
-      await SunmiPrinter.printText('Quý khách quét mã QR hoặc tuy cứu: https://mily.vn/ductrong để tra cứu hoá đơn điện tử\n');
-
       await SunmiPrinter.line();
-      await SunmiPrinter.cut();
+
+      await SunmiPrinter.printQRCode("https://mily.vn/ductrong",
+          style: SunmiQrcodeStyle(
+            align: SunmiPrintAlign.CENTER,
+          ));
+      await SunmiPrinter.line();
+      await SunmiPrinter.printText('Quý khách quét mã QR hoặc tuy cứu: https://mily.vn/ductrong để tra cứu hoá đơn điện tử\n', style: normalCenter);
+
+      await SunmiPrinter.cutPaper();
 
       return true;
     } catch (e) {

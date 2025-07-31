@@ -16,7 +16,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<SignInResponse?> signInWithLoginName(
       {required String loginName,
       required String password,
-      required String companyCode}) async {
+      required String companyCode, required String companyName}) async {
     try {
       final result = await _networkService.post<SignInResponse>(
         ApiConfig.loginEndpoint,
@@ -36,6 +36,7 @@ class AuthRepositoryImpl implements AuthRepository {
         _userPrefs.setLoginName(loginName);
         _userPrefs.setPassword(password);
         _userPrefs.setCompany(companyCode);
+        _userPrefs.setCompanyName(companyName);
 
         // IMPORTANT: Save token to TokenManager để authorization header được cập nhật ngay
         await TokenManager.instance.saveToken(data);

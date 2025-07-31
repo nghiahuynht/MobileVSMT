@@ -8,9 +8,10 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    <uses-permission android:name="android.permission.INTERNET"/>
     
     <application
-        android:label="trash_pay"
+        android:label="G-VSMT"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -15,7 +15,8 @@ class CreateOrderLoaded extends CreateOrderState {
   final double subtotal;
   final bool isSubmitting;
 
-  double get total => products.fold(0, (sum, prod) => sum + ((prod.item.priceSale ?? 0) * prod.quantity));
+  double get total => products.fold(0, (sum, prod) => 
+    sum + (prod.isSelected ? (prod.item.priceSale ?? 0) : 0));
 
   bool get isSelected => products.any((e) => e.isSelected);
 

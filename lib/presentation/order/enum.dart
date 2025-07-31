@@ -19,7 +19,7 @@ enum OrderStatus {
   Color get color {
     switch (this) {
       case OrderStatus.waiting:
-        return Colors.grey[300] ?? Colors.grey;
+        return const Color(0xffffa301);
       case OrderStatus.approved:
         return const Color(0xFF059669);
       case OrderStatus.cancelled:

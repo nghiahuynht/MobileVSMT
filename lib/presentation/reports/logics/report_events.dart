@@ -3,8 +3,9 @@ abstract class ReportEvent {}
 // Load initial reports data
 class LoadReportsEvent extends ReportEvent {
   final int year;
+  final String saleUserCode;
 
-  LoadReportsEvent({required this.year});
+  LoadReportsEvent({required this.year, required this.saleUserCode});
 }
 
 // Load specific report type

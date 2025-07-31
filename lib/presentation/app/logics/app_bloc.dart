@@ -26,6 +26,9 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     Emitter<AppState> emit,
   ) async {
     try {
+
+      
+
       if (_tokenManager.isLoggedIn) {
         final user = await _domainManager.auth.getCurrentUser();
 

@@ -291,15 +291,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         fontFamily: FontFamily.productSans,
                       ),
                     ),
-                    Text(
-                      ' × ${item.quantity}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.primary,
-                        fontFamily: FontFamily.productSans,
-                      ),
-                    ),
+                    // if (item.quantity > 0)
+                    //   Text(
+                    //     ' × ${item.quantity}',
+                    //     style: TextStyle(
+                    //       fontSize: 14,
+                    //       fontWeight: FontWeight.w600,
+                    //       color: AppColors.primary,
+                    //       fontFamily: FontFamily.productSans,
+                    //     ),
+                    //   ),
                   ],
                 ),
               ],
@@ -311,7 +312,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${((item.priceWithVAT ?? 0) * item.quantity).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ',
+                '${(item.quantity > 0 ? (item.priceWithVAT ?? 0) : 0).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

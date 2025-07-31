@@ -30,7 +30,6 @@ Future initializeApp({String? name}) async {
   ]);
 
   await TokenManager.instance.initialize();
-  
 
   Bloc.observer = XBlocObserver();
 }

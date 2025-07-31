@@ -74,12 +74,6 @@ class RevenueSummaryTable extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 textAlign: TextAlign.right),
           ),
-          const Expanded(
-            flex: 3,
-            child: Text('Số lượng KH',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                textAlign: TextAlign.right),
-          ),
           if (onRowTap != null)
             Expanded(
               child: Container(),
@@ -108,18 +102,11 @@ class RevenueSummaryTable extends StatelessWidget {
             ),
             Expanded(
               flex: 3,
-              child: Text(_formatVND(item.revenue),
+              child: Text(_formatVND(item.revenue ?? 0),
                   style: const TextStyle(
                       fontWeight: FontWeight.w600, fontSize: 14),
                   textAlign: TextAlign.right),
-            ),
-            Expanded(
-              flex: 3,
-              child: Text(item.totalCustomer.toString(),
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 14),
-                  textAlign: TextAlign.right),
-            ),
+            ),  
             if (onRowTap != null)
               const Expanded(
                 child: Align(

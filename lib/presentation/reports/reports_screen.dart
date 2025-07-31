@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trash_pay/constants/colors.dart';
+import 'package:trash_pay/presentation/app/app_bloc_extension.dart';
 import 'package:trash_pay/presentation/report_detail/report_detail_screen.dart';
 import 'package:trash_pay/presentation/reports/widgets/revenue_chart.dart';
 import 'package:trash_pay/presentation/reports/widgets/revenue_list.dart';
@@ -22,7 +23,10 @@ class _ReportsScreenState extends State<ReportsScreen>
   @override
   void initState() {
     super.initState();
-    context.read<ReportBloc>().add(LoadReportsEvent(year: DateTime.now().year));
+    context.read<ReportBloc>().add(LoadReportsEvent(
+          year: DateTime.now().year,
+          saleUserCode: context.userCode ?? '',
+        ));
   }
 
   @override
@@ -84,7 +88,10 @@ class _ReportsScreenState extends State<ReportsScreen>
                         if (selectedYear != null) {
                           context
                               .read<ReportBloc>()
-                              .add(LoadReportsEvent(year: selectedYear));
+                              .add(LoadReportsEvent(
+                                year: selectedYear,
+                                saleUserCode: context.userCode ?? '',
+                              ));
                         }
                       },
                       child: const Icon(
@@ -146,6 +153,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                                 onPressed: () => context.read<ReportBloc>().add(
                                       LoadReportsEvent(
                                         year: DateTime.now().year,
+                                        saleUserCode: context.userCode ?? '',
                                       ),
                                     ),
                                 style: ElevatedButton.styleFrom(
@@ -190,7 +198,7 @@ class _ReportsScreenState extends State<ReportsScreen>
                 context,
                 MaterialPageRoute(
                     builder: (context) => ReportDetailScreen(
-                          month: int.parse(value.label),
+                          month: int.parse(value.label?? ''),
                           year: state.year,
                         )),
               );

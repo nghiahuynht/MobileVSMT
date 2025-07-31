@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trash_pay/presentation/app/app_bloc_extension.dart';
 import 'package:trash_pay/presentation/report_detail/logics/report_detail_cubit.dart';
 import 'package:trash_pay/presentation/reports/widgets/revenue_list.dart';
 import 'package:trash_pay/presentation/widgets/common/professional_header.dart';
@@ -18,7 +19,7 @@ class ReportDetailScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       body: BlocProvider(
-        create: (context) => ReportDetailCubit(month, year),
+        create: (context) => ReportDetailCubit(month, year, context.userCode),
         child: BlocBuilder<ReportDetailCubit, ReportDetailState>(
             builder: (context, state) {
           return Column(

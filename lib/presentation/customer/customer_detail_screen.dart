@@ -464,10 +464,10 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.add_shopping_cart_outlined, size: 18),
+                Icon(Icons.payment_outlined, size: 18),
                 SizedBox(width: 8),
                 Text(
-                  'Tạo Đơn Hàng Mới',
+                  'Thu tiền',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,

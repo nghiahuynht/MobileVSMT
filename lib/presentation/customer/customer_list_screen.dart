@@ -6,8 +6,12 @@ import 'package:trash_pay/domain/domain_manager.dart';
 import 'package:trash_pay/domain/entities/customer/customer.dart';
 import 'package:trash_pay/domain/entities/meta_data/area.dart';
 import 'package:trash_pay/domain/entities/meta_data/route.dart' as MetaRoute;
+import 'package:trash_pay/domain/entities/checkout/checkout_data.dart';
 import 'package:trash_pay/presentation/app/app_bloc_extension.dart';
 import 'package:trash_pay/presentation/add_customer_screen/add_customer_screen.dart';
+import 'package:trash_pay/presentation/checkout/checkout_screen.dart';
+import 'package:trash_pay/presentation/create_order/create_order_screen.dart';
+import 'package:trash_pay/presentation/create_order/logics/create_order_bloc.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_bloc.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_events.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_state.dart';
@@ -414,18 +418,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: customers.length,
             itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => CustomerDetailScreen(
-                        customer: customers[index],
-                      ),
-                    ),
-                  );
-                },
-                child: _buildCustomerCard(customers[index]),
-              );
+              return _buildCustomerCard(customers[index]);
             },
           ),
 
@@ -714,6 +707,114 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               ],
             ],
           ),
+
+          const SizedBox(height: 16),
+
+          // Action buttons
+          Row(
+            children: [
+              // View Details Button
+              Expanded(
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.primary,
+                      width: 1,
+                    ),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => CustomerDetailScreen(
+                              customer: customer,
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.visibility_outlined,
+                              size: 16,
+                              color: AppColors.primary,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              'Xem chi tiết',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              // Collect Money Button
+              Expanded(
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        _onCollectMoneyPressed(customer);
+                      },
+                      child: const Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.payment_outlined,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              'Thu tiền',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -743,5 +844,14 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
 
   List<Color> _getAvatarColors(String? status) {
     return [const Color(0xFFD97706), const Color(0xFFF59E0B)];
+  }
+
+  void _onCollectMoneyPressed(CustomerModel customer) {
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+      return BlocProvider(
+        create: (context) => CreateOrderBloc(),
+        child: ProductList(customer: customer, products: context.products),
+      );
+    }));
   }
 }

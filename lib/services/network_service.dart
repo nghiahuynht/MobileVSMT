@@ -34,7 +34,7 @@ class DioNetwork {
     dio.interceptors.add(
       RetryInterceptor(
         dio: dio,
-        options: RetryOptions(
+        options: const RetryOptions(
           retries: ApiConfig.maxRetries,
           retryInterval: ApiConfig.retryInterval,
         ),
@@ -42,17 +42,17 @@ class DioNetwork {
     );
 
     // Add logging interceptor in debug mode
-    dio.interceptors.add(
-      LogInterceptor(
-        request: true,
-        requestHeader: true,
-        requestBody: true,
-        responseHeader: true,
-        responseBody: true,
-        error: true,
-        logPrint: (obj) => _logger.d(obj),
-      ),
-    );
+    // dio.interceptors.add(
+    //   LogInterceptor(
+    //     request: true,
+    //     requestHeader: true,
+    //     requestBody: true,
+    //     responseHeader: true,
+    //     responseBody: true,
+    //     error: true,
+    //     logPrint: (obj) => _logger.d(obj),
+    //   ),
+    // );
 
     // Add auth interceptor
     dio.interceptors.add(_AuthInterceptor());
@@ -325,9 +325,7 @@ class _AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (err.response?.statusCode == 401) {
-      // Handle token refresh logic here
-      // You can implement token refresh mechanism
-      // For now, just continue with the error
+      TokenManager.instance.forceRefresh();
     }
     handler.next(err);
   }

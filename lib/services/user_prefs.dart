@@ -6,9 +6,10 @@ class _keys {
   static const String theme = 'app-theme';
   static const String token = 'token';
   static const String user = 'user';
-  static const String companyCode = 'companyCode';
+  static const String companyCode = 'c';
   static const String loginName = 'loginName';
   static const String password = 'password';
+  static const String companyName = 'companyName';
 }
 
 class UserPrefs {
@@ -93,5 +94,17 @@ class UserPrefs {
     } else {
       _prefs.setString(_keys.password, value);
     }
+  }
+
+  void setCompanyName(String? value) {
+    if (value == null) {
+      _prefs.remove(_keys.companyName);
+    } else {
+      _prefs.setString(_keys.companyName, value);
+    }
+  }
+  
+  String? getCompanyName() {
+    return _prefs.getString(_keys.companyName);
   }
 }

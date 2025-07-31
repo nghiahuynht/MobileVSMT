@@ -138,7 +138,7 @@ class OrderDetailScreen extends StatelessWidget {
                                     child: Column(
                                       children: state.order.lstSaleOrderItem
                                           .map((item) =>
-                                              _buildOrderItemTile(item))
+                                              _buildCartItem(item))
                                           .toList(),
                                     ),
                                   ),
@@ -201,7 +201,7 @@ class OrderDetailScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                          _buildPrintButton(context, order),
+                          _buildPrintButton(context, state.order),
                         ],
                       ),
                     );
@@ -398,17 +398,10 @@ class OrderDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOrderItemTile(OrderItemModel item) {
-    return Container(
+
+  Widget _buildCartItem(OrderItemModel item) {
+    return Padding(
       padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Color(0xFFF1F5F9),
-            width: 1,
-          ),
-        ),
-      ),
       child: Row(
         children: [
           Expanded(
@@ -418,31 +411,64 @@ class OrderDetailScreen extends StatelessWidget {
                 Text(
                   item.productName ?? '',
                   style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1F2937),
                     fontFamily: FontFamily.productSans,
                   ),
                 ),
                 const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Text(
+                      '${(item.priceNoVAT ?? 0).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        fontFamily: FontFamily.productSans,
+                      ),
+                    ),
+                    // if (item.quantity > 0)
+                    //   Text(
+                    //     ' × ${item.quantity}',
+                    //     style: TextStyle(
+                    //       fontSize: 14,
+                    //       fontWeight: FontWeight.w600,
+                    //       color: AppColors.primary,
+                    //       fontFamily: FontFamily.productSans,
+                    //     ),
+                    //   ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Total Price
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${(item.quantity > 0 ? (item.priceWithVAT ?? 0) : 0).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                  fontFamily: FontFamily.productSans,
+                ),
+              ),
+              if (item.vat != null) ...[
+                const SizedBox(height: 2),
                 Text(
-                  '${item.quantity} x ${_formatCurrency(item.priceWithVAT?.toDouble() ?? 0)}',
+                  '(VAT: ${item.vat}%)',
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
                     fontFamily: FontFamily.productSans,
                   ),
                 ),
-              ],
-            ),
-          ),
-          Text(
-            _formatCurrency(((item.quantity) * (item.priceWithVAT ?? 0)).toDouble()),
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
-              fontFamily: FontFamily.productSans,
-            ),
+              ]
+            ],
           ),
         ],
       ),

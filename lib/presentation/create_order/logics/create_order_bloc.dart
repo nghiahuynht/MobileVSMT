@@ -32,19 +32,17 @@ class CreateOrderBloc
 
   void _onAddProduct(
       events.AddProductToCart event, Emitter<state.CreateOrderState> emit) {
+    // Đảm bảo mỗi sản phẩm chỉ được chọn tối đa 1 lần
     _allProducts[event.index] = _allProducts[event.index]
-        .copyWith(quantity: _allProducts[event.index].quantity + 1);
+        .copyWith(quantity: 1);
     emit(_currentLoadedState(isSubmitting: false));
   }
 
   void _onRemoveProduct(events.RemoveProductFromCart event,
       Emitter<state.CreateOrderState> emit) {
-    int value = _allProducts[event.index].quantity <= 0
-        ? 0
-        : _allProducts[event.index].quantity - 1;
-
+    // Đảm bảo mỗi sản phẩm chỉ được chọn tối đa 1 lần
     _allProducts[event.index] =
-        _allProducts[event.index].copyWith(quantity: value);
+        _allProducts[event.index].copyWith(quantity: 0);
     emit(_currentLoadedState(isSubmitting: false));
   }
 
