@@ -9,6 +9,7 @@ class OrderDetailBloc extends Bloc<OrderDetailEvent, OrderDetailState> {
 
   OrderDetailBloc(OrderModel order) : super(OrderDetailInitial(order)) {
     on<LoadOrderDetailEvent>(_onLoadOrderDetail);
+    on<CancelOrderEvent>(_onCancelOrder);
   }
 
   Future<void> _onLoadOrderDetail(
@@ -25,4 +26,20 @@ class OrderDetailBloc extends Bloc<OrderDetailEvent, OrderDetailState> {
       emit(state.getError('Lỗi khi tải thông tin đơn hàng: $e'));
     }
   }
+
+  Future<void> _onCancelOrder(
+    CancelOrderEvent event,
+    Emitter<OrderDetailState> emit,
+  ) async {
+    emit(state.getLoading());
+
+    try {
+      await _domainManager.order.cancelOrder(event.order.id);
+
+      await _onLoadOrderDetail(const LoadOrderDetailEvent(), emit);
+    } catch (e) {
+      emit(state.getError('Lỗi khi huỷ đơn hàng: $e'));
+    }
+  }
+
 }

@@ -41,6 +41,16 @@ class MonthlyRevenue {
     );
   }
 
+
+  factory MonthlyRevenue.fromDailyMap(Map<String, dynamic> map) {
+    return MonthlyRevenue(
+      label: map['day'] != null ? (map['day'] as int?)?.toString() ?? '0' : null,
+      revenue: map['totalRevenue'] != null ? (map['totalRevenue'] as double) : null,
+      totalCustomer: map['totalCustomer'] != null ? (map['totalCustomer'] as int) : null,
+    );
+  }
+
+
   String toJson() => json.encode(toMap());
 
   @override

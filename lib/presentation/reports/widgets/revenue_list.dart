@@ -5,12 +5,14 @@ class RevenueSummaryTable extends StatelessWidget {
   final List<MonthlyRevenue> data;
   final Function(MonthlyRevenue)? onRowTap;
   final bool isExpanded;
+  final bool isDaily;
 
   const RevenueSummaryTable({
     super.key,
     required this.data,
     this.onRowTap,
     this.isExpanded = false,
+    this.isDaily = false,
   });
 
   @override
@@ -63,10 +65,11 @@ class RevenueSummaryTable extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             flex: 2,
-            child: Text('Tháng',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+            child: Text(isDaily ? 'Ngày' : 'Tháng',
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
           ),
           const Expanded(
             flex: 3,
@@ -97,7 +100,7 @@ class RevenueSummaryTable extends StatelessWidget {
           children: [
             Expanded(
               flex: 2,
-              child: Text('Tháng ${item.label}',
+              child: Text('${isDaily ? 'Ngày' : 'Tháng'} ${item.label}',
                   style: const TextStyle(fontSize: 14)),
             ),
             Expanded(
@@ -106,7 +109,7 @@ class RevenueSummaryTable extends StatelessWidget {
                   style: const TextStyle(
                       fontWeight: FontWeight.w600, fontSize: 14),
                   textAlign: TextAlign.right),
-            ),  
+            ),
             if (onRowTap != null)
               const Expanded(
                 child: Align(

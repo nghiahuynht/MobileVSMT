@@ -137,8 +137,7 @@ class OrderDetailScreen extends StatelessWidget {
                                     ),
                                     child: Column(
                                       children: state.order.lstSaleOrderItem
-                                          .map((item) =>
-                                              _buildCartItem(item))
+                                          .map((item) => _buildCartItem(item))
                                           .toList(),
                                     ),
                                   ),
@@ -201,7 +200,23 @@ class OrderDetailScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                          _buildPrintButton(context, state.order),
+                          if (state.order.orderStatus != OrderStatus.canceled)
+                            Row(
+                              children: [
+                                if (state.order.orderStatus ==
+                                    OrderStatus.waiting) ...[
+                                  Expanded(
+                                      child: _buildCancelButton(
+                                          context, state.order)),
+                                  const SizedBox(
+                                    width: 5,
+                                  )
+                                ],
+                                Expanded(
+                                    child: _buildPrintButton(
+                                        context, state.order)),
+                              ],
+                            ),
                         ],
                       ),
                     );
@@ -255,6 +270,48 @@ class OrderDetailScreen extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCancelButton(BuildContext context, OrderModel order) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: () {
+          _cancelOrder(context, order);
+        },
+        style: OutlinedButton.styleFrom(
+          backgroundColor: const Color(0xFFDC2626),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          side: const BorderSide(
+            color: Colors.white,
+            width: 1.5,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.cancel_outlined,
+              color: Colors.white,
+              size: 16,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              'Huỷ hoá đơn',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontFamily: FontFamily.productSans,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -398,7 +455,6 @@ class OrderDetailScreen extends StatelessWidget {
     );
   }
 
-
   Widget _buildCartItem(OrderItemModel item) {
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -522,5 +578,35 @@ class OrderDetailScreen extends StatelessWidget {
 
   String _getStatusDisplayName(OrderStatus status) {
     return status.statusDisplayName;
+  }
+
+  void _cancelOrder(BuildContext context, OrderModel order) async {
+    final result = await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Xác nhận huỷ hoá đơn'),
+        content: const Text('Bạn có chắc chắn muốn huỷ hoá đơn này không?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Quay về'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(dialogContext).pop(true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Huỷ'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      context.read<OrderDetailBloc>().add(CancelOrderEvent(order));
+    }
   }
 }

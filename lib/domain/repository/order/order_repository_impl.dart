@@ -104,4 +104,27 @@ class OrderRepositoryImpl implements OrderRepository {
       throw Exception('An unexpected error occurred: $e');
     }
   }
+  
+  @override
+  Future<bool> cancelOrder(int id) async {
+    try {
+      final result = await _apiService.post<bool>(
+        ApiConfig.approvedSaleOrder,
+        queryParameters: {
+          "orderId": id,
+          "status": 0, // 0: huỷ
+        },
+        fromJson: (json) => jsonDecode(json)['isSuccess'],
+      );
+      if (result is Success<bool>) {
+        return result.data;
+      } else if (result is Failure<bool>) {
+        throw Exception(result.errorResultEntity.message);
+      } else {
+        throw Exception('Unexpected result type');
+      }
+    } catch (e) {
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
 }

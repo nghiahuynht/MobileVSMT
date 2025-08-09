@@ -35,6 +35,7 @@ class ReportDetailScreen extends StatelessWidget {
                         ? RevenueSummaryTable(
                             data: state.data,
                             isExpanded: true,
+                            isDaily: true,
                           )
                         : _buildEmpty(),
               ),

@@ -205,7 +205,7 @@ class _ProductListState extends State<ProductList> {
             }
 
             return ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
               itemCount: products.length,
               itemBuilder: (context, index) {
                 final product = products[index];
@@ -313,7 +313,7 @@ class _ProductListState extends State<ProductList> {
                 if (product.item.unitCode != null) ...[
                   const SizedBox(height: 2),
                   Text(
-                    '${(product.item.priceSale ?? 0).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')} đ/${product.item.unitCode}',
+                    '${(widget.customer.currentPrice ?? 0).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')} đ/${product.item.unitCode}',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[500],
@@ -338,7 +338,7 @@ class _ProductListState extends State<ProductList> {
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             label: Text(
-              'Xem giỏ hàng',
+              'Tạo đơn thu',
               style: TextStyle(
                 fontFamily: FontFamily.productSans,
                 fontWeight: FontWeight.w600,
@@ -370,7 +370,10 @@ class _ProductListState extends State<ProductList> {
           .toList();
 
       final checkoutData = CheckoutData(
-        cartItems: cartItems,
+        cartItems: cartItems.map((e) => e.copyWith(
+          priceNoVAT: widget.customer.currentPrice ?? 0,
+          priceWithVAT: widget.customer.currentPrice ?? 0,
+        )).toList(),
         customer: currentState.selectedCustomer,
         subtotal: currentState.subtotal,
         total: currentState.total,

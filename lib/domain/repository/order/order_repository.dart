@@ -17,4 +17,6 @@ abstract class OrderRepository {
   Future<OrderModel> getOrderById(int id);
 
   Future<bool> createOrder(Map<String, dynamic> orderData);
+
+  Future<bool> cancelOrder(int id);
 }

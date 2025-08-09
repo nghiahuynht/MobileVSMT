@@ -60,7 +60,7 @@ class ReportRepositoryImpl extends ReportRepository {
 
           return (data as List)
               .map((item) =>
-                  MonthlyRevenue.fromMonthMap(item as Map<String, dynamic>))
+                  MonthlyRevenue.fromDailyMap(item as Map<String, dynamic>))
               .toList();
         },
       );

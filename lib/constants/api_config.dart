@@ -32,6 +32,7 @@ class ApiConfig {
   static const String getSaleOrderPaging = '$saleOrderEndpoint/GetSaleOrderPaging';
   static const String getSaleOrderById = '$saleOrderEndpoint/GetSaleOrderById';
   static const String insertSaleOrder = '$saleOrderEndpoint/InsertSaleOrder';
+  static const String approvedSaleOrder = '$saleOrderEndpoint/ApprovedSaleOrder';
 
   static const String customerEndpoint = '/Customer';
   static const String getCustomerPaging = '$customerEndpoint/GetCustomerPaging';

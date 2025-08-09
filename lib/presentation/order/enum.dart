@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 enum OrderStatus {
   waiting,
   approved,
-  cancelled;
+  canceled;
 
   String get statusDisplayName {
     switch (this) {
@@ -11,7 +11,7 @@ enum OrderStatus {
         return 'Chờ duyệt';
       case OrderStatus.approved:
         return 'Đã duyệt';
-      case OrderStatus.cancelled:
+      case OrderStatus.canceled:
         return 'Đã hủy';
     }
   }
@@ -22,7 +22,7 @@ enum OrderStatus {
         return const Color(0xffffa301);
       case OrderStatus.approved:
         return const Color(0xFF059669);
-      case OrderStatus.cancelled:
+      case OrderStatus.canceled:
         return const Color(0xFFDC2626);
     }
   }
@@ -33,7 +33,7 @@ enum OrderStatus {
         return Icons.edit_outlined;
       case OrderStatus.approved:
         return Icons.check_circle_outline;
-      case OrderStatus.cancelled:
+      case OrderStatus.canceled:
         return Icons.cancel_outlined;
     }
   }
