@@ -61,7 +61,7 @@ class CheckoutCubit extends Cubit<CheckoutState> {
   void printReceipt(OrderModel order) async {
     emit(state.copyWith(isLoading: true));
     try {
-       await ReceiptPrinterService().printReceipt(order);
+      await ReceiptPrinterService().printReceipt(order);
       emit(state.copyWith(isLoading: false));
     } catch (e) {
       emit(state.copyWith(isLoading: false));

@@ -13,6 +13,17 @@ extension StringUrl on String {
     }
     return text;
   }
+
+  String get removeDiacritics {
+    const vietnamese = 'àáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđĐÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ';
+    const english = 'aaaaaaaaaaaaaaaaaeeeeeeeeeeeiiiiiooooooooooooooooouuuuuuuuuuuyyyyydDAAAAAAAAAAAAAAAAAEEEEEEEEEEEIIIIIOOOOOOOOOOOOOOOOOUUUUUUUUUUUYYYYY';
+    
+    String result = this;
+    for (int i = 0; i < vietnamese.length; i++) {
+      result = result.replaceAll(vietnamese[i], english[i]);
+    }
+    return result;
+  }
 }
 
 extension DateTimeExtension on DateTime {

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trash_pay/constants/colors.dart';
+import 'package:trash_pay/constants/font_family.dart';
 import 'package:trash_pay/domain/entities/profile/profile.dart';
+import 'package:trash_pay/presentation/app/logics/app_bloc.dart';
+import 'package:trash_pay/presentation/connect_printer/connect_printer_screen.dart';
 import 'package:trash_pay/presentation/flash/logics/auth_bloc.dart';
 import 'package:trash_pay/presentation/profile/logics/profile_bloc.dart';
 import 'package:trash_pay/presentation/profile/logics/profile_events.dart';
@@ -10,8 +13,18 @@ import 'package:trash_pay/presentation/profile/logics/profile_state.dart';
 import 'package:trash_pay/presentation/widgets/common/professional_header.dart';
 import 'package:intl/intl.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +95,34 @@ class ProfileScreen extends StatelessWidget {
                       child: Column(
                         children: [
                           Spacer(),
+                          if (!context.read<AppBloc>().state.isSunmi) ...[
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => const ConnectPrinterScreen(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: Text(
+                                'Kết nối máy in',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: FontFamily.productSans,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
                           SizedBox(
                             width: double.infinity,
                             child: OutlinedButton(
@@ -467,9 +508,37 @@ class ProfileScreen extends StatelessWidget {
         //     ),
         //   ),
         // ),
-
-        const SizedBox(height: 12),
-
+        if (!context.read<AppBloc>().state.isSunmi) ...[
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const ConnectPrinterScreen(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Kết nối máy in',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: FontFamily.productSans,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         // Logout Button
         SizedBox(
           width: double.infinity,

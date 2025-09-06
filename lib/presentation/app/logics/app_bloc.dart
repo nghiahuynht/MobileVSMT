@@ -8,6 +8,7 @@ import 'package:trash_pay/domain/entities/meta_data/meta_data.dart';
 import 'package:trash_pay/domain/entities/meta_data/payment_type.dart';
 import 'package:trash_pay/domain/entities/meta_data/ward.dart';
 import 'package:trash_pay/domain/entities/product/product.dart';
+import 'package:trash_pay/services/receipt_printer_service.dart';
 import 'package:trash_pay/services/token_manager.dart';
 import 'app_events.dart';
 import 'app_state.dart';
@@ -26,9 +27,10 @@ class AppBloc extends Bloc<AppEvent, AppState> {
     Emitter<AppState> emit,
   ) async {
     try {
-
+      // Check if device is Sunmi POS
+      final isSunmi = await ReceiptPrinterService.instance.initializePrinter();
+      emit(state.copyWith(isSunmi: isSunmi));
       
-
       if (_tokenManager.isLoggedIn) {
         final user = await _domainManager.auth.getCurrentUser();
 

@@ -51,12 +51,14 @@ dependencies:
   flutter_esc_pos_utils: ^1.0.1
   permission_handler: ^11.3.1
   cached_network_image: ^3.4.1
-  sunmi_printer_plus: ^4.1.0
-  rxdart: ^0.27.7  # Add this for better stream handling (optional)
+  rxdart: ^0.28.0  # Add this for better stream handling (optional)
   syncfusion_flutter_charts: ^30.1.41
   url_launcher: ^6.3.2
   num_to_word_en_vi: ^1.0.5
   number_to_vietnamese_words: ^1.0.1+1
+  bluetooth_print_plus:
+    path: ../bluetooth_print_plus
+  sunmi_printer_plus: ^4.1.0
 
 dev_dependencies:
   flutter_test:
