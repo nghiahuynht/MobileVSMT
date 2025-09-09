@@ -635,6 +635,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               id: 0,
                               orderStatus: OrderStatus.waiting,
                               isDeleted: false,
+                              customerAddress: widget.checkoutData.customer?.address,
                               customerCode: widget.checkoutData.customer?.code,
                               customerName: widget.checkoutData.customer?.name,
                               taxAddress: widget.checkoutData.customer?.taxAddress,
@@ -840,6 +841,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               lstSaleOrderItem: widget.checkoutData.cartItems,
               orderDate: DateTime.now().getDateString(),
               createdBy: context.userCode,
+              // customerAddress: widget.checkoutData.customer?.address,
             ).toMap(), context
           );
     }

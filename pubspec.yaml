@@ -57,7 +57,8 @@ dependencies:
   num_to_word_en_vi: ^1.0.5
   number_to_vietnamese_words: ^1.0.1+1
   bluetooth_print_plus:
-    path: ../bluetooth_print_plus
+    git:
+      url: https://github.com/TruongThaiNgan/bluetooth_print_plus.git
   sunmi_printer_plus: ^4.1.0
 
 dev_dependencies:

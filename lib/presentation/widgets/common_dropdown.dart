@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:trash_pay/constants/colors.dart';
 
 class XDropdown<T> extends StatelessWidget {
   final T? value;
@@ -29,25 +30,49 @@ class XDropdown<T> extends StatelessWidget {
       ),
       child: DropdownButtonFormField<T>(
         value: value,
+        isExpanded: true,
+        menuMaxHeight: 300,
         items: [
           DropdownMenuItem<T>(
             value: null,
-            child: Text(
-              hintText,
-              style: const TextStyle(
-                color: Color(0xFF94A3B8),
-                fontSize: 14,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                hintText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 14,
+                ),
               ),
             ),
           ),
           ...items.map((item) => DropdownMenuItem<T>(
                 value: item,
-                child: Text(
-                  itemBuilder(item),
-                  style: const TextStyle(
-                    color: Color(0xFF1E293B),
-                    fontSize: 14,
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        itemBuilder(item),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF1E293B),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                    if (value == item)
+                      const Padding(
+                        padding: EdgeInsets.only(left: 8),
+                        child: Icon(
+                          Icons.check,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                  ],
                 ),
               )),
         ],
@@ -67,6 +92,35 @@ class XDropdown<T> extends StatelessWidget {
           color: Color(0xFF1E293B),
           fontSize: 14,
         ),
+        selectedItemBuilder: (context) {
+          final List<Widget> displayItems = [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                hintText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            ...items.map((item) => Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    itemBuilder(item),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF1E293B),
+                      fontSize: 14,
+                    ),
+                  ),
+                )),
+          ];
+          return displayItems;
+        },
       ),
     );
   }

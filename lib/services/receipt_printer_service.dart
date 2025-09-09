@@ -180,7 +180,7 @@ class ReceiptPrinterService {
       await escCommand.newline();
       await escCommand.text(content: 'Tên KH: ${order.customerName ?? ''}'.removeDiacritics);
       await escCommand.newline();
-      await escCommand.text(content: 'Địa chỉ: ${order.taxAddress ?? ''}'.removeDiacritics);
+      await escCommand.text(content: 'Địa chỉ: ${order.customerAddress ?? ''}'.removeDiacritics);
       await escCommand.newline();
       await escCommand.text(content: 'Hình thức TT: ${order.paymentName ?? ''}'.removeDiacritics);
       await escCommand.newline();
@@ -318,10 +318,10 @@ class ReceiptPrinterService {
       await SunmiPrinter.setAlignment(SunmiPrintAlign.LEFT);
       await SunmiPrinter.printText('Mã KH: ${order.customerCode ?? ''}\n');
       await SunmiPrinter.printText('Tên KH: ${order.customerName ?? ''}\n');
-      await SunmiPrinter.printText('Địa chỉ: ${order.taxAddress ?? ''}\n');
+      await SunmiPrinter.printText('Địa chỉ: ${order.customerAddress ?? ''}\n');
       await SunmiPrinter.printText(
           'Hình thức TT: ${order.paymentName ?? ''}\n');
-      await SunmiPrinter.printText('Loại thu: ${order.arrears}\n');
+      await SunmiPrinter.printText('Loại thu: ${order.arrears ?? ""}\n');
       
 // Các mặt hàng
       await SunmiPrinter.printText('${'─' * 32}');
@@ -368,7 +368,7 @@ class ReceiptPrinterService {
           'Ghi chú: ${order.note ?? ''}\n\n');
 
 
-      await SunmiPrinter.printText('Nhân viên: ${order.saleUserFullName}\n');
+      await SunmiPrinter.printText('Nhân viên: ${order.saleUserFullName ?? ''}\n');
       await SunmiPrinter.line();
 
       await SunmiPrinter.printQRCode("https://mily.vn/ductrong",

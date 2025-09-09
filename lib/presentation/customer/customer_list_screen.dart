@@ -6,10 +6,8 @@ import 'package:trash_pay/domain/domain_manager.dart';
 import 'package:trash_pay/domain/entities/customer/customer.dart';
 import 'package:trash_pay/domain/entities/meta_data/area.dart';
 import 'package:trash_pay/domain/entities/meta_data/route.dart' as MetaRoute;
-import 'package:trash_pay/domain/entities/checkout/checkout_data.dart';
 import 'package:trash_pay/presentation/app/app_bloc_extension.dart';
 import 'package:trash_pay/presentation/add_customer_screen/add_customer_screen.dart';
-import 'package:trash_pay/presentation/checkout/checkout_screen.dart';
 import 'package:trash_pay/presentation/create_order/create_order_screen.dart';
 import 'package:trash_pay/presentation/create_order/logics/create_order_bloc.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_bloc.dart';
@@ -223,7 +221,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                               return _buildFilterDropdown<Area>(
                                 value: _selectedArea,
                                 items: context.areas,
-                                hintText: 'Chọn Tổ',
+                                hintText: 'Chọn khu vực',
                                 onChanged: _onAreaChanged,
                                 itemBuilder: (Area area) => area.name,
                               );
@@ -232,7 +230,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                 _buildFilterDropdown<Area>(
                               value: null,
                               items: [],
-                              hintText: 'Chọn Tổ',
+                              hintText: 'Chọn khu vực',
                               onChanged: _onAreaChanged,
                               itemBuilder: (Area area) => area.name,
                             ),
@@ -477,26 +475,50 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       ),
       child: DropdownButtonFormField<T>(
         value: value,
+        isExpanded: true,
+        menuMaxHeight: 300,
         items: [
           DropdownMenuItem<T>(
             value: null,
-            child: Text(
-              hintText,
-              style: const TextStyle(
-                color: Color(0xFF94A3B8),
-                fontSize: 14,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                hintText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 14,
+                ),
               ),
             ),
           ),
           ...items
               .map((item) => DropdownMenuItem<T>(
                     value: item,
-                    child: Text(
-                      itemBuilder(item),
-                      style: const TextStyle(
-                        color: Color(0xFF1E293B),
-                        fontSize: 14,
-                      ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            itemBuilder(item),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Color(0xFF1E293B),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        if (value == item)
+                          const Padding(
+                            padding: EdgeInsets.only(left: 8),
+                            child: Icon(
+                              Icons.check,
+                              size: 16,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                      ],
                     ),
                   ))
               .toList(),
@@ -517,6 +539,35 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
           color: Color(0xFF1E293B),
           fontSize: 14,
         ),
+        selectedItemBuilder: (context) {
+          final List<Widget> displayItems = [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                hintText,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            ...items.map((item) => Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    itemBuilder(item),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF1E293B),
+                      fontSize: 14,
+                    ),
+                  ),
+                )),
+          ];
+          return displayItems;
+        },
       ),
     );
   }
@@ -589,16 +640,18 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                       Row(
                         children: [
                           Icon(
-                            Icons.phone_outlined,
+                            Icons.co_present,
                             size: 14,
                             color: Colors.grey.shade600,
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            customer.phone!,
+                            customer.code ?? '',
+                            maxLines: 1,
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey.shade600,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],

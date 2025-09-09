@@ -14,6 +14,7 @@ class OrderItemModel {
   final num? priceWithVAT;
   final num? total;
   final bool? isPromotion;
+  final String? customerAddress;
   OrderItemModel({
     this.id,
     this.saleOrderId,
@@ -27,6 +28,7 @@ class OrderItemModel {
     this.priceWithVAT,
     this.total,
     this.isPromotion,
+    this.customerAddress,
   });
 
   OrderItemModel copyWith({
@@ -42,6 +44,7 @@ class OrderItemModel {
     num? priceWithVAT,
     num? total,
     bool? isPromotion,
+    String? customerAddress,
   }) {
     return OrderItemModel(
       id: id ?? this.id,
@@ -56,6 +59,7 @@ class OrderItemModel {
       priceWithVAT: priceWithVAT ?? this.priceWithVAT,
       total: total ?? this.total,
       isPromotion: isPromotion ?? this.isPromotion,
+      customerAddress: customerAddress ?? this.customerAddress,
     );
   }
 
@@ -73,6 +77,7 @@ class OrderItemModel {
       'priceWithVAT': priceWithVAT,
       'total': total,
       'isPromotion': isPromotion,
+      'customerAddress': customerAddress,
     };
   }
 
@@ -85,6 +90,7 @@ class OrderItemModel {
       'vat': vat,
       'priceWithVAT': priceWithVAT,
       'total': total,
+      'customerAddress': customerAddress,
     };
   }
 
@@ -102,6 +108,7 @@ class OrderItemModel {
       priceWithVAT: map['priceWithVAT'] != null ? map['priceWithVAT'] as num : null,
       total: map['total'] != null ? map['total'] as num : null,
       isPromotion: map['isPromotion'] != null ? map['isPromotion'] as bool : null,
+      customerAddress: map['customerAddress'] != null ? map['customerAddress'] as String : null,
     );
   }
 
@@ -111,7 +118,7 @@ class OrderItemModel {
 
   @override
   String toString() {
-    return 'OrderItemModel(id: $id, saleOrderId: $saleOrderId, productCode: $productCode, productName: $productName, unitCode: $unitCode, unitName: $unitName, quantity: $quantity, priceNoVAT: $priceNoVAT, vat: $vat, priceWithVAT: $priceWithVAT, total: $total, isPromotion: $isPromotion)';
+    return 'OrderItemModel(id: $id, saleOrderId: $saleOrderId, productCode: $productCode, productName: $productName, unitCode: $unitCode, unitName: $unitName, quantity: $quantity, priceNoVAT: $priceNoVAT, vat: $vat, priceWithVAT: $priceWithVAT, total: $total, isPromotion: $isPromotion, customerAddress: $customerAddress)';
   }
 
   @override
@@ -130,7 +137,8 @@ class OrderItemModel {
       other.vat == vat &&
       other.priceWithVAT == priceWithVAT &&
       other.total == total &&
-      other.isPromotion == isPromotion;
+      other.isPromotion == isPromotion &&
+      other.customerAddress == customerAddress;
   }
 
   @override
@@ -146,6 +154,7 @@ class OrderItemModel {
       vat.hashCode ^
       priceWithVAT.hashCode ^
       total.hashCode ^
-      isPromotion.hashCode;
+      isPromotion.hashCode ^
+      customerAddress.hashCode;
   }
 } 

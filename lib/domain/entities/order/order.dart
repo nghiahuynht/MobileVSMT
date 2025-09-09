@@ -43,6 +43,7 @@ class OrderModel extends BaseModel {
   final DateTime? createdDate;
   final String? updatedBy;
   final DateTime? updatedDate;
+  final String? customerAddress;
   OrderModel({
     required this.id,
     this.code,
@@ -79,6 +80,7 @@ class OrderModel extends BaseModel {
     this.createdDate,
     this.updatedBy,
     this.updatedDate,
+    this.customerAddress,
   }) : super(id: id);
 
   String get statusDisplayName => orderStatus.statusDisplayName;
@@ -122,6 +124,7 @@ class OrderModel extends BaseModel {
     DateTime? createdDate,
     String? updatedBy,
     DateTime? updatedDate,
+    String? customerAddress,
   }) {
     return OrderModel(
       id: id ?? this.id,
@@ -159,6 +162,7 @@ class OrderModel extends BaseModel {
       createdDate: createdDate ?? this.createdDate,
       updatedBy: updatedBy ?? this.updatedBy,
       updatedDate: updatedDate ?? this.updatedDate,
+      customerAddress: customerAddress ?? this.customerAddress,
     );
   }
 
@@ -199,6 +203,7 @@ class OrderModel extends BaseModel {
       'createdDate': createdDate?.millisecondsSinceEpoch,
       'updatedBy': updatedBy,
       'updatedDate': updatedDate?.millisecondsSinceEpoch,
+      'customerAddress': customerAddress,
     };
   }
 
@@ -274,6 +279,8 @@ class OrderModel extends BaseModel {
       updatedDate: map['updatedDate'] != null
           ? DateTime.tryParse(map['updatedDate'] as String)
           : null,
+      customerAddress:
+          map['customerAddress'] != null ? map['customerAddress'] as String : null,
     );
   }
 
@@ -282,7 +289,7 @@ class OrderModel extends BaseModel {
 
   @override
   String toString() {
-    return 'OrderModel(id: $id, code: $code, orderDate: $orderDate, customerCode: $customerCode, customerName: $customerName, customerGroupName: $customerGroupName, payerName: $payerName, taxAddress: $taxAddress, taxCode: $taxCode, agencyName: $agencyName, arrears: $arrears, arrearsName: $arrearsName, paymentType: $paymentType, paymentName: $paymentName, saleUserCode: $saleUserCode, saleUserFullName: $saleUserFullName, orderStatus: $orderStatus, orderStatusName: $orderStatusName, approveDate: $approveDate, note: $note, totalNoVAT: $totalNoVAT, totalVAT: $totalVAT, totalWithVAT: $totalWithVAT, sourceOrder: $sourceOrder, transactionId: $transactionId, uuid: $uuid, invoiceNum: $invoiceNum, invoiceSeries: $invoiceSeries, invoiceDate: $invoiceDate, isDeleted: $isDeleted, lstSaleOrderItem: $lstSaleOrderItem, createdBy: $createdBy, createdDate: $createdDate, updatedBy: $updatedBy, updatedDate: $updatedDate)';
+    return 'OrderModel(id: $id, code: $code, orderDate: $orderDate, customerCode: $customerCode, customerName: $customerName, customerGroupName: $customerGroupName, payerName: $payerName, taxAddress: $taxAddress, taxCode: $taxCode, agencyName: $agencyName, arrears: $arrears, arrearsName: $arrearsName, paymentType: $paymentType, paymentName: $paymentName, saleUserCode: $saleUserCode, saleUserFullName: $saleUserFullName, orderStatus: $orderStatus, orderStatusName: $orderStatusName, approveDate: $approveDate, note: $note, totalNoVAT: $totalNoVAT, totalVAT: $totalVAT, totalWithVAT: $totalWithVAT, sourceOrder: $sourceOrder, transactionId: $transactionId, uuid: $uuid, invoiceNum: $invoiceNum, invoiceSeries: $invoiceSeries, invoiceDate: $invoiceDate, isDeleted: $isDeleted, lstSaleOrderItem: $lstSaleOrderItem, createdBy: $createdBy, createdDate: $createdDate, updatedBy: $updatedBy, updatedDate: $updatedDate, customerAddress: $customerAddress)';
   }
 
   @override
@@ -323,7 +330,8 @@ class OrderModel extends BaseModel {
         other.createdBy == createdBy &&
         other.createdDate == createdDate &&
         other.updatedBy == updatedBy &&
-        other.updatedDate == updatedDate;
+        other.updatedDate == updatedDate &&
+        other.customerAddress == customerAddress;
   }
 
   @override
@@ -362,6 +370,7 @@ class OrderModel extends BaseModel {
         createdBy.hashCode ^
         createdDate.hashCode ^
         updatedBy.hashCode ^
-        updatedDate.hashCode;
+        updatedDate.hashCode ^
+        customerAddress.hashCode;
   }
 }

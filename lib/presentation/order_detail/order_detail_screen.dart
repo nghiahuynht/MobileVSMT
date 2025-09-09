@@ -98,10 +98,10 @@ class OrderDetailScreen extends StatelessWidget {
                                       'Mã KH',
                                       state.order.customerCode ??
                                           Strings.defaultEmpty),
-                                  if (state.order.taxAddress != null)
+                                  if (state.order.customerAddress != null)
                                     _buildInfoRow(
                                         'Địa chỉ',
-                                        state.order.taxAddress ??
+                                        state.order.customerAddress ??
                                             Strings.defaultEmpty),
                                   _buildInfoRow(
                                       'Hình thức thanh toán',

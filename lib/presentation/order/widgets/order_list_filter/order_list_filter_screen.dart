@@ -138,7 +138,7 @@ class _OrderListFilterScreenState extends State<OrderListFilterScreen> {
                                     size: 16, color: Colors.grey[600]),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Tổ',
+                                  'Khu vực',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -150,7 +150,7 @@ class _OrderListFilterScreenState extends State<OrderListFilterScreen> {
                             ),
                             const SizedBox(height: 8),
                             XDropdown<Area>(
-                              hintText: 'Chọn Tổ',
+                              hintText: 'Chọn Khu vực',
                               value: _selectedArea,
                               items: context.areas,
                               itemBuilder: (Area area) => area.name,

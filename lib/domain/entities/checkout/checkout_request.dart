@@ -9,6 +9,7 @@ class CheckoutRequest {
   final String? saleUserCode;
   final String? note;
   final String? createdBy;
+  // final String? customerAddress;
   CheckoutRequest({
     required this.customerCode,
     required this.orderDate,
@@ -18,6 +19,7 @@ class CheckoutRequest {
     required this.saleUserCode,
     required this.note,
     required this.createdBy,
+    // required this.customerAddress,
   });
 
   CheckoutRequest copyWith({
@@ -29,6 +31,7 @@ class CheckoutRequest {
     String? saleUserCode,
     String? note,
     String? createdBy,
+    String? customerAddress,
   }) {
     return CheckoutRequest(
       customerCode: customerCode ?? this.customerCode,
@@ -39,6 +42,7 @@ class CheckoutRequest {
       saleUserCode: saleUserCode ?? this.saleUserCode,
       note: note ?? this.note,
       createdBy: createdBy ?? this.createdBy,
+      // customerAddress: customerAddress ?? this.customerAddress,
     );
   }
 
@@ -53,6 +57,7 @@ class CheckoutRequest {
       'saleUserCode': saleUserCode,
       'note': note,
       'createdBy': createdBy,
+      // 'customerAddress': customerAddress,
     };
   }
 }
