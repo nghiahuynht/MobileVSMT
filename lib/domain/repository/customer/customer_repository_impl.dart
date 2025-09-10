@@ -7,6 +7,7 @@ import 'package:trash_pay/domain/entities/common/pagination_wrapper_responsive.d
 import 'package:trash_pay/domain/entities/customer/customer.dart';
 import 'package:trash_pay/domain/repository/customer/customer_repository.dart';
 import 'package:trash_pay/services/api_service.dart';
+import 'package:trash_pay/services/app_messenger.dart';
 
 class CustomerRepositoryImpl implements CustomerRepository {
   final ApiService _apiService = ApiService.instance;
@@ -72,14 +73,38 @@ class CustomerRepositoryImpl implements CustomerRepository {
   @override
   Future<ApiResultModel<bool>> addCustomer(CustomerModel customer, {bool isEdit = false}) async {
     try {
-      final result = await _apiService.post<bool>(
+      final result = await _apiService.post<Map<String, dynamic>>(
         ApiConfig.insertOrUpdateCustomer,
         data: customer.toMap(isCreate: !isEdit),
-        fromJson: (json) => jsonDecode(json)['isSuccess'],
+        fromJson: (json) => jsonDecode(json),
       );
 
-      return result;
+      if (result is Success<Map<String, dynamic>>) {
+        final data = result.data;
+        if (data['isSuccess'] == true) {
+          return const ApiResultModel.success(data: true);
+        } else {
+          AppMessenger.showError(data['message']?.toString());
+          return ApiResultModel.failure(
+            errorResultEntity: ErrorResultModel(
+              message: data['message']?.toString() ?? 'Thao tác thất bại',
+            ),
+          );
+        }
+      } else if (result is Failure<Map<String, dynamic>>) {
+        AppMessenger.showError(result.errorResultEntity.message);
+        return ApiResultModel.failure(
+          errorResultEntity: result.errorResultEntity,
+        );
+      } else {
+        return ApiResultModel.failure(
+          errorResultEntity: const ErrorResultModel(
+            message: 'Unexpected result type',
+          ),
+        );
+      }
     } catch (e) {
+      AppMessenger.showError(e.toString());
       return ApiResultModel.failure(
         errorResultEntity: ErrorResultModel(
           message: 'Failed to add customer: ${e.toString()}',
@@ -99,6 +124,7 @@ class CustomerRepositoryImpl implements CustomerRepository {
 
       return result;
     } catch (e) {
+      AppMessenger.showError(e.toString());
       return ApiResultModel.failure(
         errorResultEntity: ErrorResultModel(
           message: 'Failed to update customer: ${e.toString()}',

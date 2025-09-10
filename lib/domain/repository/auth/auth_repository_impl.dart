@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:trash_pay/constants/api_config.dart';
 import 'package:trash_pay/domain/entities/based_api_result/api_result_model.dart';
 import 'package:trash_pay/domain/entities/sign_in/sign_in_response.dart';
@@ -7,6 +6,7 @@ import 'package:trash_pay/domain/repository/auth/auth_repository.dart';
 import 'package:trash_pay/services/network_service.dart';
 import 'package:trash_pay/services/token_manager.dart';
 import 'package:trash_pay/services/user_prefs.dart';
+import 'package:trash_pay/services/app_messenger.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final DioNetwork _networkService = DioNetwork.instance;
@@ -26,6 +26,14 @@ class AuthRepositoryImpl implements AuthRepository {
           'password': password,
         },
         fromJson: (data) {
+          // Some auth APIs return the token directly without isSuccess wrapper
+          // If wrapped, enforce isSuccess; otherwise assume success
+          if (data is Map<String, dynamic> && data.containsKey('isSuccess')) {
+            if (data['isSuccess'] != true) {
+              throw data['message'] ?? 'Đăng nhập thất bại';
+            }
+            return SignInResponse.fromMap(data['data'] as Map<String, dynamic>);
+          }
           return SignInResponse.fromMap(data);
         },
       );
@@ -43,10 +51,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
         return data;
       } else if (result is Failure<SignInResponse>) {
+        AppMessenger.showError(result.errorResultEntity.message);
         throw Exception(result.errorResultEntity.message);
       }
       return null;
     } catch (e) {
+      AppMessenger.showError(e.toString());
       throw Exception('Login failed: ${e.toString()}');
     }
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trash_pay/constants/colors.dart';
@@ -16,6 +17,7 @@ import 'package:trash_pay/presentation/customer/logics/customer_state.dart';
 import 'package:trash_pay/presentation/customer/customer_detail_screen.dart';
 import 'package:trash_pay/presentation/widgets/common/professional_header.dart';
 import 'package:intl/intl.dart';
+import 'package:trash_pay/services/app_messenger.dart';
 
 class CustomerListScreen extends StatefulWidget {
   const CustomerListScreen({super.key});
@@ -31,6 +33,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   Area? _selectedArea;
   late CustomerBloc _customerBloc;
   bool _isLoadingMore = false; // Add flag to prevent duplicate calls
+  Timer? _searchDebounce;
 
   List<MetaRoute.Route> _routes = [];
 
@@ -50,6 +53,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
     _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _scrollController.dispose();
+    _searchDebounce?.cancel();
     _customerBloc.close();
     super.dispose();
   }
@@ -82,12 +86,16 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   }
 
   void _onSearchChanged() {
-    _customerBloc.add(LoadCustomersEvent(
-      areaSaleCode: _selectedArea?.code,
-      routeSaleCode: _selectedRoute?.code,
-      search: _searchController.text,
-      saleUserCode: context.userCode,
-    ));
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      _customerBloc.add(LoadCustomersEvent(
+        areaSaleCode: _selectedArea?.code,
+        routeSaleCode: _selectedRoute?.code,
+        search: _searchController.text,
+        saleUserCode: context.userCode,
+      ));
+    });
   }
 
   void _onRouteChanged(MetaRoute.Route? route) {
@@ -337,14 +345,15 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                           backgroundColor: AppColors.primary,
                         ),
                       );
-                    } else if (state is CustomerError) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: const Text('Đã có lỗi xảy ra'),
-                          backgroundColor: Color(0xFFDC2626),
-                        ),
-                      );
-                    }
+                    } 
+                    // else if (state is CustomerError) {
+                    //   ScaffoldMessenger.of(context).showSnackBar(
+                    //     SnackBar(
+                    //       content: Text(state.message),
+                    //       backgroundColor: const Color(0xFFDC2626),
+                    //     ),
+                    //   );
+                    // }
                   },
                   builder: (context, state) {
                     if (state is CustomerLoading) {
@@ -630,13 +639,13 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     Text(
                       customer.name ?? Strings.defaultEmpty,
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1E293B),
-                      ),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1E293B),
+                          overflow: TextOverflow.ellipsis),
                     ),
                     const SizedBox(height: 4),
-                    if (customer.phone != null)
+                    if (customer.code != null)
                       Row(
                         children: [
                           Icon(
@@ -676,11 +685,10 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   child: Text(
                     customer.address!,
                     style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                        overflow: TextOverflow.ellipsis),
                     maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -700,13 +708,16 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   color: Colors.grey.shade600,
                 ),
                 const SizedBox(width: 4),
-                Text(
-                  '${customer.routeSaleName ?? ''}${customer.routeSaleName != null && customer.areaSaleName != null ? ' - ' : ''}${customer.areaSaleName ?? ''}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500,
-                  ),
+                Expanded(
+                  child: Text(
+                      '${customer.routeSaleName ?? ''}${customer.routeSaleName != null && customer.areaSaleName != null ? ' - ' : ''}${customer.areaSaleName ?? ''}',
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                          overflow: TextOverflow.ellipsis),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
                 ),
               ],
             ),
@@ -723,13 +734,15 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                   color: Colors.grey.shade600,
                 ),
                 const SizedBox(width: 4),
-                Text(
-                  customer.customerGroupName!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500,
-                  ),
+                Expanded(
+                  child: Text(customer.customerGroupName!,
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                          overflow: TextOverflow.ellipsis),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis),
                 ),
               ],
             ),

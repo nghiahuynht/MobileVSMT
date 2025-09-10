@@ -59,14 +59,15 @@ class _ProductListState extends State<ProductList> {
       backgroundColor: Colors.grey[50],
       body: BlocListener<CreateOrderBloc, state.CreateOrderState>(
         listener: (context, s) {
-          if (s is state.CreateOrderError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Đã có lỗi xảy ra'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          } else if (s is state.CreateOrderSuccess) {
+          // if (s is state.CreateOrderError) {
+          //   ScaffoldMessenger.of(context).showSnackBar(
+          //     const SnackBar(
+          //       content: Text('Đã có lỗi xảy ra'),
+          //       backgroundColor: Colors.red,
+          //     ),
+          //   );
+          // } else 
+          if (s is state.CreateOrderSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Tạo đơn hàng thành công!'),

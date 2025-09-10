@@ -161,6 +161,14 @@ class HomePage extends StatelessWidget {
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
+                            Text(
+                              'Phiên bản 1.0.0',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
                           ],
                         ),
                       ),

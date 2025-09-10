@@ -35,14 +35,14 @@ class _ReportsScreenState extends State<ReportsScreen>
       backgroundColor: const Color(0xFFF8F9FA),
       body: BlocListener<ReportBloc, ReportState>(
         listener: (context, state) {
-          if (state is ReportError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Đã có lỗi xảy ra'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
+          // if (state is ReportError) {
+          //   ScaffoldMessenger.of(context).showSnackBar(
+          //     const SnackBar(
+          //       content: Text('Đã có lỗi xảy ra'),
+          //       backgroundColor: Colors.red,
+          //     ),
+          //   );
+          // }
         },
         child: BlocBuilder<ReportBloc, ReportState>(
           builder: (context, state) {

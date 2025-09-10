@@ -8,6 +8,7 @@ import 'package:trash_pay/presentation/app/logics/app_events.dart';
 import 'package:trash_pay/presentation/app/logics/app_state.dart';
 import 'package:trash_pay/presentation/flash/logics/auth_bloc.dart';
 import 'package:trash_pay/router/routes.dart';
+import 'package:trash_pay/services/app_messenger.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
           ),
+          scaffoldMessengerKey: AppMessenger.scaffoldMessengerKey,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           routerConfig: router,

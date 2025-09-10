@@ -21,14 +21,16 @@ class CheckoutCubit extends Cubit<CheckoutState> {
     emit(state.copyWith(paymentTypeSelected: paymentType));
   }
 
-  void _showError(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Đã có lỗi xảy ra'),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
+  // void _showError(BuildContext context, {
+  //   String? message,
+  // }) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text(message ?? 'Đã có lỗi xảy ra'),
+  //       backgroundColor: Colors.red,
+  //     ),
+  //   );
+  // }
 
   void _showSuccess(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -48,13 +50,13 @@ class CheckoutCubit extends Cubit<CheckoutState> {
         _showSuccess(context);
       } else {
         emit(state.copyWith(isSuccess: false));
-        _showError(context);
+        // _showError(context);
       }
       emit(state.copyWith(isLoading: false));
     } catch (e) {
       emit(state.copyWith(isLoading: false));
       emit(state.copyWith(isSuccess: false));
-      _showError(context);
+      // _showError(context, message: e.toString());
     }
   }
 

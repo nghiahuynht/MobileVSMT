@@ -2,6 +2,7 @@ import 'package:trash_pay/domain/entities/based_api_result/api_result_model.dart
 import 'package:trash_pay/domain/entities/based_api_result/error_result_model.dart';
 import 'package:trash_pay/domain/entities/product/product.dart';
 import 'package:trash_pay/services/api_service.dart';
+import 'package:trash_pay/services/app_messenger.dart';
 import 'product_repository.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
@@ -24,6 +25,7 @@ class ProductRepositoryImpl implements ProductRepository {
         
         return ApiResultModel.success(data: products);
       } else if (result is Failure<List<dynamic>>) {
+        AppMessenger.showError(result.errorResultEntity.message);
         return ApiResultModel.failure(
           errorResultEntity: result.errorResultEntity,
         );
@@ -35,6 +37,7 @@ class ProductRepositoryImpl implements ProductRepository {
         );
       }
     } catch (e) {
+      AppMessenger.showError(e.toString());
       return ApiResultModel.failure(
         errorResultEntity: ErrorResultModel(
           message: 'Error loading products: $e',
@@ -55,6 +58,7 @@ class ProductRepositoryImpl implements ProductRepository {
         final product = ProductModel.fromJson(result.data);
         return ApiResultModel.success(data: product);
       } else if (result is Failure<Map<String, dynamic>>) {
+        AppMessenger.showError(result.errorResultEntity.message);
         return ApiResultModel.failure(
           errorResultEntity: result.errorResultEntity,
         );
@@ -66,6 +70,7 @@ class ProductRepositoryImpl implements ProductRepository {
         );
       }
     } catch (e) {
+      AppMessenger.showError(e.toString());
       return ApiResultModel.failure(
         errorResultEntity: ErrorResultModel(
           message: 'Error loading product: $e',
@@ -89,6 +94,7 @@ class ProductRepositoryImpl implements ProductRepository {
         
         return ApiResultModel.success(data: products);
       } else if (result is Failure<List<dynamic>>) {
+        AppMessenger.showError(result.errorResultEntity.message);
         return ApiResultModel.failure(
           errorResultEntity: result.errorResultEntity,
         );
@@ -100,6 +106,7 @@ class ProductRepositoryImpl implements ProductRepository {
         );
       }
     } catch (e) {
+      AppMessenger.showError(e.toString());
       return ApiResultModel.failure(
         errorResultEntity: ErrorResultModel(
           message: 'Error searching products: $e',

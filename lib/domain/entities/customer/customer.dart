@@ -36,6 +36,7 @@ class CustomerModel extends BaseModel {
   final DateTime? createdDate;
   final String? updatedBy;
   final DateTime? updatedDate;
+  final String? village;
   CustomerModel({
     required int id,
     this.code,
@@ -69,6 +70,7 @@ class CustomerModel extends BaseModel {
     this.createdDate,
     this.updatedBy,
     this.updatedDate,
+    this.village,
   }) : super(id: id);
 
 
@@ -105,6 +107,7 @@ class CustomerModel extends BaseModel {
     DateTime? createdDate,
     String? updatedBy,
     DateTime? updatedDate,
+    String? village,
   }) {
     return CustomerModel(
       id: id ?? this.id,
@@ -139,6 +142,7 @@ class CustomerModel extends BaseModel {
       createdDate: createdDate ?? this.createdDate,
       updatedBy: updatedBy ?? this.updatedBy,
       updatedDate: updatedDate ?? this.updatedDate,
+      village: village ?? this.village,
     );
   }
 
@@ -178,6 +182,7 @@ class CustomerModel extends BaseModel {
       'createdDate': createdDate?.getDateString(),
       'updatedBy': updatedBy,
       'updatedDate': updatedDate?.getDateString(),
+      'village': village,
     };
   }
 
@@ -215,6 +220,7 @@ class CustomerModel extends BaseModel {
       createdDate: map['createdDate'] != null ? DateTime.tryParse(map['createdDate'] as String) : null,
       updatedBy: map['updatedBy'] != null ? map['updatedBy'] as String : null,
       updatedDate: map['updatedDate'] != null ? DateTime.tryParse(map['updatedDate'] as String) : null,
+      village: map['village'] != null ? map['village'] as String : null,
     );
   }
 
@@ -224,7 +230,7 @@ class CustomerModel extends BaseModel {
 
   @override
   String toString() {
-    return 'CustomerModel(id: $id, code: $code, name: $name, provinceCode: $provinceCode, districtCode: $districtCode, wardCode: $wardCode, phone: $phone, address: $address, description: $description, bankName: $bankName, bankAccountName: $bankAccountName, bankAccountNumber: $bankAccountNumber, price: $price, taxCode: $taxCode, taxAddress: $taxAddress, payerName: $payerName, agencyName: $agencyName, oldPrice: $oldPrice, currentPrice: $currentPrice, customerGroupCode: $customerGroupCode, customerGroupName: $customerGroupName, isDeleted: $isDeleted, areaSaleCode: $areaSaleCode, areaSaleName: $areaSaleName, routeSaleCode: $routeSaleCode, routeSaleName: $routeSaleName, saleUserCode: $saleUserCode, saleName: $saleName, createdBy: $createdBy, createdDate: $createdDate, updatedBy: $updatedBy, updatedDate: $updatedDate)';
+    return 'CustomerModel(id: $id, code: $code, name: $name, provinceCode: $provinceCode, districtCode: $districtCode, wardCode: $wardCode, phone: $phone, address: $address, description: $description, bankName: $bankName, bankAccountName: $bankAccountName, bankAccountNumber: $bankAccountNumber, price: $price, taxCode: $taxCode, taxAddress: $taxAddress, payerName: $payerName, agencyName: $agencyName, oldPrice: $oldPrice, currentPrice: $currentPrice, customerGroupCode: $customerGroupCode, customerGroupName: $customerGroupName, isDeleted: $isDeleted, areaSaleCode: $areaSaleCode, areaSaleName: $areaSaleName, routeSaleCode: $routeSaleCode, routeSaleName: $routeSaleName, saleUserCode: $saleUserCode, saleName: $saleName, createdBy: $createdBy, createdDate: $createdDate, updatedBy: $updatedBy, updatedDate: $updatedDate, village: $village)';
   }
 
   @override
@@ -263,7 +269,8 @@ class CustomerModel extends BaseModel {
       other.createdBy == createdBy &&
       other.createdDate == createdDate &&
       other.updatedBy == updatedBy &&
-      other.updatedDate == updatedDate;
+      other.updatedDate == updatedDate &&
+      other.village == village;
   }
 
   @override
@@ -299,6 +306,7 @@ class CustomerModel extends BaseModel {
       createdBy.hashCode ^
       createdDate.hashCode ^
       updatedBy.hashCode ^
-      updatedDate.hashCode;
+      updatedDate.hashCode ^
+      village.hashCode;
   }
 } 

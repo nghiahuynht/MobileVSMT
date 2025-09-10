@@ -699,6 +699,14 @@ class _LoginScreenState extends State<LoginScreen>
               fontFamily: FontFamily.productSans,
             ),
           ),
+          Text(
+            'Phiên bản 1.0.0',
+            style: TextStyle(
+              fontSize: 12,
+              color: const Color(0xFF9CA3AF),
+              fontFamily: FontFamily.productSans,
+            ),
+          ),
         ],
       ),
     );

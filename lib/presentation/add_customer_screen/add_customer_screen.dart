@@ -16,6 +16,7 @@ import 'package:trash_pay/domain/entities/meta_data/province.dart';
 import 'package:trash_pay/presentation/app/app_bloc_extension.dart';
 import 'package:trash_pay/domain/domain_manager.dart';
 import 'package:trash_pay/domain/entities/meta_data/route.dart' as MetaRoute;
+import 'package:trash_pay/services/app_messenger.dart';
 
 class AddCustomerScreen extends StatefulWidget {
   final CustomerModel? customer;
@@ -32,6 +33,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
+  final _villageController = TextEditingController();
   final _priceController = TextEditingController();
 
   List<MetaRoute.Route> _routes = [];
@@ -51,6 +53,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       _nameController.text = widget.customer!.name ?? '';
       _phoneController.text = widget.customer!.phone ?? '';
       _addressController.text = widget.customer!.address ?? '';
+      _villageController.text = widget.customer!.village ?? '';
       _priceController.text = widget.customer!.currentPrice?.toInt().toString() ?? '';
       _selectedProvince = context.provinces
           .where((province) => province.code == widget.customer!.provinceCode)
@@ -77,18 +80,19 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
+    _villageController.dispose();
     _priceController.dispose();
     super.dispose();
   }
 
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFFDC2626),
-      ),
-    );
-  }
+  // void _showErrorSnackBar(String message) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text(message),
+  //       backgroundColor: const Color(0xFFDC2626),
+  //     ),
+  //   );
+  // }
 
   void _submitForm(BuildContext ctx) {
     if (_formKey.currentState!.validate()) {
@@ -106,6 +110,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
           areaSaleName: _selectedArea?.name,
           routeSaleCode: _selectedRoute?.code,
           routeSaleName: _selectedRoute?.name,
+          village: _villageController.text.trim(),
           currentPrice: double.tryParse(_priceController.text) ?? 0.0,
           saleUserCode: ctx.read<AppBloc>().state.userCode);
 
@@ -122,6 +127,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       child: BlocListener<CustomerBloc, CustomerState>(
         listener: (context, state) {
           if (state is CustomerOperationSuccess) {
+            // keep success toast here if desired; otherwise could use AppMessenger.showSuccess
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -144,17 +150,13 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
           areaSaleName: _selectedArea?.name,
           routeSaleCode: _selectedRoute?.code,
           routeSaleName: _selectedRoute?.name,
+          village: _villageController.text.trim(),
           currentPrice: double.tryParse(_priceController.text) ?? 0.0,
           saleUserCode: context.read<AppBloc>().state.userCode);
 
             Navigator.of(context).pop(customerData);
           } else if (state is CustomerError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Đã có lỗi xảy ra"),
-                backgroundColor: Color(0xFFDC2626),
-              ),
-            );
+            AppMessenger.showError("Đã có lỗi xảy ra");
           }
         },
         child: Scaffold(
@@ -273,6 +275,16 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                             itemBuilder: (Ward ward) => ward.name ?? '',
                           ),
 
+                          const SizedBox(height: 20),
+
+                          // village
+                          _buildTextField(
+                            controller: _villageController,
+                            label: 'Tổ/Thôn',
+                            hint: 'Nhập Tổ/Thôn',
+                            icon: Icons.groups,
+                            maxLines: 3,
+                          ),
                           const SizedBox(height: 20),
 
                           // Address
@@ -443,7 +455,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
             _routes.where((route) => route.code == selectData).firstOrNull;
       }
     } catch (e) {
-      _showErrorSnackBar('Không thể tải danh sách tuyến');
+      // _showErrorSnackBar('Không thể tải danh sách tuyến');
     }
   }
 

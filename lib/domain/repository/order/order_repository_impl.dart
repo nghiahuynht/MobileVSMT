@@ -7,6 +7,7 @@ import 'package:trash_pay/domain/entities/order/order.dart';
 import 'package:trash_pay/domain/repository/order/order_repository.dart';
 import 'package:trash_pay/services/api_service.dart';
 import 'package:trash_pay/utils/extension.dart';
+import 'package:trash_pay/services/app_messenger.dart';
 
 class OrderRepositoryImpl implements OrderRepository {
   final ApiService _apiService = ApiService.instance;
@@ -50,11 +51,13 @@ class OrderRepositoryImpl implements OrderRepository {
       if (result is Success<PaginationWrapperResponsive<OrderModel>>) {
         return result.data;
       } else if (result is Failure<PaginationWrapperResponsive<OrderModel>>) {
+        AppMessenger.showError(result.errorResultEntity.message);
         throw Exception(result.errorResultEntity.message);
       } else {
         throw Exception('Unexpected result type');
       }
     } catch (e) {
+      AppMessenger.showError(e.toString());
       throw Exception('An unexpected error occurred: $e');
     }
   }
@@ -76,11 +79,13 @@ class OrderRepositoryImpl implements OrderRepository {
       if (result is Success<OrderModel>) {
         return result.data;
       } else if (result is Failure<OrderModel>) {
+        AppMessenger.showError(result.errorResultEntity.message);
         throw Exception(result.errorResultEntity.message);
       } else {
         throw Exception('Unexpected result type');
       }
     } catch (e) {
+      AppMessenger.showError(e.toString());
       throw Exception('An unexpected error occurred: $e');
     }
   }
@@ -88,42 +93,58 @@ class OrderRepositoryImpl implements OrderRepository {
   @override
   Future<bool> createOrder(Map<String, dynamic> orderData) async {
     try {
-      final result = await _apiService.post<bool>(
+      final result = await _apiService.post<Map<String, dynamic>>(
         ApiConfig.insertSaleOrder,
         data: orderData,
-        fromJson: (json) => jsonDecode(json)['isSuccess'],
+        fromJson: (json) => jsonDecode(json),
       );
-      if (result is Success<bool>) {
-        return result.data;
-      } else if (result is Failure<bool>) {
+      if (result is Success<Map<String, dynamic>>) {
+        if (result.data['isSuccess'] == true) {
+          return true;
+        } else {
+          throw result.data['message'];
+        }
+      } else if (result is Failure<Map<String, dynamic>>) {
+        AppMessenger.showError(result.errorResultEntity.message);
+        return false;
+      } else if (result is Failure<Map<String, dynamic>>) {
+        AppMessenger.showError(result.errorResultEntity.message);
         throw Exception(result.errorResultEntity.message);
       } else {
         throw Exception('Unexpected result type');
       }
     } catch (e) {
-      throw Exception('An unexpected error occurred: $e');
+      AppMessenger.showError(e.toString());
+      throw e;
     }
   }
   
   @override
   Future<bool> cancelOrder(int id) async {
     try {
-      final result = await _apiService.post<bool>(
+      final result = await _apiService.post<Map<String, dynamic>>(
         ApiConfig.approvedSaleOrder,
         queryParameters: {
           "orderId": id,
           "status": 0, // 0: huỷ
         },
-        fromJson: (json) => jsonDecode(json)['isSuccess'],
+        fromJson: (json) => jsonDecode(json),
       );
-      if (result is Success<bool>) {
-        return result.data;
-      } else if (result is Failure<bool>) {
+      if (result is Success<Map<String, dynamic>>) {
+        if (result.data['isSuccess'] == true) {
+          return true;
+        } else {
+          AppMessenger.showError(result.data['message']?.toString());
+          throw result.data['message'];
+        }
+      } else if (result is Failure<Map<String, dynamic>>) {
+        AppMessenger.showError(result.errorResultEntity.message);
         throw Exception(result.errorResultEntity.message);
       } else {
         throw Exception('Unexpected result type');
       }
     } catch (e) {
+      AppMessenger.showError(e.toString());
       throw Exception('An unexpected error occurred: $e');
     }
   }

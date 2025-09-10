@@ -15,7 +15,11 @@ class UnitRepositoryImpl implements UnitRepository {
         final result = await _networkService.get<List<Unit>>(
           ApiConfig.unitsEndpoint,
           fromJson: (data) {
-            final List<dynamic> listData = jsonDecode(data)['data'];
+            final root = jsonDecode(data);
+            if (root['isSuccess'] != true) {
+              throw root['message'] ?? 'Thao tác thất bại';
+            }
+            final List<dynamic> listData = root['data'];
             return listData.map((json) => Unit.fromMap(json)).toList();
           },
         );

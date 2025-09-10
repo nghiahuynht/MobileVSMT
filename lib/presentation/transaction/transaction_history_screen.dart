@@ -48,14 +48,15 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       backgroundColor: Colors.grey[50],
       body: BlocListener<TransactionBloc, TransactionState>(
         listener: (context, state) {
-          if (state is TransactionError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
-          } else if (state is TransactionOperationSuccess) {
+          // if (state is TransactionError) {
+          //   ScaffoldMessenger.of(context).showSnackBar(
+          //     SnackBar(
+          //       content: Text(state.message),
+          //       backgroundColor: Colors.red,
+          //     ),
+          //   );
+          // } else 
+          if (state is TransactionOperationSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
