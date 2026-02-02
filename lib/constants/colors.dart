@@ -17,4 +17,5 @@ class AppColors {
   };
 
   static const Color primary = Color(0xFFF88000);
+  static const Color success = Color(0xFF16A34A);
 }

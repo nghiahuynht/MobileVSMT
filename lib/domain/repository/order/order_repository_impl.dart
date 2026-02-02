@@ -4,6 +4,7 @@ import 'package:trash_pay/constants/api_config.dart';
 import 'package:trash_pay/domain/entities/based_api_result/api_result_model.dart';
 import 'package:trash_pay/domain/entities/common/pagination_wrapper_responsive.dart';
 import 'package:trash_pay/domain/entities/order/order.dart';
+import 'package:trash_pay/domain/entities/order_history_item/order_history_item.dart';
 import 'package:trash_pay/domain/repository/order/order_repository.dart';
 import 'package:trash_pay/services/api_service.dart';
 import 'package:trash_pay/utils/extension.dart';
@@ -51,6 +52,42 @@ class OrderRepositoryImpl implements OrderRepository {
       if (result is Success<PaginationWrapperResponsive<OrderModel>>) {
         return result.data;
       } else if (result is Failure<PaginationWrapperResponsive<OrderModel>>) {
+        AppMessenger.showError(result.errorResultEntity.message);
+        throw Exception(result.errorResultEntity.message);
+      } else {
+        throw Exception('Unexpected result type');
+      }
+    } catch (e) {
+      AppMessenger.showError(e.toString());
+      throw Exception('An unexpected error occurred: $e');
+    }
+  }
+
+  @override
+  Future<List<OrderHistoryItemModel>> getSaleOrderByCustomer(String customerCode, int year) async {
+    try {
+      final result = await _apiService.post<List<OrderHistoryItemModel>>(
+        '${ApiConfig.getSaleOrderByCustomer}?customerCode=$customerCode&year=$year',
+        fromJson: (json) {
+          final decoded = json is String
+              ? jsonDecode(json) as Map<String, dynamic>
+              : json as Map<String, dynamic>;
+          final dynamic data = decoded['data'];
+          if (data == null) return <OrderHistoryItemModel>[];
+          final dataList = data['dataList'];
+          if (dataList is List) {
+            return List<OrderHistoryItemModel>.from(
+              dataList.map<OrderHistoryItemModel>(
+                (x) => OrderHistoryItemModel.fromMap(x as Map<String, dynamic>),
+              ),
+            );
+          }
+          return <OrderHistoryItemModel>[];
+        },
+      );
+      if (result is Success<List<OrderHistoryItemModel>>) {
+        return result.data;
+      } else if (result is Failure<List<OrderHistoryItemModel>>) {
         AppMessenger.showError(result.errorResultEntity.message);
         throw Exception(result.errorResultEntity.message);
       } else {

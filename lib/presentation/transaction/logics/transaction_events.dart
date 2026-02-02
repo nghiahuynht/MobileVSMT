@@ -4,8 +4,9 @@ abstract class TransactionEvent {}
 
 // Load transactions for a customer
 class LoadTransactionsEvent extends TransactionEvent {
-  final String customerId;
-  LoadTransactionsEvent(this.customerId);
+  final String customerCode;
+  final int? year;
+  LoadTransactionsEvent(this.customerCode, {this.year});
 }
 
 // Load all transactions (for admin view)
@@ -27,11 +28,17 @@ class FilterTransactionsByStatusEvent extends TransactionEvent {
 class FilterTransactionsByDateEvent extends TransactionEvent {
   final DateTime? startDate;
   final DateTime? endDate;
-  
+
   FilterTransactionsByDateEvent({
     this.startDate,
     this.endDate,
   });
+}
+
+// Filter transactions by year
+class FilterTransactionsByYearEvent extends TransactionEvent {
+  final int? selectedYear;
+  FilterTransactionsByYearEvent(this.selectedYear);
 }
 
 // Search transactions
@@ -45,6 +52,6 @@ class ClearFiltersEvent extends TransactionEvent {}
 
 // Refresh transactions
 class RefreshTransactionsEvent extends TransactionEvent {
-  final String? customerId;
-  RefreshTransactionsEvent({this.customerId});
+  final String? customerCode;
+  RefreshTransactionsEvent({this.customerCode});
 } 

@@ -14,7 +14,8 @@ class TransactionsLoaded extends TransactionState {
   final TransactionStatus? selectedStatus;
   final DateTime? startDate;
   final DateTime? endDate;
-  final String? customerId;
+  final String? customerCode;
+  final int? selectedYear;
 
   // Statistics
   final double totalCredit;
@@ -30,7 +31,8 @@ class TransactionsLoaded extends TransactionState {
     this.selectedStatus,
     this.startDate,
     this.endDate,
-    this.customerId,
+    this.customerCode,
+    this.selectedYear,
     required this.totalCredit,
     required this.totalDebit,
     required this.balance,
@@ -45,7 +47,8 @@ class TransactionsLoaded extends TransactionState {
     TransactionStatus? selectedStatus,
     DateTime? startDate,
     DateTime? endDate,
-    String? customerId,
+    String? customerCode,
+    int? selectedYear,
     double? totalCredit,
     double? totalDebit,
     double? balance,
@@ -53,6 +56,7 @@ class TransactionsLoaded extends TransactionState {
     bool clearType = false,
     bool clearStatus = false,
     bool clearDates = false,
+    bool clearYear = false,
   }) {
     return TransactionsLoaded(
       allTransactions: allTransactions ?? this.allTransactions,
@@ -62,7 +66,8 @@ class TransactionsLoaded extends TransactionState {
       selectedStatus: clearStatus ? null : (selectedStatus ?? this.selectedStatus),
       startDate: clearDates ? null : (startDate ?? this.startDate),
       endDate: clearDates ? null : (endDate ?? this.endDate),
-      customerId: customerId ?? this.customerId,
+      customerCode: customerCode ?? this.customerCode,
+      selectedYear: clearYear ? null : (selectedYear ?? this.selectedYear),
       totalCredit: totalCredit ?? this.totalCredit,
       totalDebit: totalDebit ?? this.totalDebit,
       balance: balance ?? this.balance,
@@ -72,10 +77,11 @@ class TransactionsLoaded extends TransactionState {
 
   bool get hasFilters {
     return selectedType != null ||
-           selectedStatus != null ||
-           startDate != null ||
-           endDate != null ||
-           searchQuery.isNotEmpty;
+        selectedStatus != null ||
+        startDate != null ||
+        endDate != null ||
+        selectedYear != null ||
+        searchQuery.isNotEmpty;
   }
 
   Map<TransactionType, int> get transactionsByType {

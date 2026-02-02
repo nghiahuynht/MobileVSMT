@@ -8,12 +8,12 @@ import 'logics/transaction_state.dart';
 import '../../domain/entities/transaction/transaction.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
-  final String? customerId;
+  final String? customerCode;
   final String? customerName;
 
   const TransactionHistoryScreen({
     super.key,
-    this.customerId,
+    this.customerCode,
     this.customerName,
   });
 
@@ -23,14 +23,12 @@ class TransactionHistoryScreen extends StatefulWidget {
 
 class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
   final TextEditingController _searchController = TextEditingController();
-  int? _selectedYear;
 
   @override
   void initState() {
     super.initState();
-    _selectedYear = DateTime.now().year;
-    if (widget.customerId != null) {
-      context.read<TransactionBloc>().add(LoadTransactionsEvent(widget.customerId!));
+    if (widget.customerCode != null) {
+      context.read<TransactionBloc>().add(LoadTransactionsEvent(widget.customerCode!));
     } else {
       context.read<TransactionBloc>().add(LoadAllTransactionsEvent());
     }
@@ -48,15 +46,14 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       backgroundColor: Colors.grey[50],
       body: BlocListener<TransactionBloc, TransactionState>(
         listener: (context, state) {
-          // if (state is TransactionError) {
-          //   ScaffoldMessenger.of(context).showSnackBar(
-          //     SnackBar(
-          //       content: Text(state.message),
-          //       backgroundColor: Colors.red,
-          //     ),
-          //   );
-          // } else 
-          if (state is TransactionOperationSuccess) {
+          if (state is TransactionError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
+            );
+          } else if (state is TransactionOperationSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -82,15 +79,15 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
   Widget _buildHeader() {
     return ProfessionalHeaders.detail(
-      title: widget.customerId != null 
-        ? 'Lịch sử thu tiền'
-        : 'Tất cả thu tiền',
+      title: widget.customerCode != null
+          ? 'Lịch sử thu tiền'
+          : 'Tất cả thu tiền',
       subtitle: widget.customerName ?? 'Quản lý lịch sử thu tiền hệ thống',
       onBackPressed: () => Navigator.pop(context),
       actionWidget: IconButton(
         onPressed: () {
-          if (widget.customerId != null) {
-            context.read<TransactionBloc>().add(RefreshTransactionsEvent(customerId: widget.customerId));
+          if (widget.customerCode != null) {
+            context.read<TransactionBloc>().add(RefreshTransactionsEvent(customerCode: widget.customerCode));
           } else {
             context.read<TransactionBloc>().add(RefreshTransactionsEvent());
           }
@@ -111,22 +108,38 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           );
         }
 
+        if (state is TransactionError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Text(
+                    state.message,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                      fontFamily: FontFamily.productSans,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
         if (state is TransactionsLoaded) {
-          // Lọc chỉ các giao dịch thu tiền (credit transactions)
-          final creditTransactions = state.allTransactions.where((t) => t.isCredit).toList();
-          final filteredCreditTransactions = _filterTransactionsByYear(creditTransactions);
-          
+          final creditTransactions = state.filteredTransactions.where((t) => t.isCredit).toList();
           return Column(
             children: [
-              // Statistics Section
-              _buildStatistics(filteredCreditTransactions),
-              
-              // Filters and Search
-              _buildFiltersAndSearch(state, filteredCreditTransactions),
-              
-              // Transaction List
+              // _buildStatistics(creditTransactions, state.selectedYear),
+              _buildFiltersAndSearch(state, creditTransactions),
               Expanded(
-                child: _buildTransactionList(filteredCreditTransactions),
+                child: _buildTransactionList(creditTransactions),
               ),
             ],
           );
@@ -139,12 +152,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     );
   }
 
-  List<TransactionModel> _filterTransactionsByYear(List<TransactionModel> transactions) {
-    if (_selectedYear == null) return transactions;
-    return transactions.where((t) => t.createdAt.year == _selectedYear).toList();
-  }
-
-  Widget _buildStatistics(List<TransactionModel> transactions) {
+  Widget _buildStatistics(List<TransactionModel> transactions, int? selectedYear) {
     final totalAmount = transactions.fold<double>(0, (sum, t) => sum + t.amount);
     final totalCount = transactions.length;
     
@@ -224,7 +232,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 8),
                 Text(
-                  'Năm ${_selectedYear ?? "Tất cả"}',
+                  'Năm ${selectedYear ?? "Tất cả"}',
                   style: TextStyle(
                     fontSize: 14,
                     fontFamily: FontFamily.productSans,
@@ -289,38 +297,38 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       child: Column(
         children: [
           // Search Bar
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (value) {
-                context.read<TransactionBloc>().add(SearchTransactionsEvent(value));
-              },
-              decoration: InputDecoration(
-                hintText: 'Tìm kiếm giao dịch thu tiền...',
-                hintStyle: TextStyle(
-                  color: Colors.grey[500],
-                  fontFamily: FontFamily.productSans,
-                ),
-                prefixIcon: Icon(Icons.search_outlined, color: Colors.grey[500]),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ),
+          // Container(
+          //   decoration: BoxDecoration(
+          //     color: Colors.white,
+          //     borderRadius: BorderRadius.circular(12),
+          //     boxShadow: [
+          //       BoxShadow(
+          //         color: Colors.black.withOpacity(0.05),
+          //         blurRadius: 10,
+          //         offset: const Offset(0, 2),
+          //       ),
+          //     ],
+          //   ),
+          //   child: TextField(
+          //     controller: _searchController,
+          //     onChanged: (value) {
+          //       context.read<TransactionBloc>().add(SearchTransactionsEvent(value));
+          //     },
+          //     decoration: InputDecoration(
+          //       hintText: 'Tìm kiếm giao dịch thu tiền...',
+          //       hintStyle: TextStyle(
+          //         color: Colors.grey[500],
+          //         fontFamily: FontFamily.productSans,
+          //       ),
+          //       prefixIcon: Icon(Icons.search_outlined, color: Colors.grey[500]),
+          //       border: InputBorder.none,
+          //       contentPadding: const EdgeInsets.symmetric(
+          //         horizontal: 16,
+          //         vertical: 12,
+          //       ),
+          //     ),
+          //   ),
+          // ),
           
           const SizedBox(height: 12),
           
@@ -328,14 +336,14 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildYearFilter(),
+                child: _buildYearFilter(state),
               ),
-              const SizedBox(width: 8),
-              _buildFilterChip(
-                'Trạng thái',
-                state.selectedStatus != null,
-                () => _showStatusFilter(context, state),
-              ),
+              // const SizedBox(width: 8),
+              // _buildFilterChip(
+              //   'Trạng thái',
+              //   state.selectedStatus != null,
+              //   () => _showStatusFilter(context, state),
+              // ),
             ],
           ),
         ],
@@ -343,10 +351,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     );
   }
 
-  Widget _buildYearFilter() {
+  Widget _buildYearFilter(TransactionsLoaded state) {
     final currentYear = DateTime.now().year;
     final years = List.generate(5, (index) => currentYear - index);
-    
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -360,7 +367,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
         ],
       ),
       child: DropdownButtonFormField<int>(
-        value: _selectedYear,
+        value: state.selectedYear,
         decoration: InputDecoration(
           hintText: 'Chọn năm',
           hintStyle: TextStyle(
@@ -385,9 +392,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
           )),
         ],
         onChanged: (value) {
-          setState(() {
-            _selectedYear = value;
-          });
+          context.read<TransactionBloc>().add(FilterTransactionsByYearEvent(value));
         },
         style: TextStyle(
           fontFamily: FontFamily.productSans,
@@ -434,9 +439,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     return GestureDetector(
       onTap: () {
         _searchController.clear();
-        setState(() {
-          _selectedYear = DateTime.now().year;
-        });
         context.read<TransactionBloc>().add(ClearFiltersEvent());
       },
       child: Container(

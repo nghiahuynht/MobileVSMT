@@ -1,5 +1,6 @@
 import 'package:trash_pay/domain/entities/common/pagination_wrapper_responsive.dart';
 import 'package:trash_pay/domain/entities/order/order.dart';
+import 'package:trash_pay/domain/entities/order_history_item/order_history_item.dart';
 
 abstract class OrderRepository {
   Future<PaginationWrapperResponsive<OrderModel>> getSaleOrders({
@@ -15,6 +16,8 @@ abstract class OrderRepository {
   });
 
   Future<OrderModel> getOrderById(int id);
+
+  Future<List<OrderHistoryItemModel>> getSaleOrderByCustomer(String customerCode, int year);
 
   Future<bool> createOrder(Map<String, dynamic> orderData);
 

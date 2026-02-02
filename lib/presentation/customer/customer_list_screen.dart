@@ -17,7 +17,7 @@ import 'package:trash_pay/presentation/customer/logics/customer_state.dart';
 import 'package:trash_pay/presentation/customer/customer_detail_screen.dart';
 import 'package:trash_pay/presentation/widgets/common/professional_header.dart';
 import 'package:intl/intl.dart';
-import 'package:trash_pay/services/app_messenger.dart';
+import 'package:go_router/go_router.dart';
 
 class CustomerListScreen extends StatefulWidget {
   const CustomerListScreen({super.key});
@@ -345,7 +345,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                           backgroundColor: AppColors.primary,
                         ),
                       );
-                    } 
+                    }
                     // else if (state is CustomerError) {
                     //   ScaffoldMessenger.of(context).showSnackBar(
                     //     SnackBar(
@@ -751,6 +751,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
 
           // Bottom stats
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               if (customer.currentPrice != null) ...[
                 Container(
@@ -769,7 +770,24 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                if ((customer.toTalCollected ?? 0) >= 0) ...[
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withAlpha(35),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      'Tổng đã thu: ${NumberFormat.currency(locale: 'vi_VN', symbol: '₫').format(customer.toTalCollected ?? 0)}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.success,
+                      ),
+                    ),
+                  ),
+                ]
               ],
             ],
           ),
@@ -777,9 +795,58 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
           const SizedBox(height: 16),
 
           // Action buttons
+          Container(
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: AppColors.primary,
+                width: 1,
+              ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(8),
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => CustomerDetailScreen(
+                        customer: customer,
+                      ),
+                    ),
+                  );
+                },
+                child: const Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.visibility_outlined,
+                        size: 16,
+                        color: AppColors.primary,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'Xem chi tiết',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
           Row(
             children: [
-              // View Details Button
+              // Payment History Button
               Expanded(
                 child: Container(
                   height: 40,
@@ -795,27 +862,19 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                     color: Colors.transparent,
                     child: InkWell(
                       borderRadius: BorderRadius.circular(8),
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => CustomerDetailScreen(
-                              customer: customer,
-                            ),
-                          ),
-                        );
-                      },
+                      onTap: () => _onPaymentHistoryPressed(customer),
                       child: const Center(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                              Icons.visibility_outlined,
+                              Icons.history,
                               size: 16,
                               color: AppColors.primary,
                             ),
                             SizedBox(width: 6),
                             Text(
-                              'Xem chi tiết',
+                              'Lịch sử thu tiền',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
@@ -919,5 +978,15 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
         child: ProductList(customer: customer, products: context.products),
       );
     }));
+  }
+
+  void _onPaymentHistoryPressed(CustomerModel customer) {
+    context.push(
+      '/order-history',
+      extra: <String, dynamic>{
+        'customerId': customer.code ?? customer.id.toString(),
+        'customerName': customer.name ?? Strings.defaultEmpty,
+      },
+    );
   }
 }

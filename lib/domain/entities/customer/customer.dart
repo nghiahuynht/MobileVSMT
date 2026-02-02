@@ -23,6 +23,7 @@ class CustomerModel extends BaseModel {
   final String? agencyName;
   final num? oldPrice;
   final num? currentPrice;
+  final num? toTalCollected;
   final String? customerGroupCode;
   final String? customerGroupName;
   final bool isDeleted;
@@ -37,6 +38,7 @@ class CustomerModel extends BaseModel {
   final String? updatedBy;
   final DateTime? updatedDate;
   final String? village;
+
   CustomerModel({
     required int id,
     this.code,
@@ -71,6 +73,7 @@ class CustomerModel extends BaseModel {
     this.updatedBy,
     this.updatedDate,
     this.village,
+    this.toTalCollected,
   }) : super(id: id);
 
 
@@ -108,6 +111,7 @@ class CustomerModel extends BaseModel {
     String? updatedBy,
     DateTime? updatedDate,
     String? village,
+    num? toTalCollected,
   }) {
     return CustomerModel(
       id: id ?? this.id,
@@ -143,6 +147,7 @@ class CustomerModel extends BaseModel {
       updatedBy: updatedBy ?? this.updatedBy,
       updatedDate: updatedDate ?? this.updatedDate,
       village: village ?? this.village,
+      toTalCollected: toTalCollected ?? this.toTalCollected,
     );
   }
 
@@ -183,6 +188,7 @@ class CustomerModel extends BaseModel {
       'updatedBy': updatedBy,
       'updatedDate': updatedDate?.getDateString(),
       'village': village,
+      'toTalCollected': toTalCollected,
     };
   }
 
@@ -221,6 +227,7 @@ class CustomerModel extends BaseModel {
       updatedBy: map['updatedBy'] != null ? map['updatedBy'] as String : null,
       updatedDate: map['updatedDate'] != null ? DateTime.tryParse(map['updatedDate'] as String) : null,
       village: map['village'] != null ? map['village'] as String : null,
+      toTalCollected: map['toTalCollected'] != null ? map['toTalCollected'] as num : null,
     );
   }
 
@@ -230,7 +237,7 @@ class CustomerModel extends BaseModel {
 
   @override
   String toString() {
-    return 'CustomerModel(id: $id, code: $code, name: $name, provinceCode: $provinceCode, districtCode: $districtCode, wardCode: $wardCode, phone: $phone, address: $address, description: $description, bankName: $bankName, bankAccountName: $bankAccountName, bankAccountNumber: $bankAccountNumber, price: $price, taxCode: $taxCode, taxAddress: $taxAddress, payerName: $payerName, agencyName: $agencyName, oldPrice: $oldPrice, currentPrice: $currentPrice, customerGroupCode: $customerGroupCode, customerGroupName: $customerGroupName, isDeleted: $isDeleted, areaSaleCode: $areaSaleCode, areaSaleName: $areaSaleName, routeSaleCode: $routeSaleCode, routeSaleName: $routeSaleName, saleUserCode: $saleUserCode, saleName: $saleName, createdBy: $createdBy, createdDate: $createdDate, updatedBy: $updatedBy, updatedDate: $updatedDate, village: $village)';
+    return 'CustomerModel(id: $id, code: $code, name: $name, provinceCode: $provinceCode, districtCode: $districtCode, wardCode: $wardCode, phone: $phone, address: $address, description: $description, bankName: $bankName, bankAccountName: $bankAccountName, bankAccountNumber: $bankAccountNumber, price: $price, taxCode: $taxCode, taxAddress: $taxAddress, payerName: $payerName, agencyName: $agencyName, oldPrice: $oldPrice, currentPrice: $currentPrice, toTalCollected: $toTalCollected, customerGroupCode: $customerGroupCode, customerGroupName: $customerGroupName, isDeleted: $isDeleted, areaSaleCode: $areaSaleCode, areaSaleName: $areaSaleName, routeSaleCode: $routeSaleCode, routeSaleName: $routeSaleName, saleUserCode: $saleUserCode, saleName: $saleName, createdBy: $createdBy, createdDate: $createdDate, updatedBy: $updatedBy, updatedDate: $updatedDate, village: $village)';
   }
 
   @override
@@ -257,6 +264,7 @@ class CustomerModel extends BaseModel {
       other.agencyName == agencyName &&
       other.oldPrice == oldPrice &&
       other.currentPrice == currentPrice &&
+      other.toTalCollected == toTalCollected &&
       other.customerGroupCode == customerGroupCode &&
       other.customerGroupName == customerGroupName &&
       other.isDeleted == isDeleted &&
@@ -294,6 +302,7 @@ class CustomerModel extends BaseModel {
       agencyName.hashCode ^
       oldPrice.hashCode ^
       currentPrice.hashCode ^
+      toTalCollected.hashCode ^
       customerGroupCode.hashCode ^
       customerGroupName.hashCode ^
       isDeleted.hashCode ^

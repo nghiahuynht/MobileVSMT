@@ -2,40 +2,65 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'transaction_events.dart';
 import 'transaction_state.dart';
 import '../../../domain/entities/transaction/transaction.dart';
+import '../../../domain/entities/order/order.dart';
+import '../../../domain/entities/order_history_item/order_history_item.dart';
+import '../../../domain/repository/order/order_repository.dart';
+import '../../../domain/domain_manager.dart';
+import '../../../constants/api_config.dart';
+import '../../../presentation/order/enum.dart';
 
 class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   List<TransactionModel> _allTransactions = [];
-  String? _currentCustomerId;
+  String? _currentCustomerCode;
+  int? _selectedYear;
+  final OrderRepository _orderRepository;
 
-  TransactionBloc() : super(TransactionInitial()) {
+  TransactionBloc({OrderRepository? orderRepository})
+      : _orderRepository = orderRepository ?? DomainManager().order,
+        super(TransactionInitial()) {
     on<LoadTransactionsEvent>(_onLoadTransactions);
     on<LoadAllTransactionsEvent>(_onLoadAllTransactions);
     on<FilterTransactionsByTypeEvent>(_onFilterByType);
     on<FilterTransactionsByStatusEvent>(_onFilterByStatus);
     on<FilterTransactionsByDateEvent>(_onFilterByDate);
+    on<FilterTransactionsByYearEvent>(_onFilterByYear);
     on<SearchTransactionsEvent>(_onSearchTransactions);
     on<ClearFiltersEvent>(_onClearFilters);
     on<RefreshTransactionsEvent>(_onRefreshTransactions);
   }
 
-  void _onLoadTransactions(LoadTransactionsEvent event, Emitter<TransactionState> emit) {
+  Future<void> _onLoadTransactions(LoadTransactionsEvent event, Emitter<TransactionState> emit) async {
     emit(TransactionLoading());
-    _currentCustomerId = event.customerId;
-    
-    // Generate mock data for the specific customer
-    _allTransactions = _generateMockTransactions(event.customerId);
-    
-    _emitTransactionsLoaded(emit);
+    _currentCustomerCode = event.customerCode;
+    _selectedYear = event.year ?? DateTime.now().year;
+    try {
+      final items = await _orderRepository.getSaleOrderByCustomer(
+        event.customerCode,
+        _selectedYear!,
+      );
+      _allTransactions = items.map((item) => _mapOrderHistoryItemToTransaction(item)).toList();
+      _allTransactions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      _emitTransactionsLoaded(emit);
+    } catch (e) {
+      emit(TransactionError(e.toString()));
+    }
   }
 
-  void _onLoadAllTransactions(LoadAllTransactionsEvent event, Emitter<TransactionState> emit) {
+  Future<void> _onLoadAllTransactions(LoadAllTransactionsEvent event, Emitter<TransactionState> emit) async {
     emit(TransactionLoading());
-    _currentCustomerId = null;
-    
-    // Generate mock data for all customers
-    _allTransactions = _generateAllMockTransactions();
-    
-    _emitTransactionsLoaded(emit);
+    _currentCustomerCode = null;
+    _selectedYear = DateTime.now().year;
+    try {
+      final response = await _orderRepository.getSaleOrders(
+        pageIndex: 1,
+        pageSize: ApiConfig.defaultPageSize * 5,
+      );
+      _allTransactions = response.data.map(_mapOrderToTransaction).toList();
+      _allTransactions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      _emitTransactionsLoaded(emit);
+    } catch (e) {
+      emit(TransactionError(e.toString()));
+    }
   }
 
   void _onFilterByType(FilterTransactionsByTypeEvent event, Emitter<TransactionState> emit) {
@@ -65,6 +90,19 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     }
   }
 
+  void _onFilterByYear(FilterTransactionsByYearEvent event, Emitter<TransactionState> emit) {
+    if (state is TransactionsLoaded) {
+      final currentState = state as TransactionsLoaded;
+      _selectedYear = event.selectedYear;
+      if (_currentCustomerCode != null && event.selectedYear != null) {
+        add(LoadTransactionsEvent(_currentCustomerCode!, year: event.selectedYear));
+        return;
+      }
+      final newState = currentState.copyWith(selectedYear: event.selectedYear);
+      _emitFilteredTransactions(emit, newState);
+    }
+  }
+
   void _onSearchTransactions(SearchTransactionsEvent event, Emitter<TransactionState> emit) {
     if (state is TransactionsLoaded) {
       final currentState = state as TransactionsLoaded;
@@ -76,35 +114,38 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   void _onClearFilters(ClearFiltersEvent event, Emitter<TransactionState> emit) {
     if (state is TransactionsLoaded) {
       final currentState = state as TransactionsLoaded;
+      _selectedYear = DateTime.now().year;
       final newState = currentState.copyWith(
         searchQuery: '',
         clearType: true,
         clearStatus: true,
         clearDates: true,
+        clearYear: true,
       );
       _emitFilteredTransactions(emit, newState);
     }
   }
 
   void _onRefreshTransactions(RefreshTransactionsEvent event, Emitter<TransactionState> emit) {
-    if (event.customerId != null) {
-      add(LoadTransactionsEvent(event.customerId!));
+    if (event.customerCode != null) {
+      add(LoadTransactionsEvent(event.customerCode!));
     } else {
       add(LoadAllTransactionsEvent());
     }
   }
 
   void _emitTransactionsLoaded(Emitter<TransactionState> emit) {
-    final stats = _calculateStatistics(_allTransactions);
-    
+    final initialFiltered = _applyYearFilter(_allTransactions, _selectedYear);
+    final stats = _calculateStatistics(initialFiltered);
     emit(TransactionsLoaded(
       allTransactions: _allTransactions,
-      filteredTransactions: _allTransactions,
-      customerId: _currentCustomerId,
+      filteredTransactions: initialFiltered,
+      customerCode: _currentCustomerCode,
+      selectedYear: _selectedYear,
       totalCredit: stats['credit']!,
       totalDebit: stats['debit']!,
       balance: stats['balance']!,
-      totalCount: _allTransactions.length,
+      totalCount: initialFiltered.length,
     ));
   }
 
@@ -124,10 +165,13 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
   List<TransactionModel> _applyFilters(TransactionsLoaded state) {
     var transactions = state.allTransactions;
 
-    // Filter by customer if specified
-    if (state.customerId != null) {
-      transactions = transactions.where((t) => t.customerId == state.customerId).toList();
+    // Filter by customer code if specified
+    if (state.customerCode != null) {
+      transactions = transactions.where((t) => t.customerId == state.customerCode).toList();
     }
+
+    // Filter by year
+    transactions = _applyYearFilter(transactions, state.selectedYear);
 
     // Filter by type
     if (state.selectedType != null) {
@@ -172,6 +216,71 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     return transactions;
   }
 
+  List<TransactionModel> _applyYearFilter(List<TransactionModel> transactions, int? year) {
+    if (year == null) return transactions;
+    return transactions.where((t) => t.createdAt.year == year).toList();
+  }
+
+  TransactionModel _mapOrderHistoryItemToTransaction(OrderHistoryItemModel item) {
+    final createdAt = item.orderDate ?? DateTime.now();
+    return TransactionModel(
+      id: item.id?.toString() ?? '',
+      customerId: _currentCustomerCode ?? '',
+      customerName: '',
+      amount: item.totalWithVAT ?? 0,
+      type: TransactionType.deposit,
+      status: _orderStatusStringToTransactionStatus(item.orderStatus),
+      description: item.products ?? item.code ?? 'Đơn hàng',
+      createdAt: createdAt,
+      orderId: item.id?.toString(),
+      reference: item.code,
+      createdBy: '',
+    );
+  }
+
+  TransactionModel _mapOrderToTransaction(OrderModel order) {
+    final createdAt = order.orderDate ?? order.createdDate ?? DateTime.now();
+    return TransactionModel(
+      id: order.id.toString(),
+      customerId: order.customerCode ?? '',
+      customerName: order.customerName ?? '',
+      amount: (order.totalWithVAT ?? 0).toDouble(),
+      type: TransactionType.deposit,
+      status: _orderStatusToTransactionStatus(order.orderStatus),
+      description: order.note ?? order.code ?? 'Đơn hàng',
+      createdAt: createdAt,
+      orderId: order.id.toString(),
+      reference: order.code,
+      createdBy: order.saleUserFullName ?? '',
+    );
+  }
+
+  TransactionStatus _orderStatusStringToTransactionStatus(String? status) {
+    if (status == null) return TransactionStatus.pending;
+    switch (status.toLowerCase()) {
+      case 'waiting':
+        return TransactionStatus.pending;
+      case 'approved':
+        return TransactionStatus.completed;
+      case 'canceled':
+      case 'cancelled':
+        return TransactionStatus.cancelled;
+      default:
+        return TransactionStatus.pending;
+    }
+  }
+
+  TransactionStatus _orderStatusToTransactionStatus(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.waiting:
+        return TransactionStatus.pending;
+      case OrderStatus.approved:
+        return TransactionStatus.completed;
+      case OrderStatus.canceled:
+        return TransactionStatus.cancelled;
+    }
+  }
+
   Map<String, double> _calculateStatistics(List<TransactionModel> transactions) {
     double totalCredit = 0;
     double totalDebit = 0;
@@ -193,130 +302,4 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     };
   }
 
-  List<TransactionModel> _generateMockTransactions(String customerId) {
-    final now = DateTime.now();
-    final customerNames = {
-      'customer_1': 'Nguyễn Văn An',
-      'customer_2': 'Trần Thị Bình',
-      'customer_3': 'Lê Minh Cường',
-      'customer_4': 'Phạm Thị Dung',
-      'customer_5': 'Hoàng Văn Em',
-    };
-
-    final customerName = customerNames[customerId] ?? 'Khách hàng';
-
-    return [
-      TransactionModel(
-        id: 'txn_001',
-        customerId: customerId,
-        customerName: customerName,
-        amount: 500000,
-        type: TransactionType.deposit,
-        status: TransactionStatus.completed,
-        description: 'Nạp tiền vào tài khoản',
-        createdAt: now.subtract(const Duration(days: 1)),
-        reference: 'DEP001',
-        createdBy: 'system',
-      ),
-      TransactionModel(
-        id: 'txn_002',
-        customerId: customerId,
-        customerName: customerName,
-        amount: 135000,
-        type: TransactionType.purchase,
-        status: TransactionStatus.completed,
-        description: 'Mua 3x thùng rác THANG-1',
-        createdAt: now.subtract(const Duration(days: 3)),
-        orderId: 'order_001',
-        reference: 'PUR002',
-        createdBy: 'staff_001',
-      ),
-      TransactionModel(
-        id: 'txn_003',
-        customerId: customerId,
-        customerName: customerName,
-        amount: 90000,
-        type: TransactionType.purchase,
-        status: TransactionStatus.completed,
-        description: 'Mua 2x thùng rác THANG-2',
-        createdAt: now.subtract(const Duration(days: 7)),
-        orderId: 'order_002',
-        reference: 'PUR003',
-        createdBy: 'staff_002',
-      ),
-      TransactionModel(
-        id: 'txn_004',
-        customerId: customerId,
-        customerName: customerName,
-        amount: 45000,
-        type: TransactionType.refund,
-        status: TransactionStatus.completed,
-        description: 'Hoàn tiền đơn hàng bị hủy',
-        createdAt: now.subtract(const Duration(days: 10)),
-        orderId: 'order_003',
-        reference: 'REF004',
-        createdBy: 'manager_001',
-      ),
-      TransactionModel(
-        id: 'txn_005',
-        customerId: customerId,
-        customerName: customerName,
-        amount: 1000000,
-        type: TransactionType.deposit,
-        status: TransactionStatus.completed,
-        description: 'Nạp tiền đầu tháng',
-        createdAt: now.subtract(const Duration(days: 15)),
-        reference: 'DEP005',
-        createdBy: 'system',
-      ),
-      TransactionModel(
-        id: 'txn_006',
-        customerId: customerId,
-        customerName: customerName,
-        amount: 25000,
-        type: TransactionType.bonus,
-        status: TransactionStatus.completed,
-        description: 'Thưởng khách hàng thân thiết',
-        createdAt: now.subtract(const Duration(days: 20)),
-        reference: 'BON006',
-        createdBy: 'system',
-      ),
-      TransactionModel(
-        id: 'txn_007',
-        customerId: customerId,
-        customerName: customerName,
-        amount: 180000,
-        type: TransactionType.purchase,
-        status: TransactionStatus.pending,
-        description: 'Mua 4x thùng rác THANG-3',
-        createdAt: now.subtract(const Duration(hours: 2)),
-        orderId: 'order_004',
-        reference: 'PUR007',
-        createdBy: 'staff_003',
-      ),
-      TransactionModel(
-        id: 'txn_008',
-        customerId: customerId,
-        customerName: customerName,
-        amount: 200000,
-        type: TransactionType.withdraw,
-        status: TransactionStatus.failed,
-        description: 'Rút tiền không thành công',
-        createdAt: now.subtract(const Duration(days: 5)),
-        reference: 'WIT008',
-        createdBy: 'customer',
-      ),
-    ];
-  }
-
-  List<TransactionModel> _generateAllMockTransactions() {
-    final List<TransactionModel> allTransactions = [];
-    final customerIds = ['customer_1', 'customer_2', 'customer_3', 'customer_4', 'customer_5'];
-    
-    for (final customerId in customerIds) {
-      allTransactions.addAll(_generateMockTransactions(customerId));
-    }
-    
-    return allTransactions;
-  }
 } 

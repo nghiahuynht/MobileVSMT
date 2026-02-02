@@ -1,4 +1,3 @@
-import 'package:flutter/src/widgets/basic.dart';
 import 'package:trash_pay/presentation/app/logics/app_bloc.dart';
 import 'package:trash_pay/presentation/app/logics/app_state.dart';
 import 'package:trash_pay/presentation/create_order/create_order_screen.dart';
@@ -8,12 +7,15 @@ import 'package:trash_pay/presentation/flash/flash_screen.dart';
 import 'package:trash_pay/presentation/sign_in/sign_in_screen.dart';
 import 'package:trash_pay/presentation/checkout/checkout_screen.dart';
 import 'package:trash_pay/presentation/transaction/transaction_history_screen.dart';
+import 'package:trash_pay/presentation/order_history/order_history_screen.dart';
 import 'package:trash_pay/presentation/profile/profile_screen.dart';
 import 'package:trash_pay/domain/entities/customer/customer.dart';
 import 'package:trash_pay/domain/entities/checkout/checkout_data.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trash_pay/presentation/order/logics/order_bloc.dart';
 import 'package:trash_pay/presentation/transaction/logics/transaction_bloc.dart';
+import 'package:trash_pay/presentation/order_history/logics/order_history_cubit.dart';
+import 'package:trash_pay/domain/domain_manager.dart';
 import 'package:go_router/go_router.dart';
 
 // GoRouter configuration
@@ -64,12 +66,30 @@ final router = GoRouter(
       path: '/transaction-history',
       builder: (context, state) {
         final params = state.extra as Map<String, dynamic>;
-        final customerId = params['customerId'] as String;
-        final customerName = params['customerName'] as String;
+        final customerCode = params['customerId'] as String?;
+        final customerName = params['customerName'] as String?;
         return BlocProvider(
-          create: (context) => TransactionBloc(),
+          create: (context) => TransactionBloc(orderRepository: DomainManager().order),
           child: TransactionHistoryScreen(
-            customerId: customerId,
+            customerCode: customerCode,
+            customerName: customerName,
+          ),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/order-history',
+      builder: (context, state) {
+        final params = state.extra as Map<String, dynamic>;
+        final customerCode = params['customerId'] as String;
+        final customerName = params['customerName'] as String?;
+        return BlocProvider(
+          create: (context) => OrderHistoryCubit(
+            customerCode: customerCode,
+            orderRepository: DomainManager().order,
+          ),
+          child: OrderHistoryScreen(
+            customerCode: customerCode,
             customerName: customerName,
           ),
         );
