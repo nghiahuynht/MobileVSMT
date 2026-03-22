@@ -422,7 +422,7 @@ class _LoginScreenState extends State<LoginScreen>
                 value: unit,
                 child: Text(
                   unit.label ?? '',
-                  maxLines: 1,
+                  maxLines: 2,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -432,6 +432,24 @@ class _LoginScreenState extends State<LoginScreen>
                 ),
               );
             }).toList(),
+      selectedItemBuilder: (BuildContext context) {
+        if (_isLoadingUnits) {
+          return <Widget>[];
+        }
+        return _units.map((Unit unit) {
+          return Text(
+            unit.label ?? '',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              fontFamily: FontFamily.productSans,
+              color: Colors.black,
+            ),
+          );
+        }).toList();
+      },
       onChanged: _isLoadingUnits
           ? null
           : (Unit? unit) {

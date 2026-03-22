@@ -52,12 +52,11 @@ packages:
   bluetooth_print_plus:
     dependency: "direct main"
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: b2b6b6a5ac835962d86206f866ad0317828e1dc6
-      url: "https://github.com/TruongThaiNgan/bluetooth_print_plus.git"
-    source: git
-    version: "2.4.5"
+      name: bluetooth_print_plus
+      sha256: "9d059064e8d7d8af9dbd1bf9b4c964428cb567d2f372a85177d9ba0f4e743d71"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.6"
   boolean_selector:
     dependency: transitive
     description:
