@@ -154,7 +154,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildSectionHeader(
-                          'Sản phẩm đã chọn', widget.checkoutData.itemCount),
+                          'Sản phẩm đã chọn', widget.checkoutData.totalQuantity),
                       const SizedBox(height: 16),
                       _buildCartItemsList(),
                           
@@ -291,16 +291,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         fontFamily: FontFamily.productSans,
                       ),
                     ),
-                    // if (item.quantity > 0)
-                    //   Text(
-                    //     ' × ${item.quantity}',
-                    //     style: TextStyle(
-                    //       fontSize: 14,
-                    //       fontWeight: FontWeight.w600,
-                    //       color: AppColors.primary,
-                    //       fontFamily: FontFamily.productSans,
-                    //     ),
-                    //   ),
+                    if (item.quantity > 0)
+                      Text(
+                        ' × ${item.quantity}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                          fontFamily: FontFamily.productSans,
+                        ),
+                      ),
                   ],
                 ),
               ],
@@ -312,7 +312,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${(item.quantity > 0 ? (item.priceWithVAT ?? 0) : 0).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ',
+                '${((item.priceWithVAT ?? 0) * item.quantity).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}đ',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

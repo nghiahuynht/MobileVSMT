@@ -38,4 +38,7 @@ class CheckoutData {
 
   bool get isEmpty => cartItems.isEmpty;
   int get itemCount => cartItems.where((item) => item.quantity > 0).length;
+
+  int get totalQuantity =>
+      cartItems.fold<int>(0, (int sum, OrderItemModel item) => sum + item.quantity);
 } 

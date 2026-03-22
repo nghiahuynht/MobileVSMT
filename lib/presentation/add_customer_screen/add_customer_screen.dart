@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trash_pay/constants/colors.dart';
+import 'package:trash_pay/constants/enums/app_type_enum.dart';
 import 'package:trash_pay/domain/entities/customer/customer.dart';
 import 'package:trash_pay/domain/entities/location/group.dart';
 import 'package:trash_pay/domain/entities/meta_data/area.dart';
@@ -120,6 +121,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isSlaughter = context.appType == AppType.slaughter;
     final provinces = context.provinces;
     final allAreas = context.areas;
     return BlocProvider(
@@ -232,7 +234,10 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                                 _selectedArea = null;
                               });
                             },
-                            validator: (value) {
+                            validator: (Province? value) {
+                              if (isSlaughter) {
+                                return null;
+                              }
                               if (value == null) {
                                 return 'Vui lòng chọn tỉnh/thành phố';
                               }
@@ -266,7 +271,10 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                                 _selectedArea = null;
                               });
                             },
-                            validator: (value) {
+                            validator: (Ward? value) {
+                              if (isSlaughter) {
+                                return null;
+                              }
                               if (value == null) {
                                 return 'Vui lòng chọn phường xã';
                               }
@@ -294,6 +302,12 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                             hint: 'Nhập địa chỉ chi tiết',
                             icon: Icons.home_outlined,
                             maxLines: 3,
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Vui lòng nhập địa chỉ';
+                              }
+                              return null;
+                            },
                           ),
 
                           const SizedBox(height: 20),
@@ -379,10 +393,13 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                                   RegExp(r'^\d+\.?\d{0,2}')),
                             ],
                             validator: (value) {
+                              if (isSlaughter) {
+                                return null;
+                              }
                               if (value == null || value.trim().isEmpty) {
                                 return 'Vui lòng nhập giá tiền';
                               }
-                              final price = double.tryParse(value);
+                              final double? price = double.tryParse(value);
                               if (price == null || price <= 0) {
                                 return 'Giá tiền phải lớn hơn 0';
                               }

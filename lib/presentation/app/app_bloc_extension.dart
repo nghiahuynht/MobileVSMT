@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
+import 'package:trash_pay/constants/enums/app_type_enum.dart';
 import 'package:trash_pay/domain/entities/location/group.dart';
 import 'package:trash_pay/domain/entities/meta_data/arrear.dart';
 import 'package:trash_pay/domain/entities/meta_data/payment_type.dart';
@@ -41,6 +42,9 @@ extension AppBlocExtension on BuildContext {
 
   /// Lấy user code
   String? get userCode => appState.userCode;
+
+  /// Loại ứng dụng (thu rác / giết mổ)
+  AppType get appType => appState.appType;
 
   /// Lấy danh sách arrears
   List<Arrear> get arrears => appState.arrears;

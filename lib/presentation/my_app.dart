@@ -26,6 +26,7 @@ class MyApp extends StatelessWidget {
       child: BlocBuilder<AppBloc, AppState>(builder: (context, state) {
         return MaterialApp.router(
           title: 'Flutter Demo',
+          debugShowCheckedModeBanner: false,
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,

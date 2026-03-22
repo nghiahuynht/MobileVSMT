@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:trash_pay/constants/colors.dart';
+import 'package:trash_pay/presentation/app/logics/app_bloc.dart';
+import 'package:trash_pay/presentation/app/logics/app_events.dart';
 import 'package:trash_pay/presentation/flash/logics/auth_bloc.dart';
 import 'package:trash_pay/presentation/flash/logics/auth_events.dart';
 import 'package:trash_pay/presentation/flash/logics/auth_state.dart';
@@ -28,6 +30,7 @@ class _FlashPageState extends State<FlashPage> {
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is Authenticated) {
+            context.read<AppBloc>().add(SyncAppTypeFromCompany());
             context.replace('/home');
           } else if (state is Unauthenticated) {
             context.replace('/login');

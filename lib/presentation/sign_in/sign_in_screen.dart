@@ -5,7 +5,7 @@ import 'package:trash_pay/constants/colors.dart';
 import '../../constants/font_family.dart';
 import '../../domain/entities/unit/unit.dart';
 import '../app/logics/app_bloc.dart';
-import '../app/logics/app_events.dart';
+import '../app/logics/app_events.dart' show LoadAreasAfterLogin, SyncAppTypeFromCompany;
 import '../flash/logics/auth_bloc.dart';
 import '../flash/logics/auth_events.dart';
 import 'logics/sign_in_bloc.dart';
@@ -102,7 +102,8 @@ class _LoginScreenState extends State<LoginScreen>
               // Trigger AuthBloc để check lại auth status và lấy user info
               if (mounted) {
                 context.read<AuthBloc>().add(CheckAuthStatus());
-                // Load areas sau khi đăng nhập thành công
+                // Đồng bộ app type theo companyCode vừa lưu trong prefs
+                context.read<AppBloc>().add(SyncAppTypeFromCompany());
                 context.read<AppBloc>().add(LoadAreasAfterLogin());
               }
               context.replace('/home');
@@ -110,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen>
               // User info already retrieved, trigger AuthBloc and navigate
               if (mounted) {
                 context.read<AuthBloc>().add(CheckAuthStatus());
-                // Load areas sau khi đăng nhập thành công
+                context.read<AppBloc>().add(SyncAppTypeFromCompany());
                 context.read<AppBloc>().add(LoadAreasAfterLogin());
               }
               context.replace('/home');
@@ -606,63 +607,63 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildRememberMeRow() {
-    return Row(
-      children: [
-        // Remember Me Checkbox
-        Row(
-          children: [
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: Checkbox(
-                value: _rememberMe,
-                onChanged: (value) => setState(() {
-                  _rememberMe = value ?? false;
-                }),
-                activeColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'Ghi nhớ đăng nhập',
-              style: TextStyle(
-                fontSize: 14,
-                color: const Color(0xFF6B7280),
-                fontFamily: FontFamily.productSans,
-              ),
-            ),
-          ],
-        ),
+  // Widget _buildRememberMeRow() {
+  //   return Row(
+  //     children: [
+  //       // Remember Me Checkbox
+  //       Row(
+  //         children: [
+  //           SizedBox(
+  //             width: 20,
+  //             height: 20,
+  //             child: Checkbox(
+  //               value: _rememberMe,
+  //               onChanged: (value) => setState(() {
+  //                 _rememberMe = value ?? false;
+  //               }),
+  //               activeColor: AppColors.primary,
+  //               shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(4),
+  //               ),
+  //             ),
+  //           ),
+  //           const SizedBox(width: 8),
+  //           Text(
+  //             'Ghi nhớ đăng nhập',
+  //             style: TextStyle(
+  //               fontSize: 14,
+  //               color: const Color(0xFF6B7280),
+  //               fontFamily: FontFamily.productSans,
+  //             ),
+  //           ),
+  //         ],
+  //       ),
 
-        const Spacer(),
+  //       const Spacer(),
 
-        // Forgot Password
-        GestureDetector(
-          onTap: () {
-            // Handle forgot password
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Tính năng quên mật khẩu đang được phát triển'),
-              ),
-            );
-          },
-          child: Text(
-            'Quên mật khẩu?',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.primary,
-              fontWeight: FontWeight.w600,
-              fontFamily: FontFamily.productSans,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+  //       // Forgot Password
+  //       GestureDetector(
+  //         onTap: () {
+  //           // Handle forgot password
+  //           ScaffoldMessenger.of(context).showSnackBar(
+  //             const SnackBar(
+  //               content: Text('Tính năng quên mật khẩu đang được phát triển'),
+  //             ),
+  //           );
+  //         },
+  //         child: Text(
+  //           'Quên mật khẩu?',
+  //           style: TextStyle(
+  //             fontSize: 14,
+  //             color: AppColors.primary,
+  //             fontWeight: FontWeight.w600,
+  //             fontFamily: FontFamily.productSans,
+  //           ),
+  //         ),
+  //       ),
+  //     ],
+  //   );
+  // }
 
   Widget _buildLoginButton(BuildContext context, SignInState state) {
     final isLoading = state is SignInLoading;

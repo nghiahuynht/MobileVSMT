@@ -1,8 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:trash_pay/constants/enums/app_type_enum.dart';
+import 'package:trash_pay/services/user_prefs.dart';
 import 'create_order_events.dart' as events;
 import 'create_order_state.dart' as state;
-import '../../../domain/entities/order/order_item.dart';
 import '../../../domain/entities/customer/customer.dart';
+import '../product_order_key.dart';
 
 class CreateOrderBloc
     extends Bloc<events.CreateOrderEvent, state.CreateOrderState> {
@@ -18,6 +20,18 @@ class CreateOrderBloc
     on<events.SubmitCreateOrder>(_onSubmitOrder);
   }
 
+  int _indexForProductCode(String productCode) {
+    return _allProducts.indexWhere(
+      (state.ProductOrderItemWrapper w) =>
+          w.item.productOrderKey == productCode,
+    );
+  }
+
+  bool _isSlaughterFromPrefs() {
+    return AppType.fromCompanyCode(UserPrefs.instance.getCompany()) ==
+        AppType.slaughter;
+  }
+
   void _onInit(events.InitCreateOrder event,
       Emitter<state.CreateOrderState> emit) async {
     _allProducts = event.products
@@ -27,28 +41,41 @@ class CreateOrderBloc
     emit(state.CreateOrderLoaded(
       products: _allProducts,
       selectedCustomer: _selectedCustomer,
+      isSlaughter: _isSlaughterFromPrefs(),
     ));
   }
 
   void _onAddProduct(
       events.AddProductToCart event, Emitter<state.CreateOrderState> emit) {
-    // Đảm bảo mỗi sản phẩm chỉ được chọn tối đa 1 lần
-    _allProducts[event.index] = _allProducts[event.index]
-        .copyWith(quantity: 1);
+    final int index = _indexForProductCode(event.productCode);
+    if (index < 0) {
+      return;
+    }
+    _allProducts[index] =
+        _allProducts[index].copyWith(quantity: 1);
     emit(_currentLoadedState(isSubmitting: false));
   }
 
   void _onRemoveProduct(events.RemoveProductFromCart event,
       Emitter<state.CreateOrderState> emit) {
-    // Đảm bảo mỗi sản phẩm chỉ được chọn tối đa 1 lần
-    _allProducts[event.index] =
-        _allProducts[event.index].copyWith(quantity: 0);
+    final int index = _indexForProductCode(event.productCode);
+    if (index < 0) {
+      return;
+    }
+    _allProducts[index] =
+        _allProducts[index].copyWith(quantity: 0);
     emit(_currentLoadedState(isSubmitting: false));
   }
 
   void _onUpdateQuantity(events.UpdateProductQuantity event,
       Emitter<state.CreateOrderState> emit) {
-    // TODO: Update product quantity in cart
+    final int index = _indexForProductCode(event.productCode);
+    if (index < 0) {
+      return;
+    }
+    final int quantity = event.quantity < 0 ? 0 : event.quantity;
+    _allProducts[index] =
+        _allProducts[index].copyWith(quantity: quantity);
     emit(_currentLoadedState(isSubmitting: false));
   }
 
@@ -73,7 +100,7 @@ class CreateOrderBloc
       products: _allProducts,
       selectedCustomer: _selectedCustomer,
       isSubmitting: isSubmitting,
+      isSlaughter: _isSlaughterFromPrefs(),
     );
   }
-
 }

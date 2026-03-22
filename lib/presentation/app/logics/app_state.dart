@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:trash_pay/constants/enums/app_type_enum.dart';
 import 'package:trash_pay/domain/entities/location/group.dart';
 import 'package:trash_pay/domain/entities/meta_data/area.dart';
 import 'package:trash_pay/domain/entities/meta_data/arrear.dart';
@@ -18,6 +19,7 @@ class AppState extends Equatable {
   final String? userCode;
   final bool isInitialized;
   final bool isSunmi;
+  final AppType appType;
 
   const AppState({
     this.areas = const [],
@@ -30,6 +32,7 @@ class AppState extends Equatable {
     this.isInitialized = false,
     this.userCode,
     this.isSunmi = true,
+    this.appType = AppType.trash,
   });
 
   factory AppState.initial() {
@@ -47,6 +50,7 @@ class AppState extends Equatable {
     List<Ward>? wards, 
     List<PaymentType>? paymentTypes,
     bool? isSunmi,
+    AppType? appType,
   }) {
     return AppState(
       areas: areas ?? this.areas,
@@ -59,10 +63,11 @@ class AppState extends Equatable {
       paymentTypes: paymentTypes ?? this.paymentTypes,
       groups: groups ?? this.groups,
       isSunmi: isSunmi ?? this.isSunmi,
+      appType: appType ?? this.appType,
     );
   }
 
   @override
   List<Object?> get props =>
-      [areas, provinces, isInitialized, userCode, products, groups, arrears, wards, paymentTypes, isSunmi];
+      [areas, provinces, isInitialized, userCode, products, groups, arrears, wards, paymentTypes, isSunmi, appType];
 }

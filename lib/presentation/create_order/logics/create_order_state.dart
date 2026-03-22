@@ -12,19 +12,38 @@ class CreateOrderLoading extends CreateOrderState {}
 class CreateOrderLoaded extends CreateOrderState {
   final List<ProductOrderItemWrapper> products;
   final CustomerModel? selectedCustomer;
-  final double subtotal;
   final bool isSubmitting;
+  final bool isSlaughter;
 
-  double get total => products.fold(0, (sum, prod) => 
-    sum + (prod.isSelected ? (selectedCustomer?.currentPrice ?? 0) : 0));
+  /// Đơn giá một dòng: slaughter dùng [ProductModel.priceSale], còn lại dùng [CustomerModel.currentPrice].
+  num lineUnitPrice(ProductOrderItemWrapper prod) {
+    if (isSlaughter) {
+      return prod.item.priceSale ?? 0;
+    }
+    return selectedCustomer?.currentPrice ?? 0;
+  }
 
-  bool get isSelected => products.any((e) => e.isSelected);
+  double get subtotal => products.fold<double>(
+        0,
+        (double sum, ProductOrderItemWrapper prod) =>
+            sum +
+            (prod.quantity > 0
+                ? (lineUnitPrice(prod) * prod.quantity).toDouble()
+                : 0),
+      );
+
+  double get total => subtotal;
+
+  bool get isSelected => products.any((ProductOrderItemWrapper e) => e.isSelected);
+
+  int get totalUnitCount =>
+      products.fold<int>(0, (int sum, ProductOrderItemWrapper e) => sum + e.quantity);
 
   CreateOrderLoaded({
     required this.products,
     this.selectedCustomer,
-    this.subtotal = 0,
     this.isSubmitting = false,
+    this.isSlaughter = false,
   });
 }
 

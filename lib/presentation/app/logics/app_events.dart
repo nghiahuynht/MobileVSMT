@@ -13,6 +13,9 @@ class AppInitialized extends AppEvent {}
 /// Event để load lại areas sau khi đăng nhập
 class LoadAreasAfterLogin extends AppEvent {}
 
+/// Đồng bộ [AppState.appType] từ [UserPrefs.getCompany] (sau đăng nhập / đổi công ty).
+class SyncAppTypeFromCompany extends AppEvent {}
+
 /// Event để hiển thị loading cho toàn app
 class ShowGlobalLoading extends AppEvent {
   final String? message;
