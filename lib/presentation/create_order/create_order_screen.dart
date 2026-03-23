@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trash_pay/constants/colors.dart';
 import 'package:trash_pay/constants/enums/app_type_enum.dart';
@@ -394,7 +395,7 @@ class _ProductListState extends State<ProductList> {
           .map(
             (state.ProductOrderItemWrapper e) {
               final num unit = currentState.lineUnitPrice(e);
-              final num withVat = unit + (e.item.vat ?? 0);
+              final num withVat = unit + ((e.item.vat ?? 0) * unit);
               return OrderItemModel(
                 quantity: e.quantity,
                 productCode: e.item.code,
@@ -536,6 +537,29 @@ class _SlaughterQuantityEditorState extends State<_SlaughterQuantityEditor> {
         );
   }
 
+  void _applyQuantityWhileTyping(BuildContext context, String value) {
+    if (value.trim().isEmpty) {
+      return;
+    }
+    final int? parsed = int.tryParse(value.trim());
+    if (parsed == null) {
+      return;
+    }
+    final String key = widget.product.item.productOrderKey;
+    if (parsed <= 0) {
+      context.read<CreateOrderBloc>().add(
+            events.RemoveProductFromCart(key),
+          );
+      return;
+    }
+    context.read<CreateOrderBloc>().add(
+          events.UpdateProductQuantity(
+            productCode: key,
+            quantity: parsed,
+          ),
+        );
+  }
+
   @override
   Widget build(BuildContext context) {
     final String key = widget.product.item.productOrderKey;
@@ -574,6 +598,9 @@ class _SlaughterQuantityEditorState extends State<_SlaughterQuantityEditor> {
             focusNode: _focusNode,
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
+            inputFormatters: <TextInputFormatter>[
+              FilteringTextInputFormatter.digitsOnly,
+            ],
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -587,6 +614,8 @@ class _SlaughterQuantityEditorState extends State<_SlaughterQuantityEditor> {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
+            onChanged: (String value) =>
+                _applyQuantityWhileTyping(context, value),
             onSubmitted: (_) => _applyParsedQuantity(context),
             onEditingComplete: () => _applyParsedQuantity(context),
           ),

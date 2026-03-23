@@ -38,6 +38,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     userPrefs.setCompany(null);
     userPrefs.setLoginName(null);
     userPrefs.setPassword(null);
+    userPrefs.setLinkTraCuu(null);
+    userPrefs.setCompanyAddress(null);
     
     // Clear TokenManager
     await TokenManager.instance.clearToken();

@@ -7,7 +7,9 @@ class SignInWithLoginNameEvent extends SignInEvent {
   final String password;
   final String companyCode;
   final String companyName;
-  SignInWithLoginNameEvent(this.loginName, this.password, this.companyCode, this.companyName);
+  final String? linkTraCuu;
+  final String? address;
+  SignInWithLoginNameEvent(this.loginName, this.password, this.companyCode, this.companyName, {this.linkTraCuu, this.address});
 }
 
 

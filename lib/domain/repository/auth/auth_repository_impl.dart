@@ -16,7 +16,10 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<SignInResponse?> signInWithLoginName(
       {required String loginName,
       required String password,
-      required String companyCode, required String companyName}) async {
+      required String companyCode,
+      required String companyName,
+      String? linkTraCuu,
+      String? address}) async {
     try {
       final result = await _networkService.post<SignInResponse>(
         ApiConfig.loginEndpoint,
@@ -45,6 +48,8 @@ class AuthRepositoryImpl implements AuthRepository {
         _userPrefs.setPassword(password);
         _userPrefs.setCompany(companyCode);
         _userPrefs.setCompanyName(companyName);
+        _userPrefs.setLinkTraCuu(linkTraCuu);
+        _userPrefs.setCompanyAddress(address);
 
         // IMPORTANT: Save token to TokenManager để authorization header được cập nhật ngay
         await TokenManager.instance.saveToken(data);
@@ -99,6 +104,8 @@ class AuthRepositoryImpl implements AuthRepository {
     _userPrefs.setLoginName(null);
     _userPrefs.setPassword(null);
     _userPrefs.setCompany(null);
+    _userPrefs.setLinkTraCuu(null);
+    _userPrefs.setCompanyAddress(null);
     
     // Clear TokenManager
     await TokenManager.instance.clearToken();

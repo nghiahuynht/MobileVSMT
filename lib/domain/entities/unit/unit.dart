@@ -7,6 +7,8 @@ class Unit {
   final String? description;
   final bool? active;
   final bool? isDeleted;
+  final String? linkTraCuu;
+  final String? address;
 
   const Unit({
     required this.id,
@@ -15,6 +17,8 @@ class Unit {
     this.description,
     this.active,
     this.isDeleted,
+    this.linkTraCuu,
+    this.address,
   });
 
   factory Unit.fromMap(Map<String, dynamic> json) {
@@ -25,6 +29,8 @@ class Unit {
       description: json['description'] as String?,
       active: json['active'] as bool?,
       isDeleted: json['isDeleted'] as bool?,
+      linkTraCuu: json['linkTraCuu'] as String?,
+      address: json['address'] as String?,
     );
   }
 
@@ -40,11 +46,13 @@ class Unit {
       'description': description,
       'active': active,
       'isDeleted': isDeleted,
+      'linkTraCuu': linkTraCuu,
+      'address': address,
     };
   }
 
   @override
   String toString() {
-    return 'Unit(id: $id, code: $code, label: $label, description: $description, active: $active, isDeleted: $isDeleted)';
+    return 'Unit(id: $id, code: $code, label: $label, description: $description, active: $active, isDeleted: $isDeleted, linkTraCuu: $linkTraCuu, address: $address)';
   }
 }

@@ -10,6 +10,7 @@ import 'package:sunmi_printer_plus/core/enums/enums.dart';
 import 'package:sunmi_printer_plus/core/styles/sunmi_qrcode_style.dart';
 import 'package:sunmi_printer_plus/core/styles/sunmi_text_style.dart';
 import 'package:sunmi_printer_plus/core/sunmi/sunmi_printer.dart';
+import 'package:trash_pay/constants/enums/app_type_enum.dart';
 import 'package:trash_pay/presentation/widgets/dialogs/widgets/status_toast.dart';
 import 'package:trash_pay/services/user_prefs.dart';
 import 'package:trash_pay/utils/extension.dart';
@@ -135,6 +136,8 @@ class ReceiptPrinterService {
       final totalFormatted = NumberFormat("#,###").format(total);
 
       final companyName = _prefs.getCompanyName();
+      final companyAddress = _prefs.getCompanyAddress();
+      final linkTraCuu = _prefs.getLinkTraCuu() ?? '';
 
       // Clean command buffer và setup
       await escCommand.cleanCommand();
@@ -143,6 +146,11 @@ class ReceiptPrinterService {
       // Header - Company name (Center, Normal)
       await escCommand.text(
         content: (companyName ?? '').removeDiacritics,
+        alignment: Alignment.center,
+      );
+      await escCommand.newline();
+      await escCommand.text(
+        content: (companyAddress ?? '').removeDiacritics,
         alignment: Alignment.center,
       );
       await escCommand.newline();
@@ -251,7 +259,7 @@ class ReceiptPrinterService {
       
       // QR Code
       await escCommand.qrCode(
-        content: 'https://mily.vn/ductrong',
+        content: linkTraCuu,
         alignment: Alignment.center,
       );
       await escCommand.newline();
@@ -263,7 +271,7 @@ class ReceiptPrinterService {
       );
       await escCommand.newline();
       await escCommand.text(
-        content: 'https://mily.vn/ductrong',
+        content: linkTraCuu,
         alignment: Alignment.center,
       );
       await escCommand.newline();
@@ -292,8 +300,12 @@ class ReceiptPrinterService {
       final now = DateTime.now();
       final total = order.totalWithVAT?.toInt() ?? 0;
       final totalFormatted = NumberFormat("#,###").format(total);
+      final bool isSlaughter =
+          AppType.fromCompanyCode(_prefs.getCompany()) == AppType.slaughter;
 
       final companyName = _prefs.getCompanyName();
+      final companyAddress = _prefs.getCompanyAddress();
+      final linkTraCuu = _prefs.getLinkTraCuu() ?? '';
 
       final normalCenter = SunmiTextStyle(
             align: SunmiPrintAlign.CENTER,
@@ -305,6 +317,9 @@ class ReceiptPrinterService {
           );
 
       await SunmiPrinter.printText('${companyName ?? ''}\n',
+        style: normalCenter,
+      );
+      await SunmiPrinter.printText('${companyAddress ?? ''}\n',
         style: normalCenter,
       );
       await SunmiPrinter.printText('BIÊN NHẬN THANH TOÁN\n', style: boldCenter);
@@ -338,18 +353,20 @@ class ReceiptPrinterService {
             ? '${item.productName?.substring(0, 15)}...'
             : item.productName;
 
-        // final quantity = "${item.quantity} x ${item.priceNoVAT}";
-
-        // final vat = '(VAT: ${item.vat ?? 0}%)';
-
         final price =
             _formatCurrency( (item.priceWithVAT ?? 0).toDouble() * (item.quantity));
 
         await SunmiPrinter.printText(
             '${productName?.padRight(24 - productName.length) ?? 0} ${price.padLeft(14)}');
+        
+        if (isSlaughter) {
+          final quantity = "${item.quantity} x ${item.priceNoVAT}";
 
-        // await SunmiPrinter.printText(
-        //     '${quantity.padRight(24 - quantity.length)} ${vat.padLeft(14)}');
+          final vat = '(VAT: ${item.vat ?? 0}%)';
+
+          await SunmiPrinter.printText(
+              '${quantity.padRight(24 - quantity.length)} ${vat.padLeft(14)}');
+        }
 
 
         await SunmiPrinter.printText('${'─' * 32}');
@@ -371,12 +388,15 @@ class ReceiptPrinterService {
       await SunmiPrinter.printText('Nhân viên: ${order.saleUserFullName ?? ''}\n');
       await SunmiPrinter.line();
 
-      await SunmiPrinter.printQRCode("https://mily.vn/ductrong",
+      await SunmiPrinter.printQRCode(linkTraCuu,
           style: SunmiQrcodeStyle(
             align: SunmiPrintAlign.CENTER,
           ));
       await SunmiPrinter.line();
-      await SunmiPrinter.printText('Quý khách quét mã QR hoặc tuy cứu: https://mily.vn/ductrong để tra cứu hoá đơn điện tử\n', style: normalCenter);
+      await SunmiPrinter.printText(
+        'Quý khách quét mã QR hoặc truy cập: $linkTraCuu để tra cứu hoá đơn điện tử\n',
+        style: normalCenter,
+      );
 
       await SunmiPrinter.cutPaper();
 

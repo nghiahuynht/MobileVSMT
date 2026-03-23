@@ -34,6 +34,8 @@ class SignInBloc extends Bloc<SignInEvent, SignInState> {
         password: event.password,
         companyCode: event.companyCode,
         companyName: event.companyName,
+        linkTraCuu: event.linkTraCuu,
+        address: event.address,
       );
       if (response?.accessToken.isNotEmpty ?? false) {
         // Get user info after successful sign in

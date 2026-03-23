@@ -749,6 +749,8 @@ class _LoginScreenState extends State<LoginScreen>
           _passwordController.text,
           _selectedUnit!.code!,
           _selectedUnit!.label!,
+          linkTraCuu: _selectedUnit!.linkTraCuu,
+          address: _selectedUnit!.address,
         ),
       );
     }

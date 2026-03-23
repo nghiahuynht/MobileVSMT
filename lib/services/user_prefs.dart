@@ -10,6 +10,8 @@ class _keys {
   static const String loginName = 'loginName';
   static const String password = 'password';
   static const String companyName = 'companyName';
+  static const String linkTraCuu = 'linkTraCuu';
+  static const String companyAddress = 'companyAddress';
 }
 
 class UserPrefs {
@@ -106,5 +108,29 @@ class UserPrefs {
   
   String? getCompanyName() {
     return _prefs.getString(_keys.companyName);
+  }
+
+  void setLinkTraCuu(String? value) {
+    if (value == null) {
+      _prefs.remove(_keys.linkTraCuu);
+    } else {
+      _prefs.setString(_keys.linkTraCuu, value);
+    }
+  }
+
+  String? getLinkTraCuu() {
+    return _prefs.getString(_keys.linkTraCuu);
+  }
+
+  void setCompanyAddress(String? value) {
+    if (value == null) {
+      _prefs.remove(_keys.companyAddress);
+    } else {
+      _prefs.setString(_keys.companyAddress, value);
+    }
+  }
+
+  String? getCompanyAddress() {
+    return _prefs.getString(_keys.companyAddress);
   }
 }
