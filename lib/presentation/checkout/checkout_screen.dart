@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:trash_pay/constants/colors.dart';
+import 'package:trash_pay/constants/enums/app_type_enum.dart';
 import 'package:trash_pay/constants/font_family.dart';
 import 'package:trash_pay/domain/entities/checkout/checkout_request.dart';
 import 'package:trash_pay/domain/entities/meta_data/arrear.dart';
@@ -30,11 +32,93 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController _notesController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  List<TextEditingController>? _trashLinePriceControllers;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncTrashLinePriceControllers();
+  }
 
   @override
   void dispose() {
     _notesController.dispose();
+    if (_trashLinePriceControllers != null) {
+      for (final TextEditingController c in _trashLinePriceControllers!) {
+        c.dispose();
+      }
+    }
     super.dispose();
+  }
+
+  void _syncTrashLinePriceControllers() {
+    final int itemCount = widget.checkoutData.cartItems.length;
+    if (context.appType != AppType.trash) {
+      if (_trashLinePriceControllers != null) {
+        for (final TextEditingController c in _trashLinePriceControllers!) {
+          c.dispose();
+        }
+        _trashLinePriceControllers = null;
+      }
+      return;
+    }
+    _trashLinePriceControllers ??= <TextEditingController>[];
+    while (_trashLinePriceControllers!.length < itemCount) {
+      final int index = _trashLinePriceControllers!.length;
+      final OrderItemModel item = widget.checkoutData.cartItems[index];
+      final num defaultLine = (item.priceWithVAT ?? 0) * item.quantity;
+      final String digitString =
+          defaultLine > 0 ? defaultLine.toStringAsFixed(0) : '';
+      final String initialText = digitString.isEmpty
+          ? ''
+          : _VietnameseThousandsInputFormatter.formatDigits(digitString);
+      _trashLinePriceControllers!
+          .add(TextEditingController(text: initialText));
+    }
+    while (_trashLinePriceControllers!.length > itemCount) {
+      final TextEditingController removed =
+          _trashLinePriceControllers!.removeLast();
+      removed.dispose();
+    }
+  }
+
+  double? _parseMoneyInput(String raw) {
+    final String normalized =
+        raw.replaceAll('.', '').replaceAll(',', '').trim();
+    if (normalized.isEmpty) {
+      return null;
+    }
+    return double.tryParse(normalized);
+  }
+
+  List<OrderItemModel> _resolveCartItemsForCheckout(BuildContext context) {
+    if (context.appType != AppType.trash) {
+      return widget.checkoutData.cartItems;
+    }
+    final List<TextEditingController>? controllers =
+        _trashLinePriceControllers;
+    if (controllers == null ||
+        controllers.length != widget.checkoutData.cartItems.length) {
+      return widget.checkoutData.cartItems;
+    }
+    return List<OrderItemModel>.generate(
+      widget.checkoutData.cartItems.length,
+      (int index) {
+        final OrderItemModel item = widget.checkoutData.cartItems[index];
+        final double lineTotal = _parseMoneyInput(controllers[index].text) ?? 0;
+        final int quantity = item.quantity > 0 ? item.quantity : 1;
+        final double unitWithVat = lineTotal / quantity;
+        final num vatPercent = item.vat ?? 0;
+        final double unitNoVat = vatPercent > 0
+            ? unitWithVat / (1 + vatPercent.toDouble() / 100)
+            : unitWithVat;
+        return item.copyWith(
+          priceWithVAT: unitWithVat,
+          priceNoVAT: unitNoVat,
+          total: lineTotal,
+        );
+      },
+    );
   }
 
   @override
@@ -255,14 +339,110 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           color: Colors.grey[200],
         ),
         itemBuilder: (context, index) {
-          final item = widget.checkoutData.cartItems[index];
-          return _buildCartItem(item);
+          final OrderItemModel item = widget.checkoutData.cartItems[index];
+          return _buildCartItem(context, item, index);
         },
       ),
     );
   }
 
-  Widget _buildCartItem(OrderItemModel item) {
+  Widget _buildCartItem(
+      BuildContext context, OrderItemModel item, int index) {
+    final bool isTrashApp = context.appType == AppType.trash;
+    if (isTrashApp) {
+      final List<TextEditingController>? controllers =
+          _trashLinePriceControllers;
+      if (controllers == null || index >= controllers.length) {
+        return const SizedBox.shrink();
+      }
+      final TextEditingController lineController = controllers[index];
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.productName ?? '',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF1F2937),
+                      fontFamily: FontFamily.productSans,
+                    ),
+                  ),
+                  if (item.quantity > 0) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      '× ${item.quantity}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                        fontFamily: FontFamily.productSans,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            SizedBox(
+              width: 120,
+              child: TextField(
+                controller: lineController,
+                keyboardType: TextInputType.number,
+                inputFormatters: <TextInputFormatter>[
+                  _VietnameseThousandsInputFormatter(),
+                ],
+                onChanged: (_) => setState(() {}),
+                textAlign: TextAlign.right,
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: 'Thành tiền',
+                  hintStyle: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey[500],
+                    fontFamily: FontFamily.productSans,
+                  ),
+                  suffixText: 'đ',
+                  suffixStyle: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                    fontFamily: FontFamily.productSans,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide:
+                        const BorderSide(color: AppColors.primary, width: 1.5),
+                  ),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                ),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primary,
+                  fontFamily: FontFamily.productSans,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -306,8 +486,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ],
             ),
           ),
-
-          // Total Price
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
@@ -436,10 +614,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildPaymentSummary() {
-    final subtotal = widget.checkoutData.cartItems.fold<double>(
-        0, (sum, item) => sum + (item.priceNoVAT ?? 0) * item.quantity);
-    final total = widget.checkoutData.cartItems.fold<double>(
-        0, (sum, item) => sum + (item.priceWithVAT ?? 0) * item.quantity);
+    final List<OrderItemModel> itemsForTotals =
+        _resolveCartItemsForCheckout(context);
+    final double subtotal = itemsForTotals.fold<double>(
+        0, (double sum, OrderItemModel item) => sum + (item.priceNoVAT ?? 0) * item.quantity);
+    final double total = itemsForTotals.fold<double>(
+        0, (double sum, OrderItemModel item) => sum + (item.priceWithVAT ?? 0) * item.quantity);
 
     final vat = total - subtotal;
 
@@ -630,6 +810,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   flex: 3,
                   child: ElevatedButton(
                     onPressed: () {
+                      final List<OrderItemModel> itemsForPrint =
+                          _resolveCartItemsForCheckout(context);
+                      final double totalWithVat = itemsForPrint.fold<double>(
+                          0,
+                          (double sum, OrderItemModel item) =>
+                              sum + (item.priceWithVAT ?? 0) * item.quantity);
+                      final double totalNoVat = itemsForPrint.fold<double>(
+                          0,
+                          (double sum, OrderItemModel item) =>
+                              sum + (item.priceNoVAT ?? 0) * item.quantity);
                       context.read<CheckoutCubit>().printReceipt(
                             OrderModel(
                               id: 0,
@@ -640,15 +830,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               customerName: widget.checkoutData.customer?.name,
                               taxAddress: widget.checkoutData.customer?.taxAddress,
                               paymentName: state.paymentTypeSelected?.label,
-                              totalWithVAT: widget.checkoutData.cartItems.fold<double>(0, (sum, item) => sum + (item.priceWithVAT ?? 0) * item.quantity),
-                              totalNoVAT: widget.checkoutData.cartItems.fold<double>(0, (sum, item) => sum + (item.priceNoVAT ?? 0) * item.quantity),
-                              totalVAT: widget.checkoutData.cartItems.fold<double>(0, (sum, item) => sum + (item.priceWithVAT ?? 0) * item.quantity - (item.priceNoVAT ?? 0) * item.quantity),
+                              totalWithVAT: totalWithVat,
+                              totalNoVAT: totalNoVat,
+                              totalVAT: totalWithVat - totalNoVat,
                               orderDate: DateTime.now(),
                               createdBy: context.userCode,
                               note: _notesController.text.trim().isEmpty
                                   ? null
                                   : _notesController.text.trim(),
-                              lstSaleOrderItem: widget.checkoutData.cartItems,
+                              lstSaleOrderItem: itemsForPrint,
                             ),
                           );
                     },
@@ -838,7 +1028,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               note: _notesController.text.trim().isEmpty
                   ? null
                   : _notesController.text.trim(),
-              lstSaleOrderItem: widget.checkoutData.cartItems,
+              lstSaleOrderItem: _resolveCartItemsForCheckout(context),
               orderDate: DateTime.now().getDateString(),
               createdBy: context.userCode,
               // customerAddress: widget.checkoutData.customer?.address,
@@ -1067,4 +1257,70 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   //     ),
   //   );
   // }
+}
+
+/// Formats integer digits with `.` every thousands (e.g. 160000 → 160.000).
+class _VietnameseThousandsInputFormatter extends TextInputFormatter {
+  const _VietnameseThousandsInputFormatter();
+
+  static String formatDigits(String digitsOnly) {
+    if (digitsOnly.isEmpty) {
+      return '';
+    }
+    final StringBuffer buffer = StringBuffer();
+    final int length = digitsOnly.length;
+    final int firstGroupLength = length % 3 == 0 ? 3 : length % 3;
+    buffer.write(digitsOnly.substring(0, firstGroupLength));
+    int position = firstGroupLength;
+    while (position < length) {
+      buffer.write('.');
+      buffer.write(digitsOnly.substring(position, position + 3));
+      position += 3;
+    }
+    return buffer.toString();
+  }
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final String newDigits =
+        newValue.text.replaceAll(RegExp(r'[^0-9]'), '');
+    if (newDigits.isEmpty) {
+      return const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+    }
+    final String formatted = formatDigits(newDigits);
+    final int digitsBeforeCaret = newValue.selection.baseOffset <= 0
+        ? 0
+        : newValue.text
+            .substring(0, newValue.selection.baseOffset.clamp(0, newValue.text.length))
+            .replaceAll(RegExp(r'[^0-9]'), '')
+            .length;
+    final int caretOffset =
+        _offsetAfterDigitIndex(formatted, digitsBeforeCaret);
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: caretOffset),
+    );
+  }
+
+  static int _offsetAfterDigitIndex(String formatted, int digitCount) {
+    if (digitCount <= 0) {
+      return 0;
+    }
+    int seen = 0;
+    for (int i = 0; i < formatted.length; i++) {
+      if (formatted.codeUnitAt(i) != 0x2E) {
+        seen++;
+        if (seen >= digitCount) {
+          return i + 1;
+        }
+      }
+    }
+    return formatted.length;
+  }
 }

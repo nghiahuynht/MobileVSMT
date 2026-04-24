@@ -56,8 +56,11 @@ dependencies:
   url_launcher: ^6.3.2
   num_to_word_en_vi: ^1.0.5
   number_to_vietnamese_words: ^1.0.1+1
-  bluetooth_print_plus: ^2.4.6
+  bluetooth_print_plus:
+    git:
+      url: git@github.com:TruongThaiNgan/bluetooth_print_plus.git
   sunmi_printer_plus: ^4.1.0
+  dropdown_button2: ^3.0.0
 
 dev_dependencies:
   flutter_test:

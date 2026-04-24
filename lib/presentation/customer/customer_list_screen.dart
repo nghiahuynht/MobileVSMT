@@ -16,6 +16,7 @@ import 'package:trash_pay/presentation/customer/logics/customer_events.dart';
 import 'package:trash_pay/presentation/customer/logics/customer_state.dart';
 import 'package:trash_pay/presentation/customer/customer_detail_screen.dart';
 import 'package:trash_pay/presentation/widgets/common/professional_header.dart';
+import 'package:trash_pay/presentation/widgets/common_dropdown.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
@@ -225,8 +226,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                           child: AreasBuilder(
                             builder: (context, areas) {
                               // Filter areas based on selected group
-
-                              return _buildFilterDropdown<Area>(
+                              return XDropdown<Area>(
                                 value: _selectedArea,
                                 items: context.areas,
                                 hintText: 'Chọn khu vực',
@@ -234,10 +234,9 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                 itemBuilder: (Area area) => area.name,
                               );
                             },
-                            loadingBuilder: (context) =>
-                                _buildFilterDropdown<Area>(
-                              value: null,
-                              items: [],
+                            loadingBuilder: (context) => XDropdown<Area>(
+                              value: _selectedArea,
+                              items: const [],
                               hintText: 'Chọn khu vực',
                               onChanged: _onAreaChanged,
                               itemBuilder: (Area area) => area.name,
@@ -250,7 +249,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         Expanded(
                           child: BlocBuilder<CustomerBloc, CustomerState>(
                             builder: (context, state) {
-                              return _buildFilterDropdown<MetaRoute.Route>(
+                              return XDropdown<MetaRoute.Route>(
                                 value: _selectedRoute,
                                 items: _routes,
                                 hintText: 'Chọn Tuyến',
@@ -462,121 +461,6 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               ),
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildFilterDropdown<T>({
-    required T? value,
-    required List<T> items,
-    required String hintText,
-    required Function(T?) onChanged,
-    required String Function(T) itemBuilder,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1,
-        ),
-      ),
-      child: DropdownButtonFormField<T>(
-        value: value,
-        isExpanded: true,
-        menuMaxHeight: 300,
-        items: [
-          DropdownMenuItem<T>(
-            value: null,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                hintText,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Color(0xFF94A3B8),
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-          ...items
-              .map((item) => DropdownMenuItem<T>(
-                    value: item,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            itemBuilder(item),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color(0xFF1E293B),
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                        if (value == item)
-                          const Padding(
-                            padding: EdgeInsets.only(left: 8),
-                            child: Icon(
-                              Icons.check,
-                              size: 16,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ))
-              .toList(),
-        ],
-        onChanged: onChanged,
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          isDense: true,
-        ),
-        icon: const Icon(
-          Icons.keyboard_arrow_down,
-          color: Color(0xFF64748B),
-          size: 20,
-        ),
-        dropdownColor: Colors.white,
-        style: const TextStyle(
-          color: Color(0xFF1E293B),
-          fontSize: 14,
-        ),
-        selectedItemBuilder: (context) {
-          final List<Widget> displayItems = [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                hintText,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Color(0xFF94A3B8),
-                  fontSize: 14,
-                ),
-              ),
-            ),
-            ...items.map((item) => Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    itemBuilder(item),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Color(0xFF1E293B),
-                      fontSize: 14,
-                    ),
-                  ),
-                )),
-          ];
-          return displayItems;
-        },
       ),
     );
   }

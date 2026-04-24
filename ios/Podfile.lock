@@ -1,11 +1,9 @@
 PODS:
-  - bluetooth_print_plus (2.4.5):
+  - bluetooth_print_plus (2.4.6):
     - Flutter
-    - GSDK (= 0.0.7)
   - device_info_plus (0.0.1):
     - Flutter
   - Flutter (1.0.0)
-  - GSDK (0.0.7)
   - package_info_plus (0.4.5):
     - Flutter
   - path_provider_foundation (0.0.1):
@@ -33,10 +31,6 @@ DEPENDENCIES:
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 
-SPEC REPOS:
-  trunk:
-    - GSDK
-
 EXTERNAL SOURCES:
   bluetooth_print_plus:
     :path: ".symlinks/plugins/bluetooth_print_plus/ios"
@@ -58,10 +52,9 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
 
 SPEC CHECKSUMS:
-  bluetooth_print_plus: 6a82e02771355b571013704276759655bfc845a3
+  bluetooth_print_plus: 5b76931359f418279ad979fe8a6f9398b09fadce
   device_info_plus: bf2e3232933866d73fe290f2942f2156cdd10342
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
-  GSDK: 65d54603da7bece31b433c0f34f8a52c4431dd08
   package_info_plus: c0502532a26c7662a62a356cebe2692ec5fe4ec4
   path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
