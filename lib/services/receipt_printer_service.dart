@@ -131,7 +131,6 @@ class ReceiptPrinterService {
     try {
       final escCommand = EscCommand();
 
-      final now = DateTime.now();
       final total = order.totalWithVAT?.toInt() ?? 0;
       final totalFormatted = NumberFormat("#,###").format(total);
 
@@ -169,13 +168,16 @@ class ReceiptPrinterService {
         alignment: Alignment.center,
         style: EscTextStyle.bold,
       );
-      await escCommand.newline();
       
       // Date time (Center, Normal)
-      await escCommand.text(
-        content: 'Ngày: ${DateFormat('dd/MM/yyyy HH:mm:ss').format(now)}'.removeDiacritics,
-        alignment: Alignment.center,
-      );
+      if (order.createdDate != null) {
+        await escCommand.newline();
+          
+        await escCommand.text(
+          content: 'Ngày: ${DateFormat('dd/MM/yyyy HH:mm:ss').format(order.createdDate!)}'.removeDiacritics,
+          alignment: Alignment.center,
+        );
+      }
       await escCommand.newline();
       await escCommand.newline();
       
@@ -297,7 +299,6 @@ class ReceiptPrinterService {
 
   Future<bool> printReceiptSunmi(OrderModel order) async {
     try {
-      final now = DateTime.now();
       final total = order.totalWithVAT?.toInt() ?? 0;
       final totalFormatted = NumberFormat("#,###").format(total);
       final bool isSlaughter =
@@ -324,8 +325,10 @@ class ReceiptPrinterService {
       );
       await SunmiPrinter.printText('BIÊN NHẬN THANH TOÁN\n', style: boldCenter);
       await SunmiPrinter.printText('DV thu gom, VC rác SH\n', style: boldCenter);
-      await SunmiPrinter.printText(
-          'Ngày: ${DateFormat('dd/MM/yyyy HH:mm:ss').format(now)}\n', style: normalCenter);
+      if (order.createdDate != null) {
+        await SunmiPrinter.printText(
+          'Ngày: ${DateFormat('dd/MM/yyyy HH:mm:ss').format(order.createdDate!)}\n', style: normalCenter);
+      }
 
       await SunmiPrinter.line();
       await SunmiPrinter.line();

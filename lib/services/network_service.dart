@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:logger/logger.dart';
 import 'package:trash_pay/constants/api_config.dart';
+import 'package:trash_pay/constants/sectigo_r36_ca.dart';
 import 'package:trash_pay/domain/entities/based_api_result/api_result_model.dart';
 import 'package:trash_pay/domain/entities/based_api_result/error_result_model.dart';
 import 'package:trash_pay/services/token_manager.dart';
@@ -30,6 +33,8 @@ class DioNetwork {
       headers: _getDefaultHeaders(),
     );
 
+    _configureTrustedCertificates();
+
     // Add interceptors
     dio.interceptors.add(
       RetryInterceptor(
@@ -56,6 +61,18 @@ class DioNetwork {
 
     // Add auth interceptor
     dio.interceptors.add(_AuthInterceptor());
+  }
+
+  // Trust the API server's Sectigo "Public Server Authentication CA DV R36"
+  // intermediate explicitly. On iOS, Dio's IO adapter validates certificates
+  // via Dart's own bundled root store (not the platform keychain), so this
+  // CA must be added here even though it's a well-known public CA.
+  void _configureTrustedCertificates() {
+    (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+      final context = SecurityContext(withTrustedRoots: true);
+      context.setTrustedCertificatesBytes(utf8.encode(kSectigoR36IntermediatePem));
+      return HttpClient(context: context);
+    };
   }
 
   Map<String, String> _getDefaultHeaders() {

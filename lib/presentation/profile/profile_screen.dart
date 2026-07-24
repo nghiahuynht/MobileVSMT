@@ -167,106 +167,108 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfileContent(BuildContext context, ProfileModel profile) {
     return Padding(
       padding: const EdgeInsets.all(20),
-      child: Column(
-        children: [
-          // Profile Header Card
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: const Color(0xFFE2E8F0),
-                width: 1,
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            // Profile Header Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFFE2E8F0),
+                  width: 1,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // Avatar
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: _getRoleColors(),
-                    ),
-                    borderRadius: BorderRadius.circular(40),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _getRoleColors()[0].withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
+              child: Column(
+                children: [
+                  // Avatar
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: _getRoleColors(),
                       ),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      profile.name.isNotEmpty
-                          ? profile.name[0].toUpperCase()
-                          : 'U',
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      borderRadius: BorderRadius.circular(40),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _getRoleColors()[0].withOpacity(0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: Text(
+                        profile.name.isNotEmpty
+                            ? profile.name[0].toUpperCase()
+                            : 'U',
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Name and Role
-                Text(
-                  profile.name,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1E293B),
+              
+                  const SizedBox(height: 16),
+              
+                  // Name and Role
+                  Text(
+                    profile.name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1E293B),
+                    ),
                   ),
-                ),
+                ],
+              ),
+            ),
+        
+            const SizedBox(height: 20),
+        
+            // Contact Information
+            _buildInfoSection(
+              'Thông Tin Liên Hệ',
+              [
+                if (profile.email != null)
+                  _buildInfoItem(Icons.email_outlined, 'Email', profile.email!),
+                if (profile.phone != null)
+                  _buildInfoItem(
+                      Icons.phone_outlined, 'Số điện thoại', profile.phone!),
+                if (profile.joinedAt != null)
+                  _buildInfoItem(Icons.calendar_today_outlined, 'Ngày tham gia',
+                      DateFormat('dd/MM/yyyy').format(profile.joinedAt!)),
               ],
             ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Contact Information
-          _buildInfoSection(
-            'Thông Tin Liên Hệ',
-            [
-              if (profile.email != null)
-                _buildInfoItem(Icons.email_outlined, 'Email', profile.email!),
-              if (profile.phone != null)
-                _buildInfoItem(
-                    Icons.phone_outlined, 'Số điện thoại', profile.phone!),
-              if (profile.joinedAt != null)
-                _buildInfoItem(Icons.calendar_today_outlined, 'Ngày tham gia',
-                    DateFormat('dd/MM/yyyy').format(profile.joinedAt!)),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          // // Settings Section
-          // _buildSettingsSection(context, profile),
-
-          // const SizedBox(height: 20),
-
-          const Spacer(),
-
-          // Action Buttons
-          _buildActionButtons(context),
-
-          const SizedBox(height: 20),
-        ],
+        
+            const SizedBox(height: 20),
+        
+            // // Settings Section
+            // _buildSettingsSection(context, profile),
+        
+            // const SizedBox(height: 20),
+        
+            // const Spacer(),
+        
+            // Action Buttons
+            _buildActionButtons(context),
+        
+            const SizedBox(height: 20),
+          ],
+        ),
       ),
     );
   }
