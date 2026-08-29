@@ -17,6 +17,7 @@ class AppState extends Equatable {
   final List<Ward> wards;
   final List<PaymentType> paymentTypes;
   final String? userCode;
+  final String? userFullName;
   final bool isInitialized;
   final bool isSunmi;
   final AppType appType;
@@ -33,6 +34,7 @@ class AppState extends Equatable {
     this.userCode,
     this.isSunmi = true,
     this.appType = AppType.trash,
+    this.userFullName,
   });
 
   factory AppState.initial() {
@@ -51,6 +53,7 @@ class AppState extends Equatable {
     List<PaymentType>? paymentTypes,
     bool? isSunmi,
     AppType? appType,
+    String? userFullName,
   }) {
     return AppState(
       areas: areas ?? this.areas,
@@ -64,10 +67,11 @@ class AppState extends Equatable {
       groups: groups ?? this.groups,
       isSunmi: isSunmi ?? this.isSunmi,
       appType: appType ?? this.appType,
+      userFullName: userFullName ?? this.userFullName,
     );
   }
 
   @override
   List<Object?> get props =>
-      [areas, provinces, isInitialized, userCode, products, groups, arrears, wards, paymentTypes, isSunmi, appType];
+      [areas, provinces, isInitialized, userCode, products, groups, arrears, wards, paymentTypes, isSunmi, appType, userFullName];
 }

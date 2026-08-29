@@ -71,6 +71,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
               paymentTypes: paymentTypes as List<PaymentType>,
               isInitialized: true,
               userCode: user.code,
+              userFullName: user.fullName,
               appType: _readAppTypeFromPrefs()));
         } else {
           emit(state.copyWith(isInitialized: true, appType: _readAppTypeFromPrefs()));
@@ -115,6 +116,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
               paymentTypes: paymentTypes as List<PaymentType>,
               isInitialized: true,
               userCode: user.code,
+              userFullName: user.fullName,
               appType: _readAppTypeFromPrefs()));
         }
       }

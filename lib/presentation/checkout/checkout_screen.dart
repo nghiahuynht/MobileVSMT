@@ -834,7 +834,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               totalNoVAT: totalNoVat,
                               totalVAT: totalWithVat - totalNoVat,
                               orderDate: DateTime.now(),
+                              createdDate: DateTime.now(),
                               createdBy: context.userCode,
+                              saleUserCode: context.userCode,
+                              saleUserFullName: context.userFullName,
+                              arrears: state.arrearSelected?.code,
                               note: _notesController.text.trim().isEmpty
                                   ? null
                                   : _notesController.text.trim(),

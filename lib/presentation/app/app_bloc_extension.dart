@@ -43,6 +43,9 @@ extension AppBlocExtension on BuildContext {
   /// Lấy user code
   String? get userCode => appState.userCode;
 
+  /// Lấy user full name
+  String? get userFullName => appState.userFullName;
+
   /// Loại ứng dụng (thu rác / giết mổ)
   AppType get appType => appState.appType;
 
