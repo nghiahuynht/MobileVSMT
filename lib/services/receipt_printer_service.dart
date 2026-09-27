@@ -11,6 +11,7 @@ import 'package:sunmi_printer_plus/core/styles/sunmi_qrcode_style.dart';
 import 'package:sunmi_printer_plus/core/styles/sunmi_text_style.dart';
 import 'package:sunmi_printer_plus/core/sunmi/sunmi_printer.dart';
 import 'package:trash_pay/constants/enums/app_type_enum.dart';
+import 'package:trash_pay/domain/domain_manager.dart';
 import 'package:trash_pay/presentation/widgets/dialogs/widgets/status_toast.dart';
 import 'package:trash_pay/services/user_prefs.dart';
 import 'package:trash_pay/utils/extension.dart';
@@ -118,7 +119,34 @@ class ReceiptPrinterService {
     }
   }
 
+  /// Link tra cứu (QR trên hoá đơn) & địa chỉ công ty chỉ được lưu lúc đăng nhập.
+  /// Nếu bị mất (bản cũ ghi đè null khi refresh token) thì lấy lại từ danh sách đơn vị.
+  Future<void> ensureCompanyInfo() async {
+    final companyCode = _prefs.getCompany();
+    if (companyCode == null) return;
+    if ((_prefs.getLinkTraCuu() ?? '').isNotEmpty &&
+        (_prefs.getCompanyAddress() ?? '').isNotEmpty) {
+      return;
+    }
+    try {
+      final units = await DomainManager().unit.getUnits();
+      final unit = units.where((u) => u.code == companyCode).firstOrNull;
+      if (unit == null) return;
+      if ((_prefs.getLinkTraCuu() ?? '').isEmpty &&
+          (unit.linkTraCuu ?? '').isNotEmpty) {
+        _prefs.setLinkTraCuu(unit.linkTraCuu);
+      }
+      if ((_prefs.getCompanyAddress() ?? '').isEmpty &&
+          (unit.address ?? '').isNotEmpty) {
+        _prefs.setCompanyAddress(unit.address);
+      }
+    } catch (e) {
+      print('ensureCompanyInfo error: $e');
+    }
+  }
+
   Future<bool> printReceipt(OrderModel order) async {
+    await ensureCompanyInfo();
     if (isSunmi) {
       return await printReceiptSunmi(order);
     } else {
@@ -259,29 +287,31 @@ class ReceiptPrinterService {
       await escCommand.newline();
       await escCommand.newline();
       
-      // QR Code
-      await escCommand.qrCode(
-        content: linkTraCuu,
-        alignment: Alignment.center,
-      );
-      await escCommand.newline();
-      
-      // QR instruction
-      await escCommand.text(
-        content: 'Quý khách quét mã QR hoặc truy cập:'.removeDiacritics,
-        alignment: Alignment.center,
-      );
-      await escCommand.newline();
-      await escCommand.text(
-        content: linkTraCuu,
-        alignment: Alignment.center,
-      );
-      await escCommand.newline();
-      await escCommand.text(
-        content: 'để tra cứu hóa đơn điện tử'.removeDiacritics,
-        alignment: Alignment.center,
-      );
-      await escCommand.newline();
+      if (linkTraCuu.isNotEmpty) {
+        // QR Code
+        await escCommand.qrCode(
+          content: linkTraCuu,
+          alignment: Alignment.center,
+        );
+        await escCommand.newline();
+        
+        // QR instruction
+        await escCommand.text(
+          content: 'Quý khách quét mã QR hoặc truy cập:'.removeDiacritics,
+          alignment: Alignment.center,
+        );
+        await escCommand.newline();
+        await escCommand.text(
+          content: linkTraCuu,
+          alignment: Alignment.center,
+        );
+        await escCommand.newline();
+        await escCommand.text(
+          content: 'để tra cứu hóa đơn điện tử'.removeDiacritics,
+          alignment: Alignment.center,
+        );
+        await escCommand.newline();
+      }
       
       // Feed lines and get command
       await escCommand.print(feedLines: 5);
@@ -391,15 +421,17 @@ class ReceiptPrinterService {
       await SunmiPrinter.printText('Nhân viên: ${order.saleUserFullName ?? ''}\n');
       await SunmiPrinter.line();
 
-      await SunmiPrinter.printQRCode(linkTraCuu,
-          style: SunmiQrcodeStyle(
-            align: SunmiPrintAlign.CENTER,
-          ));
-      await SunmiPrinter.line();
-      await SunmiPrinter.printText(
-        'Quý khách quét mã QR hoặc truy cập: $linkTraCuu để tra cứu hoá đơn điện tử\n',
-        style: normalCenter,
-      );
+      if (linkTraCuu.isNotEmpty) {
+        await SunmiPrinter.printQRCode(linkTraCuu,
+            style: SunmiQrcodeStyle(
+              align: SunmiPrintAlign.CENTER,
+            ));
+        await SunmiPrinter.line();
+        await SunmiPrinter.printText(
+          'Quý khách quét mã QR hoặc truy cập: $linkTraCuu để tra cứu hoá đơn điện tử\n',
+          style: normalCenter,
+        );
+      }
 
       await SunmiPrinter.cutPaper();
 

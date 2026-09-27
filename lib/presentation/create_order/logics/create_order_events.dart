@@ -24,6 +24,12 @@ class UpdateProductQuantity extends CreateOrderEvent {
   UpdateProductQuantity({required this.productCode, required this.quantity});
 }
 
+/// Chọn nhanh: chỉ giữ các sản phẩm có key trong [productCodes] (bỏ chọn phần còn lại).
+class SelectProductsOnly extends CreateOrderEvent {
+  final Set<String> productCodes;
+  SelectProductsOnly(this.productCodes);
+}
+
 class SelectCustomerForOrder extends CreateOrderEvent {
   final CustomerModel customer;
   SelectCustomerForOrder(this.customer);

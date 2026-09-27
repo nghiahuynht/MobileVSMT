@@ -16,6 +16,7 @@ class CreateOrderBloc
     on<events.AddProductToCart>(_onAddProduct);
     on<events.RemoveProductFromCart>(_onRemoveProduct);
     on<events.UpdateProductQuantity>(_onUpdateQuantity);
+    on<events.SelectProductsOnly>(_onSelectProductsOnly);
     on<events.SelectCustomerForOrder>(_onSelectCustomer);
     on<events.SubmitCreateOrder>(_onSubmitOrder);
   }
@@ -76,6 +77,17 @@ class CreateOrderBloc
     final int quantity = event.quantity < 0 ? 0 : event.quantity;
     _allProducts[index] =
         _allProducts[index].copyWith(quantity: quantity);
+    emit(_currentLoadedState(isSubmitting: false));
+  }
+
+  void _onSelectProductsOnly(events.SelectProductsOnly event,
+      Emitter<state.CreateOrderState> emit) {
+    _allProducts = _allProducts
+        .map((state.ProductOrderItemWrapper w) => w.copyWith(
+              quantity:
+                  event.productCodes.contains(w.item.productOrderKey) ? 1 : 0,
+            ))
+        .toList();
     emit(_currentLoadedState(isSubmitting: false));
   }
 

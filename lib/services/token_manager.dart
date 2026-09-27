@@ -107,6 +107,9 @@ class TokenManager {
           password: password!,
           companyCode: companyCode!,
           companyName: companyName!,
+          // Giữ lại link tra cứu & địa chỉ, nếu không sẽ bị ghi đè null => mất QR khi in
+          linkTraCuu: _userPrefs.getLinkTraCuu(),
+          address: _userPrefs.getCompanyAddress(),
       );
 
       if (response?.accessToken.isNotEmpty ?? false) {

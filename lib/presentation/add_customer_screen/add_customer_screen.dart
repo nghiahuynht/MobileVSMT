@@ -28,11 +28,14 @@ class AddCustomerScreen extends StatefulWidget {
 }
 
 class _AddCustomerScreenState extends State<AddCustomerScreen> {
+  static const int _cccdLength = 12;
+
   late bool isEdit;
 
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _cccdController = TextEditingController();
   final _addressController = TextEditingController();
   final _villageController = TextEditingController();
   final _priceController = TextEditingController();
@@ -53,6 +56,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
     if (widget.customer != null) {
       _nameController.text = widget.customer!.name ?? '';
       _phoneController.text = widget.customer!.phone ?? '';
+      _cccdController.text = widget.customer!.cccd ?? '';
       _addressController.text = widget.customer!.address ?? '';
       _villageController.text = widget.customer!.village ?? '';
       _priceController.text = widget.customer!.currentPrice?.toInt().toString() ?? '';
@@ -80,6 +84,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _cccdController.dispose();
     _addressController.dispose();
     _villageController.dispose();
     _priceController.dispose();
@@ -102,6 +107,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
           code: widget.customer?.code ?? '',
           name: _nameController.text.trim(),
           phone: _phoneController.text.trim(),
+          cccd: _cccdController.text.trim(),
           address: _addressController.text.trim(),
           provinceCode: _selectedProvince?.code,
           wardCode: _selectedWard?.code,
@@ -143,6 +149,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
           code: widget.customer?.code ?? '',
           name: _nameController.text.trim(),
           phone: _phoneController.text.trim(),
+          cccd: _cccdController.text.trim(),
           address: _addressController.text.trim(),
           provinceCode: _selectedProvince?.code,
           wardCode: _selectedWard?.code,
@@ -216,6 +223,29 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                             ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // CCCD (không bắt buộc, nếu nhập phải đủ 12 số)
+                          _buildTextField(
+                            controller: _cccdController,
+                            label: 'Số CCCD',
+                            hint: 'Nhập số CCCD (12 số)',
+                            icon: Icons.badge_outlined,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(_cccdLength),
+                            ],
+                            validator: (value) {
+                              final cccd = value?.trim() ?? '';
+                              if (cccd.isEmpty) return null;
+                              if (cccd.length != _cccdLength) {
+                                return 'Số CCCD phải gồm đúng $_cccdLength chữ số';
+                              }
+                              return null;
+                            },
                           ),
 
                           const SizedBox(height: 20),

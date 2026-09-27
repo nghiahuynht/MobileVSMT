@@ -46,6 +46,7 @@ class AppBloc extends Bloc<AppEvent, AppState> {
       emit(state.copyWith(isSunmi: isSunmi, appType: _readAppTypeFromPrefs()));
       
       if (_tokenManager.isLoggedIn) {
+        unawaited(ReceiptPrinterService.instance.ensureCompanyInfo());
         final user = await _domainManager.auth.getCurrentUser();
 
         if (user != null) {

@@ -74,6 +74,7 @@ class _ProductListState extends State<ProductList> {
           children: [
             _buildHeader(),
             _buildSearchBar(),
+            _buildQuickMonthSelect(),
             _buildTotal(),
             const SizedBox(
               height: 18,
@@ -124,6 +125,94 @@ class _ProductListState extends State<ProductList> {
               );
             }
             return const SizedBox.shrink();
+          },
+        );
+      },
+    );
+  }
+
+  /// Nút chọn nhanh tháng thu: 6 tháng đầu năm / 6 tháng cuối năm / cả năm.
+  Widget _buildQuickMonthSelect() {
+    return BlocBuilder<AppBloc, AppState>(
+      builder: (context, appState) {
+        if (appState.appType != AppType.trash) {
+          return const SizedBox.shrink();
+        }
+        return BlocBuilder<CreateOrderBloc, state.CreateOrderState>(
+          builder: (context, s) {
+            if (s is! state.CreateOrderLoaded) {
+              return const SizedBox.shrink();
+            }
+            final Map<int, String> keyByMonth = <int, String>{};
+            for (final state.ProductOrderItemWrapper p in s.products) {
+              final int? month = p.item.monthNumber;
+              if (month != null) {
+                keyByMonth.putIfAbsent(month, () => p.item.productOrderKey);
+              }
+            }
+            if (keyByMonth.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            final Set<String> selectedKeys = s.products
+                .where((state.ProductOrderItemWrapper p) => p.isSelected)
+                .map((state.ProductOrderItemWrapper p) => p.item.productOrderKey)
+                .toSet();
+
+            Widget chip(String label, int fromMonth, int toMonth) {
+              final Set<String> keys = <String>{
+                for (int m = fromMonth; m <= toMonth; m++)
+                  if (keyByMonth[m] != null) keyByMonth[m]!,
+              };
+              final bool isActive = keys.isNotEmpty &&
+                  keys.length == selectedKeys.length &&
+                  keys.containsAll(selectedKeys);
+              return Expanded(
+                child: ChoiceChip(
+                  label: SizedBox(
+                    width: double.infinity,
+                    child: Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  selected: isActive,
+                  showCheckmark: false,
+                  selectedColor: AppColors.primary,
+                  backgroundColor: Colors.white,
+                  side: const BorderSide(color: AppColors.primary),
+                  labelStyle: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    fontFamily: FontFamily.productSans,
+                    color: isActive ? Colors.white : AppColors.primary,
+                  ),
+                  onSelected: keys.isEmpty
+                      ? null
+                      : (_) {
+                          context.read<CreateOrderBloc>().add(
+                                events.SelectProductsOnly(
+                                  isActive ? <String>{} : keys,
+                                ),
+                              );
+                        },
+                ),
+              );
+            }
+
+            return Padding(
+              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 12),
+              child: Row(
+                children: [
+                  chip('6 tháng đầu', 1, 6),
+                  const SizedBox(width: 8),
+                  chip('6 tháng cuối', 7, 12),
+                  const SizedBox(width: 8),
+                  chip('Cả năm', 1, 12),
+                ],
+              ),
+            );
           },
         );
       },

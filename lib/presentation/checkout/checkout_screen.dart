@@ -109,8 +109,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         final int quantity = item.quantity > 0 ? item.quantity : 1;
         final double unitWithVat = lineTotal / quantity;
         final num vatPercent = item.vat ?? 0;
+        // Làm tròn về đồng: tránh giá chưa VAT lẻ (vd 20.000 / 1.01 = 19.801,98...)
+        // làm lệch tiền VAT khi lưu đơn / xuất hoá đơn điện tử.
         final double unitNoVat = vatPercent > 0
-            ? unitWithVat / (1 + vatPercent.toDouble() / 100)
+            ? (unitWithVat / (1 + vatPercent.toDouble() / 100)).roundToDouble()
             : unitWithVat;
         return item.copyWith(
           priceWithVAT: unitWithVat,

@@ -218,6 +218,12 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   'Số điện thoại',
                   _customer!.phone!,
                 ),
+              if (_customer?.cccd?.isNotEmpty == true)
+                _buildInfoItem(
+                  Icons.badge_outlined,
+                  'Số CCCD',
+                  _customer!.cccd!,
+                ),
               if (_customer?.address != null)
                 _buildInfoItem(
                   Icons.home_outlined,
